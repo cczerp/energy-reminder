@@ -4,6 +4,9 @@ export const isNative = !!cap?.isNativePlatform?.();
 const LN = isNative ? cap.registerPlugin('LocalNotifications') : null;
 const BG = isNative ? cap.registerPlugin('BackgroundGeolocation') : null;
 
+// Notification buttons on exercise reminders.
+LN?.registerActionTypes({ types: [{ id: 'EX', actions: [{ id: 'rules', title: 'See rules' }, { id: 'done', title: 'Completed' }] }] }).catch(() => {});
+
 export async function ensurePerms() {
   if (!LN) return false;
   const p = await LN.requestPermissions();
@@ -27,17 +30,17 @@ export async function scheduleAll(list) {
   if (pend.notifications.length) await LN.cancel({ notifications: pend.notifications.map((n) => ({ id: n.id })) });
   if (!list.length) return;
   await LN.schedule({
-    notifications: list.map((o) => ({ id: o.id, title: o.title, body: o.body, schedule: { at: o.at, allowWhileIdle: true }, extra: { route: o.route } })),
+    notifications: list.map((o) => ({ id: o.id, title: o.title, body: o.body, schedule: { at: o.at, allowWhileIdle: true }, extra: { route: o.route, exId: o.exId }, ...(o.exId ? { actionTypeId: 'EX' } : {}) })),
   });
 }
 
-export async function fireNow(id, title, body, route) {
+export async function fireNow(id, title, body, route, exId) {
   if (!LN) return;
-  await LN.schedule({ notifications: [{ id, title, body, schedule: { at: new Date(Date.now() + 1500), allowWhileIdle: true }, extra: { route } }] });
+  await LN.schedule({ notifications: [{ id, title, body, schedule: { at: new Date(Date.now() + 1500), allowWhileIdle: true }, extra: { route, exId }, ...(exId ? { actionTypeId: 'EX' } : {}) }] });
 }
 
 export function onTap(fn) {
-  LN?.addListener('localNotificationActionPerformed', (ev) => fn(ev.notification?.extra?.route));
+  LN?.addListener('localNotificationActionPerformed', (ev) => fn(ev.notification?.extra?.route, ev.actionId, ev.notification?.extra?.exId));
 }
 
 /* ---------- location (leaving home) ---------- */
