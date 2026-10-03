@@ -550,3 +550,4 @@ native.onTap((route, action, exId) => {
 });
 if (native.isNative) native.permState().then((p) => { permState = p; changed(); });
 paint(); checkDue();
+window.__mindfulBooted = true;
