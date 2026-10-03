@@ -175,6 +175,16 @@ export const EXERCISES = [
 
   // ---------- Meditation ----------
   {
+    id: 'med-sit', cat: 'meditate', title: 'Daily Sit — your choice', mins: 5,
+    freq: 'At least once a day, 5–10 minutes',
+    summary: 'Your baseline: sit and meditate in any way you like, even if only for 5 minutes.',
+    steps: [
+      'Find a quiet spot. Sit in a straight-back chair, back straight, head erect, eyes closed — or sit however is comfortable for you.',
+      { t: 'Meditate in whatever way you choose: breath, a mantra, stillness, or one of the practices. Pick your length, then start.', pick: [300, 600], secs: 300 },
+      'Rise, deep breath, relax.',
+    ],
+  },
+  {
     id: 'med-color', cat: 'meditate', title: 'Meditation 1 — Color', mins: 3,
     freq: 'Daily', summary: 'Blue, pink, white — one minute each, one sitting.',
     steps: [
@@ -389,22 +399,24 @@ export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 export const REMIND_GROUPS = [
   { cat: 'observe', label: 'Observation', ids: ['obs-room', 'obs-stairs'] },
   { cat: 'concentrate', label: 'Concentration', ids: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
-  { cat: 'meditate', label: 'Meditation', ids: ['med-color', 'med-sound', 'med-cloud'] },
+  { cat: 'meditate', label: 'Meditation', ids: ['med-sit', 'med-color', 'med-sound', 'med-cloud'] },
   { cat: 'emotion', label: 'Emotional control', ids: ['emo-matches', 'emo-tv', 'emo-slow'] },
 ];
 export const SPOT = ['obs-room', 'obs-stairs', 'conc-stranger'];
 export const CAT_LABEL = Object.fromEntries(REMIND_GROUPS.flatMap((g) => g.ids.map((id) => [id, g.label])));
 export const REMIND_DEFAULTS = {
-  day: { s: 9, e: 20 }, // hours reminders may appear
+  day: { s: 9, e: 20 }, // hours scheduled and random reminders may appear
+  leave: { s: 6, e: 24 }, // hours "when I leave home" reminders may appear
   ex: {
     'obs-room': { on: true, n: 1, mode: 'random' },
     'obs-stairs': { on: true, n: 1, mode: 'random' },
     'conc-multiply': { on: true, n: 1 },
     'conc-poem': { on: true, n: 1 },
-    'conc-stranger': { on: false, n: 1, mode: 'random' },
-    'med-color': { on: true, n: 1 },
-    'med-sound': { on: true, n: 1 },
-    'med-cloud': { on: false, n: 1 },
+    'conc-stranger': { on: true, n: 1, mode: 'leave' },
+    'med-sit': { on: true, n: 1 },
+    'med-color': { on: true, n: 2 },
+    'med-sound': { on: true, n: 2 },
+    'med-cloud': { on: true, n: 2 },
     'emo-matches': { on: true, n: 1 },
     'emo-tv': { on: true, n: 1 },
     'emo-slow': { on: false, n: 1 },
@@ -459,6 +471,7 @@ export const NUDGES = [
 
 // Short text for reminder notifications.
 export const PING = {
+  'med-sit': 'Sit for 5–10 minutes and meditate in whatever way you choose. Your daily baseline.',
   'obs-room': 'Close your eyes a second and name every object in this room you can recall.',
   'obs-stairs': 'Next flight of stairs: count the steps, then recall the number.',
   'conc-multiply': 'Multiply two 2-digit numbers in your head. Then two 3-digit ones.',
