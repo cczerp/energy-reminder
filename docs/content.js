@@ -1,4 +1,4 @@
-// All guide content, converted from the First Steps guides.
+// All exercise and reminder content.
 // A step is a string, or { t, secs } (timed), { t, open:true } (count-up, move on when ready),
 // or { t, breath: { phases:[[label,secs]...], reps } }.
 
@@ -63,7 +63,7 @@ export const EXERCISES = [
   {
     id: 'light-wash', cat: 'energy', title: 'Light-Wash Healing', mins: 5,
     freq: 'As needed',
-    summary: 'Wash healing energy over the body; can help you pinpoint problem areas. (Other source, not the book.)',
+    summary: 'Wash healing energy over the body; it can also help you pinpoint problem areas.',
     steps: [
       'Picture a place you genuinely enjoy being. Take your time choosing it.',
       "Don't try to make the image vivid — your mind already holds the emotional memory. Use the thought of the place to induce the actual feeling you get there. Lock onto that joyful emotion.",
@@ -368,7 +368,7 @@ export const CHAKRAS = [
   { n: 7, name: 'Thought', sk: 'Sahasrara (Crown)', seed: 'Silence (sometimes OM)', loc: 'Top of the head', block: 'Earthly attachment', gland: 'Pituitary', note: 'If you are worthy enough to receive, this is where energy transcends into gratitude.' },
 ];
 
-export const CHAKRA_INTRO = 'Chakras ("wheels") are energy transformers: raw life energy takes on the quality of whichever chakra converts it. In the average person the solar plexus is most open, which is why most people are emotionally focused — and why emotional control comes first. Sources: Guru Pathik (Avatar), Joe Dispenza, and the First Steps book; they all draw on the same older tradition.';
+export const CHAKRA_INTRO = 'Chakras ("wheels") are energy transformers: raw life energy takes on the quality of whichever chakra converts it. In the average person the solar plexus is most open, which is why most people are emotionally focused — and why emotional control comes first. These ideas come from a long, shared tradition.';
 
 export const CYCLES = {
   note: 'Work in progress — only the end of the Second Period and the Third Period have come through. Dates are filled in personally.',
@@ -388,7 +388,7 @@ export const CYCLES = {
   ],
 };
 
-// Chakra alignment walkthrough (Dispenza method). Deliberately ends on its own — it never chains into the Combined Attunement.
+// Chakra alignment walkthrough. Deliberately ends on its own — it never chains into the Combined Attunement.
 EXERCISES.push({
   id: 'c-chakra', cat: 'chakra', title: 'Chakra Alignment Walkthrough', mins: 20,
   freq: 'In a calm theta/alpha state', summary: "Attention in each chakra's area, root to crown, until it feels coherent. Works on its own; it is not part of the attunement.",
