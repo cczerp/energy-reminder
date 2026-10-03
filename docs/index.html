@@ -18,6 +18,13 @@
   <a href="#log" data-tab="log">Log</a>
   <a href="#settings" data-tab="settings">Settings</a>
 </nav>
+<script>
+window.addEventListener('error', function (e) {
+  var v = document.getElementById('view');
+  if (v && !v.innerHTML.trim()) v.innerHTML = '<div style="padding:16px;color:#f2c94c;font-size:14px">Something went wrong starting the app.<br><br>' + String(e.message || e).replace(/</g, '&lt;') + '</div>';
+});
+</script>
+<script src="capacitor.js"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>
