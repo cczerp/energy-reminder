@@ -1,6 +1,6 @@
 # Mindful — meditation & mindfulness reminder app
 
-An offline-capable web app (PWA) built from the First Steps guides. No account, no server: everything is stored on the phone. Source lives in `docs/` (plain HTML/JS, no build step).
+An offline-capable web app (PWA) built from a set of meditation and energy-work guides. No account, no server: everything is stored on the phone. Source lives in `docs/` (plain HTML/JS, no build step).
 
 ## Install on Android (recommended: the native app)
 1. On GitHub open **Releases → "Mindful (latest Android build)"** and download `mindful.apk` on your phone (built automatically by `.github/workflows/android.yml` on every push; first install asks to allow "install unknown apps" for your browser).
