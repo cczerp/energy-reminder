@@ -1,0 +1,7 @@
+{
+  "appId": "com.cczerp.mindful",
+  "appName": "Mindful",
+  "webDir": "docs",
+  "backgroundColor": "#1e1833",
+  "android": { "allowMixedContent": false }
+}

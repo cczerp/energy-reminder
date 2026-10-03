@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mindful</string>
+    <string name="title_activity_main">Mindful</string>
+    <string name="package_name">com.cczerp.mindful</string>
+    <string name="custom_url_scheme">com.cczerp.mindful</string>
+</resources>
