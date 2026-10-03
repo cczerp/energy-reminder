@@ -24,6 +24,9 @@ window.addEventListener('error', function (e) {
   if (v && !v.innerHTML.trim()) v.innerHTML = '<div style="padding:16px;color:#f2c94c;font-size:14px">Something went wrong starting the app.<br><br>' + String(e.message || e).replace(/</g, '&lt;') + '</div>';
 });
 </script>
+<script nomodule>
+document.getElementById('view').innerHTML = '<div style="padding:16px;color:#f2c94c;font-size:15px">This phone\'s web engine is too old to run Mindful.<br><br>Open the Play Store, search for "Android System WebView" and "Google Chrome", update both, then reopen Mindful.</div>';
+</script>
 <script src="capacitor.js"></script>
 <script type="module" src="app.js"></script>
 </body>

@@ -1,12 +1,14 @@
 import { CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, LEAVE_OK, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING } from './content.js';
 import * as native from './native.js';
+import { BUILD } from './build.js';
 
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
-const fresh = () => ({ rem: structuredClone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {} });
+const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
-const mergeRem = (r = {}) => { const d = structuredClone(REMIND_DEFAULTS); return { ...d, ...r, day: { ...d.day, ...r.day }, cat: Object.fromEntries(Object.entries(d.cat).map(([k, v]) => [k, { ...v, ...(r.cat || {})[k] }])), mind: { ...d.mind, ...r.mind }, leave: { ...d.leave, ...r.leave }, recall: { ...d.recall, ...r.recall } }; };
+const mergeRem = (r = {}) => { const d = clone(REMIND_DEFAULTS); return { ...d, ...r, day: { ...d.day, ...r.day }, cat: Object.fromEntries(Object.entries(d.cat).map(([k, v]) => [k, { ...v, ...(r.cat || {})[k] }])), mind: { ...d.mind, ...r.mind }, leave: { ...d.leave, ...r.leave }, recall: { ...d.recall, ...r.recall } }; };
 S.rem = mergeRem(S.rem);
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} changed(); };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -18,7 +20,7 @@ const when = (t) => new Date(t).toLocaleString(undefined, { month: 'short', day:
 
 const practiceDays = () => new Set([...S.sessions, ...S.recalls].map((x) => dayKey(x.ts)).concat(Object.keys(S.tally || {})));
 const tallyOf = (id, day = dayKey()) => (S.tally?.[day] || {})[id] || 0;
-function bump(id) { S.tally ||= {}; const t = (S.tally[dayKey()] ||= {}); t[id] = (t[id] || 0) + 1; save(); }
+function bump(id) { const k = dayKey(); if (!S.tally) S.tally = {}; if (!S.tally[k]) S.tally[k] = {}; S.tally[k][id] = (S.tally[k][id] || 0) + 1; save(); }
 function toast(t) {
   const el = document.createElement('div'); el.textContent = t;
   el.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#6fcf97;color:#1e1833;padding:10px 18px;border-radius:20px;font-weight:700;z-index:9';
@@ -188,7 +190,8 @@ function Today() {
   <h2>Today's goals</h2>
   ${rows || '<div class="dim">No reminders on. Turn some on in Settings.</div>'}
   ${S.rem.recall.on ? link('#recall', `<div class="dim sm">${fmtTime(S.rem.recall.h, S.rem.recall.m)} · Observation</div><b>${recalled ? '✓ ' : ''}Evening recall</b><div class="dim sm">Recall your first morning activity and log it</div>`) : ''}
-  <div class="row" style="margin-top:8px"><a class="btn ghost" href="#note">Quick note</a></div>`;
+  <div class="row" style="margin-top:8px"><a class="btn ghost" href="#note">Quick note</a></div>
+  <div class="dim sm center" style="margin-top:18px">Mindful · build ${esc(BUILD)}</div>`;
 }
 
 function Practice() {
@@ -334,7 +337,8 @@ function Settings() {
   <div class="dim sm">Everything is stored only on this phone.</div>
   <button class="btn" data-act="export">Export backup</button>
   <label class="btn ghost" style="cursor:pointer">Restore from backup file<input type="file" id="restore" accept=".json,application/json" hidden></label>
-  <div id="msg" class="good sm"></div>`;
+  <div id="msg" class="good sm"></div>
+  <div class="dim sm center" style="margin-top:18px">Mindful · build ${esc(BUILD)}</div>`;
 }
 
 /* ----- guided runner ----- */
