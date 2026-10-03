@@ -1,12 +1,14 @@
-import { CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND, REMIND_DEFAULTS, NUDGES, PING } from './content.js';
+import { CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, SPOT, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING } from './content.js';
+import * as native from './native.js';
 
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const fresh = () => ({ rem: structuredClone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [] });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
-S.rem = { ...structuredClone(REMIND_DEFAULTS), ...S.rem };
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+const mergeRem = (r = {}) => { const d = structuredClone(REMIND_DEFAULTS); return { ...d, ...r, day: { ...d.day, ...r.day }, ex: Object.fromEntries(Object.entries(d.ex).map(([k, v]) => [k, { ...v, ...(r.ex || {})[k] }])), mind: { ...d.mind, ...r.mind }, recall: { ...d.recall, ...r.recall } }; };
+S.rem = mergeRem(S.rem);
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} changed(); };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const dayKey = (t = Date.now()) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 const dayNum = (d = new Date()) => Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000);
@@ -24,32 +26,80 @@ function streak() {
 const isLocked = (ex) => (ex.needs || []).some((n) => !S.milestones[n]);
 
 /* ---------------- reminders ---------------- */
-// Deterministic occurrences for a given day, shared by the in-app scheduler and the calendar export.
-function occurrences(date) {
-  const out = []; const dn = dayNum(date);
-  for (const [id, r] of Object.entries(S.rem)) {
-    if (!r.on) continue;
-    if (id === 'recall') {
-      out.push({ id: 'recall', at: at(date, r.h, r.m), label: 'Evening recall', title: 'Evening recall', body: 'Recall your first activity this morning in as much detail as you can, then log it.', route: '#recall' });
-      continue;
-    }
-    for (let k = 0; k < r.n; k++) {
-      const t = r.s + ((r.e - r.s) * (k + 0.5)) / r.n; const h = Math.floor(t); const m = Math.round((t - h) * 60) % 60;
-      const def = REMIND[id];
-      if (def.pool.length) {
-        const ex = exById[def.pool[(dn + k) % def.pool.length]];
-        out.push({ id: `${id}${k}`, at: at(date, h, m), label: def.label, title: `${def.label}: ${ex.title}`, body: PING[ex.id] || ex.summary, route: `#ex/${ex.id}`, exId: ex.id });
-      } else {
-        out.push({ id: `${id}${k}`, at: at(date, h, m), label: def.label, title: 'Mindful moment', body: NUDGES[(dn * 17 + k * 7) % NUDGES.length], route: '#today' });
-      }
-    }
+// Deterministic occurrences for a given day, shared by the native scheduler, the in-app scheduler and the calendar export.
+function rng(seed) {
+  let h = 1779033703 ^ seed.length;
+  for (let i = 0; i < seed.length; i++) { h = Math.imul(h ^ seed.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^= h >>> 16) >>> 0) / 4294967296; };
+}
+const effMode = (id) => { const c = S.rem.ex[id]; return !SPOT.includes(id) ? 'scheduled' : c.mode === 'leave' && native.isNative && S.rem.home ? 'leave' : 'random'; };
+// minutes-after-midnight for n reminders of one thing on one day
+function minutesFor(id, n, random, date) {
+  const { s, e } = S.rem.day; const lo = s * 60, hi = e * 60, span = hi - lo;
+  const r = rng(`${dayKey(date.getTime())}|${id}`);
+  if (!random) { const phase = 0.15 + 0.7 * rng(id)(); return Array.from({ length: n }, (_, k) => Math.round(lo + (span * (k + phase)) / n)); }
+  const out = [];
+  for (let tries = 0; out.length < n && tries < 80; tries++) {
+    const m = Math.round(lo + r() * span);
+    if (tries > 60 || out.every((x) => Math.abs(x - m) >= Math.min(60, span / (n + 1)))) out.push(m);
   }
-  return out.sort((a, b) => a.at - b.at);
+  return out;
+}
+function occurrences(date) {
+  const out = [];
+  const rc = S.rem.recall;
+  if (rc.on) out.push({ id: 'recall', at: at(date, rc.h, rc.m), label: 'Evening recall', title: 'Evening recall', body: 'Recall your first activity this morning in as much detail as you can, then log it.', route: '#recall' });
+  for (const [id, c] of Object.entries(S.rem.ex)) {
+    if (!c.on) continue;
+    const mode = effMode(id); if (mode === 'leave') continue;
+    const ex = exById[id];
+    minutesFor(id, c.n, mode === 'random', date).forEach((m, k) =>
+      out.push({ id: `${id}${k}`, at: at(date, Math.floor(m / 60), m % 60), label: CAT_LABEL[id], title: `${CAT_LABEL[id]}: ${ex.title}`, body: PING[id] || ex.summary, route: `#ex/${id}`, exId: id }));
+  }
+  const mi = S.rem.mind;
+  if (mi.on) minutesFor('mind', mi.n, false, date).forEach((m, k) =>
+    out.push({ id: `mind${k}`, at: at(date, Math.floor(m / 60), m % 60), label: 'Mindfulness', title: 'Mindful moment', body: NUDGES[(dayNum(date) * 17 + k * 7) % NUDGES.length], route: '#today' }));
+  // keep reminders from stacking: nudge anything within 10 minutes of the previous one
+  out.sort((a, b) => a.at - b.at);
+  for (let i = 1; i < out.length; i++) if (out[i].at - out[i - 1].at < 10 * 60000 && out[i].id !== 'recall') out[i].at = new Date(out[i - 1].at.getTime() + 10 * 60000);
+  return out;
 }
 const at = (date, h, m) => { const d = new Date(date); d.setHours(h, m, 0, 0); return d; };
 
+let syncT;
+function changed() { clearTimeout(syncT); syncT = setTimeout(syncNative, 800); }
+async function syncNative() {
+  if (!native.isNative) return;
+  try {
+    if ((await native.permState()) !== 'granted') return;
+    const list = []; const now = new Date();
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(now); d.setDate(d.getDate() + i);
+      occurrences(d).filter((o) => o.at > now).forEach((o, k) => list.push({ id: (dayNum(d) % 1000) * 1000 + k, title: o.title, body: o.body, at: o.at, route: o.route }));
+    }
+    await native.scheduleAll(list);
+    const leaving = Object.entries(S.rem.ex).some(([id, c]) => c.on && effMode(id) === 'leave');
+    await native.watchLeave(leaving ? S.rem.home : null, onLeave);
+  } catch (e) { console.error('sync failed', e); }
+}
+// Fired when you step out of the home circle: remind each "when I leave home" exercise, up to its daily count.
+function onLeave() {
+  const day = dayKey(); let st = {}; try { st = JSON.parse(localStorage.getItem('mindful-leave') || '{}'); } catch (e) {}
+  if (st.day !== day) st = { day, cnt: {}, last: 0 };
+  const h = new Date().getHours() + new Date().getMinutes() / 60;
+  if (h < S.rem.day.s || h > S.rem.day.e || Date.now() - st.last < 20 * 60000) return;
+  let k = 0;
+  for (const [id, c] of Object.entries(S.rem.ex)) {
+    if (!c.on || effMode(id) !== 'leave' || (st.cnt[id] || 0) >= c.n) continue;
+    st.cnt[id] = (st.cnt[id] || 0) + 1; st.last = Date.now();
+    native.fireNow(900000 + Math.floor(Math.random() * 90000) + k++, `${CAT_LABEL[id]}: ${exById[id].title}`, PING[id] || exById[id].summary, `#ex/${id}`);
+  }
+  try { localStorage.setItem('mindful-leave', JSON.stringify(st)); } catch (e) {}
+}
+
 const firedKey = 'mindful-fired';
 function checkDue() {
+  if (native.isNative) return;
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   let fired = {}; try { fired = JSON.parse(localStorage.getItem(firedKey) || '{}'); } catch (e) {}
   const today = dayKey(); if (!fired[today]) fired = { [today]: [] };
@@ -115,6 +165,7 @@ function Today() {
     const d = o.exId ? done.has(o.exId) : o.id === 'recall' && recalled;
     return link(o.route, `<div class="dim sm">${fmtTime(o.at.getHours(), o.at.getMinutes())} · ${o.label}</div><div style="${o.at < now && !d ? 'opacity:.6' : ''}"><b>${d ? '✓ ' : ''}${esc(o.exId ? exById[o.exId].title : o.title)}</b></div><div class="dim sm">${esc(o.body)}</div>`);
   }).join('') || '<div class="dim">No reminders on. Turn some on in Settings.</div>'}
+  ${Object.entries(S.rem.ex).filter(([id, c]) => c.on && effMode(id) === 'leave').map(([id, c]) => link(`#ex/${id}`, `<div class="dim sm">When you leave home · ${CAT_LABEL[id]}</div><b>${esc(exById[id].title)}</b><div class="dim sm">Up to ${c.n}× a day</div>`)).join('')}
   <div class="row"><a class="btn ghost" href="#note">Quick note</a><a class="btn ghost" href="#recall">Evening recall</a></div>`;
 }
 
@@ -198,26 +249,39 @@ function RecallForm() {
 }
 
 /* ----- settings ----- */
+let permState = native.isNative ? 'default' : 'Notification' in window ? Notification.permission : 'unsupported';
+native.permState().then((p) => { if (native.isNative) { permState = p; } });
 function Settings() {
-  const perm = 'Notification' in window ? Notification.permission : 'unsupported';
-  const rows = Object.entries(REMIND).map(([id, def]) => {
-    const r = S.rem[id];
-    return card(`${check(r.on, `<b>${def.label}</b>`, `rem:${id}`, def.pool.length ? 'Prompts from the Mental Training guide' : 'Sayings, habits, and gentle reminders')}
-      ${r.on ? `<div class="dim sm" style="margin-top:6px">Times per day</div>${stepper(`n:${id}`, r.n)}
-      <div class="dim sm">From</div>${stepper(`s:${id}`, r.s, (v) => fmtTime(v))}
-      <div class="dim sm">Until</div>${stepper(`e:${id}`, r.e, (v) => fmtTime(v))}` : ''}`);
-  }).join('');
-  const rc = S.rem.recall;
+  const R = S.rem;
+  const groups = REMIND_GROUPS.map((g) => `<h2>${g.label}</h2>` + g.ids.map((id) => {
+    const c = R.ex[id];
+    return card(`${check(c.on, `<b>${esc(exById[id].title)}</b>`, `exon:${id}`)}
+      ${c.on ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`exn:${id}`, c.n)}
+      ${SPOT.includes(id) ? `<div class="dim sm" style="margin-top:8px">When</div><div class="chips">
+        <button class="chip ${c.mode !== 'leave' ? 'on' : ''}" data-act="mode:${id}:random">Random times</button>
+        <button class="chip ${c.mode === 'leave' ? 'on' : ''}" data-act="mode:${id}:leave">When I leave home</button></div>` : ''}` : ''}`);
+  }).join('')).join('');
+  const anyLeave = Object.values(R.ex).some((c) => c.on && c.mode === 'leave');
+  const home = anyLeave ? card(`<b>Leaving home</b>
+    <div class="dim sm">${!native.isNative ? 'Works in the Android app. Here it falls back to random times.' : R.home ? `Home is set. Reminders fire when you move ${R.home.r} m away.` : 'Set your home first — until then these use random times.'}</div>
+    ${native.isNative ? `<button class="btn ghost" data-act="sethome">${R.home ? 'Update' : 'Set'} home to my current location</button>
+    ${R.home ? `<div class="dim sm">Distance to count as "left"</div>${stepper('homer', R.home.r, (v) => v + ' m')}` : ''}
+    <div class="dim sm" style="margin-top:6px">Needs location set to "Allow all the time". A small notification shows while it watches. It uses some battery.</div>` : ''}`) : '';
   return `<h1>Settings</h1>
-  <h2>Reminders</h2>
-  ${perm === 'granted' ? '<div class="good sm">Notifications are on.</div>' : `<button class="btn" data-act="perm">Allow notifications</button>${perm === 'denied' ? '<div class="warn sm">Blocked — enable notifications for this site in Chrome settings.</div>' : ''}`}
-  <div class="dim sm" style="margin:6px 0">Notifications fire while the app is open or running in the background. For reminders that ring even when the app is closed, export them to your calendar below.</div>
-  ${rows}
-  ${card(`${check(rc.on, '<b>Evening recall</b>', 'rem:recall', 'Recall your first morning activity')}${rc.on ? `<div style="margin-top:6px">${stepper('rc', rc.h * 60 + rc.m, (v) => fmtTime(Math.floor(v / 60), v % 60))}</div>` : ''}`)}
+  <h2>Notifications</h2>
+  ${permState === 'granted' ? '<div class="good sm">Notifications are on.</div>' : `<button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked — enable notifications for this app in your phone settings.</div>' : ''}`}
+  ${native.isNative ? '' : '<div class="dim sm" style="margin:6px 0">This web version notifies while the app is open. The Android app rings on schedule even when closed.</div>'}
+  <h2>Reminder hours</h2>
+  ${card(`<div class="dim sm">From</div>${stepper('dayS', R.day.s, (v) => fmtTime(v))}<div class="dim sm" style="margin-top:6px">Until</div>${stepper('dayE', R.day.e, (v) => fmtTime(v))}`)}
+  ${groups}
+  ${home}
+  <h2>Mindfulness & recall</h2>
+  ${card(`${check(R.mind.on, '<b>Mindfulness sayings</b>', 'mindon', 'Habits, emotional techniques, gentle prompts')}${R.mind.on ? `<div class="dim sm" style="margin-top:6px">Per day</div>${stepper('mindn', R.mind.n)}` : ''}`)}
+  ${card(`${check(R.recall.on, '<b>Evening recall</b>', 'recallon', 'Once a night: recall your first morning activity')}${R.recall.on ? `<div style="margin-top:6px">${stepper('rc', R.recall.h * 60 + R.recall.m, (v) => fmtTime(Math.floor(v / 60), v % 60))}</div>` : ''}`)}
   <button class="btn ghost" data-act="test">Send a test notification</button>
-  <h2>Calendar reminders</h2>
-  <div class="dim sm">Creates a calendar file with the next 14 days of your reminders, each with an alarm. Open it to add them to your phone's calendar — they then ring even if the app is closed. Redo it every two weeks or after changing settings.</div>
-  <button class="btn" data-act="ics">Export reminders (.ics)</button>
+  ${native.isNative ? '' : `<h2>Calendar reminders</h2>
+  <div class="dim sm">Creates a calendar file with the next 14 days of reminders, each with an alarm.</div>
+  <button class="btn" data-act="ics">Export reminders (.ics)</button>`}
   <h2>Backup</h2>
   <div class="dim sm">Everything is stored only on this phone.</div>
   <button class="btn" data-act="export">Export backup</button>
@@ -344,9 +408,23 @@ document.addEventListener('click', async (e) => {
     case 'inc': case 'dec': { const d = act === 'inc' ? 1 : -1; stepTo(a, b, d); break; }
     case 'savenote': S.sessions.unshift({ id: uid(), ts: Date.now(), ex: form.ex, focus: form.focus || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
     case 'saverecall': S.recalls.unshift({ id: uid(), ts: Date.now(), details: form.details, accuracy: form.accuracy || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
-    case 'rem': S.rem[a].on = !S.rem[a].on; save(); repaintKeep(); break;
-    case 'perm': { const p = await Notification.requestPermission(); if (p === 'granted') checkDue(); repaintKeep(); break; }
+    case 'exon': S.rem.ex[a].on = !S.rem.ex[a].on; save(); repaintKeep(); break;
+    case 'mindon': S.rem.mind.on = !S.rem.mind.on; save(); repaintKeep(); break;
+    case 'recallon': S.rem.recall.on = !S.rem.recall.on; save(); repaintKeep(); break;
+    case 'mode': S.rem.ex[a].mode = b; save(); repaintKeep(); break;
+    case 'sethome': {
+      msg('Finding your location…');
+      try { const p = await native.currentPosition(); S.rem.home = { latitude: p.latitude, longitude: p.longitude, r: S.rem.home?.r || 150 }; save(); repaintKeep(); msg('Home set.'); }
+      catch (err) { msg('Could not get your location. Allow location "all the time" for this app and try again.'); }
+      break;
+    }
+    case 'perm': {
+      if (native.isNative) permState = (await native.ensurePerms()) ? 'granted' : 'denied';
+      else { permState = await Notification.requestPermission(); if (permState === 'granted') checkDue(); }
+      changed(); repaintKeep(); break;
+    }
     case 'test': {
+      if (native.isNative) { if (!(await native.ensurePerms())) return msg('Notifications are blocked.'); await native.fireNow(999999, 'Mindful moment', NUDGES[Math.floor(Math.random() * NUDGES.length)], '#today'); return msg('Coming in a moment.'); }
       if (!('Notification' in window)) return msg('This browser does not support notifications.');
       if (Notification.permission !== 'granted') await Notification.requestPermission();
       if (Notification.permission !== 'granted') return msg('Notifications are blocked.');
@@ -366,13 +444,15 @@ document.addEventListener('click', async (e) => {
   }
 });
 function stepTo(name, id, d) {
-  if (name === 'details') form.details = Math.max(0, Math.min(200, form.details + d));
-  else if (name === 'rc') { const v = Math.max(0, Math.min(1425, S.rem.recall.h * 60 + S.rem.recall.m + d * 15)); S.rem.recall.h = Math.floor(v / 60); S.rem.recall.m = v % 60; save(); }
+  const R = S.rem; const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  if (name === 'details') form.details = clamp(form.details + d, 0, 200);
   else {
-    const field = name, r = S.rem[id]; // name is n/s/e, id is the reminder id
-    if (field === 'n') r.n = Math.max(1, Math.min(12, r.n + d));
-    if (field === 's') r.s = Math.max(0, Math.min(r.e - 1, r.s + d));
-    if (field === 'e') r.e = Math.min(23, Math.max(r.s + 1, r.e + d));
+    if (name === 'rc') { const v = clamp(R.recall.h * 60 + R.recall.m + d * 15, 0, 1425); R.recall.h = Math.floor(v / 60); R.recall.m = v % 60; }
+    if (name === 'exn') R.ex[id].n = clamp(R.ex[id].n + d, 1, 6);
+    if (name === 'mindn') R.mind.n = clamp(R.mind.n + d, 1, 12);
+    if (name === 'dayS') R.day.s = clamp(R.day.s + d, 0, R.day.e - 1);
+    if (name === 'dayE') R.day.e = clamp(R.day.e + d, R.day.s + 1, 23);
+    if (name === 'homer') R.home.r = clamp(R.home.r + d * 50, 50, 1000);
     save();
   }
   repaintKeep();
@@ -391,10 +471,12 @@ async function restore(e) {
     const d = JSON.parse(await f.text());
     if (!Array.isArray(d.sessions) || !Array.isArray(d.recalls)) throw new Error();
     if (!confirm('Replace everything on this phone with this backup?')) return;
-    S = { ...fresh(), ...d }; S.rem = { ...structuredClone(REMIND_DEFAULTS), ...S.rem }; save(); paint(); msg('Backup restored.');
+    S = { ...fresh(), ...d }; S.rem = mergeRem(S.rem); save(); paint(); msg('Backup restored.');
   } catch (err) { msg('That does not look like a backup.'); }
 }
 
 /* ---------------- boot ---------------- */
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (!native.isNative && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+native.onTap((route) => { if (route) location.hash = route; });
+if (native.isNative) native.permState().then((p) => { permState = p; changed(); });
 paint(); checkDue();

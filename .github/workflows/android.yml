@@ -1,0 +1,40 @@
+name: Build Android app
+
+on:
+  push:
+    branches: [main, 'claude/**']
+    paths: ['docs/**', 'android/**', 'package*.json', 'capacitor.config.json', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - run: npm ci
+      - run: npx cap sync android
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - name: Name the APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk mindful.apk
+      - uses: actions/upload-artifact@v4
+        with: { name: mindful-apk, path: mindful.apk }
+      - name: Publish latest APK
+        uses: ncipollo/release-action@v1
+        with:
+          tag: latest-apk
+          name: Mindful (latest Android build)
+          body: Install `mindful.apk` on your Android phone. Built from ${{ github.sha }}.
+          artifacts: mindful.apk
+          allowUpdates: true
+          replacesArtifacts: true
+          prerelease: true
+          commit: ${{ github.sha }}

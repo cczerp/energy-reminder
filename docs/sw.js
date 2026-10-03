@@ -1,5 +1,5 @@
-const V = 'mindful-v1';
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'content.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+const V = 'mindful-v2';
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'content.js', 'native.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(V).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
