@@ -1,6 +1,7 @@
 // Thin layer over the Capacitor plugins. In a plain browser everything here is a harmless no-op.
 const cap = globalThis.Capacitor;
-export const isNative = !!cap?.isNativePlatform?.();
+// Needs Capacitor's runtime (capacitor.js) for registerPlugin; without it we simply behave like the web version.
+export const isNative = !!cap?.isNativePlatform?.() && typeof cap.registerPlugin === 'function';
 const LN = isNative ? cap.registerPlugin('LocalNotifications') : null;
 const BG = isNative ? cap.registerPlugin('BackgroundGeolocation') : null;
 
