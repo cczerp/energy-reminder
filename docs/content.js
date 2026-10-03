@@ -1,5 +1,6 @@
 // All guide content, converted from the First Steps guides.
-// A step is a string, or { t, secs } (timed), or { t, breath: { phases:[[label,secs]...], reps } }.
+// A step is a string, or { t, secs } (timed), { t, open:true } (count-up, move on when ready),
+// or { t, breath: { phases:[[label,secs]...], reps } }.
 
 export const CATS = {
   energy: 'Energy & healing',
@@ -9,6 +10,7 @@ export const CATS = {
   meditate: 'Meditation',
   emotion: 'Emotional control',
   centers: 'Psychic centers',
+  chakra: 'Chakra alignment',
   project: 'Projection',
 };
 
@@ -81,7 +83,25 @@ export const EXERCISES = [
       'Contact method: touch index + middle finger + thumb together on the left side of the patient\'s spine between the shoulder blades (heart center). Release energy through — an open valve to an unlimited supply. Hold a clear visualization 30–40 sec; if it clouds, remove your hand, wait ~5 min, repeat from the breathing step.',
       'Radiation method: same, but no touch — stand where you can see the patient and visually direct the energy to the spot. Works at a distance too.',
       'Rhythm: 3 treatments per session, sessions every 2–3 hrs → results in ~12 hrs, often a cure in 24. Unknown ailment: direct energy to the heart center (back, left of spine, between shoulder blades).',
-      'Quick headache relief (3–4 min): tips of first two right-hand fingers on the patient\'s left temple, index + middle of the left hand lightly on the right temple. Energy flows in through the right hand, out through the left.',
+    ],
+  },
+
+  {
+    id: 'heal-headache', cat: 'energy', title: 'Quick Headache Relief', mins: 4,
+    freq: 'When asked', summary: 'Energy in through the right hand, out through the left (3–4 min).',
+    caution: 'Wash hands before and after. Light fingertip contact only.',
+    steps: [
+      "Tips of the first two right-hand fingers on the patient's left temple; index + middle of the left hand lightly on the right temple.",
+      { t: 'Visualize energy flowing in through the right hand and out through the left.', secs: 180 },
+    ],
+  },
+  {
+    id: 'energy-habits', cat: 'energy', title: 'Supporting Habits', mins: 0,
+    freq: 'Daily', summary: 'The everyday habits that keep the energy reserve up.',
+    steps: [
+      "Watch diet and drink for what actually agrees with YOU, not what's habit or custom.",
+      'Daily mild exercise to keep the blood circulating.',
+      'Daily bathing / cleanliness.',
     ],
   },
 
@@ -218,28 +238,6 @@ export const EXERCISES = [
     freq: 'A full month, all day', summary: 'Let others go first — with a genuine smile.',
     steps: ['For a full month: let others go first — walking, driving (yield right of way, drive under the limit), entering/leaving rooms, planes, trains. Do it all with a genuine smile and a cheerful attitude.'],
   },
-  {
-    id: 'emo-redirect', cat: 'emotion', title: 'Redirect, Don\'t Suppress', mins: 0,
-    freq: 'Whenever an urge shows up', summary: 'Suppression always ends in an explosion.',
-    steps: [
-      'Do not block or negate a desire — redirect it. Craving rich dessert? Take fruit instead of nothing at all.',
-      'Every emotion has a higher and lower counterpart (love of self → love of others → love of all that lives; fear → trust and confidence). Examine the emotion as it comes up and shift it toward the higher form.',
-    ],
-  },
-  {
-    id: 'emo-fear', cat: 'emotion', title: 'Fear Self-Talk', mins: 1,
-    freq: 'When fear arises', summary: 'Use your mind, not your will.',
-    steps: ['Say to yourself: "What is there to fear? I am secure. This is not a new situation. I have faced it — or one like it — more than once without dire consequences. So why fear?"', 'Use the mind, not the will: forcing a feeling down is suppression, with the risk of an explosive outbreak later.'],
-  },
-  {
-    id: 'emo-borrowed', cat: 'emotion', title: 'Whose Emotion Is This?', mins: 1,
-    freq: 'Whenever a feeling arrives out of nowhere', summary: 'Tell your own emotions from everyone else\'s.',
-    steps: [
-      'Much of what you feel is picked up from people around you. The closer two bodies are, the stronger the transfer; distance weakens it.',
-      'Recognize a feeling as coming from outside you. Then step out of it — like stepping out of a shower, a cloak, or a room. Fully or partially, your call.',
-      'Only release emotions you want to release. A borrowed emotion that feels pleasant, you may keep. Restraint and judgment — not cold, just not carried along on someone else\'s wave.',
-    ],
-  },
 
   // ---------- Psychic centers ----------
   {
@@ -304,17 +302,6 @@ export const EXERCISES = [
       'Sound AUM three times, then arise and put all thought of the exercise out of your mind immediately.',
     ],
   },
-  {
-    id: 'c-chakra', cat: 'centers', title: 'Chakra Alignment (Dispenza)', mins: 20,
-    freq: 'In theta/alpha states', summary: 'Attention in each chakra\'s area, bottom to top, until it feels coherent.',
-    steps: [
-      'Focus on the outer body and the space around the body. Let the sense organs become aware of the space around them.',
-      'Narrow the focus outward, then move inward — feel the outer body, then the breath. Take all thoughts and let them go, returning to focus.',
-      'Precision is not required: get your attention into the general area of the chakra. Attention is the mechanism.',
-      'Start at the root. Hold attention there until it feels settled, aligned, coherent with the rest of the body. Then move up: sacral, solar plexus, heart, throat, third eye, crown. Each one takes less effort than the last.',
-      'Focus on the vastness of the quantum realm. Hold the feeling of wholeness.',
-    ],
-  },
 
   // ---------- Projection ----------
   {
@@ -348,72 +335,6 @@ export const EXERCISES = [
   },
 ];
 
-export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
-
-// Reminder slots (daily unless weekday is set). `pool` = exercise ids rotated by day on the Today screen.
-export const SLOTS = [
-  { id: 'wake', label: 'Morning energy', h: 7, m: 30, pool: ['energy-breath', 'child-sun'], title: 'Morning energy', body: 'Do the Energy-Building Breath. Then notice your first activity today — tonight you will recall it.' },
-  { id: 'conc', label: 'Concentration', h: 12, m: 30, pool: ['conc-multiply', 'conc-poem', 'conc-stranger'], title: 'Concentration', body: 'Time for today\'s concentration exercise.' },
-  { id: 'med', label: 'Meditation', h: 16, m: 0, pool: ['med-color', 'med-sound', 'med-cloud'], title: 'Meditation', body: 'Three minutes. Find a quiet chair.' },
-  { id: 'recall', label: 'Evening recall', h: 20, m: 30, pool: ['obs-recall'], title: 'Evening recall', body: 'Recall your first activity this morning in as much detail as you can, then log it.' },
-  { id: 'bed', label: 'Bedtime', h: 22, m: 0, pool: ['med-love', 'emo-borrowed'], title: 'Before bed', body: 'Close the day: send some love outward, and let go of any emotion that was not yours.' },
-  { id: 'heart', label: 'Heart Center (weekly)', h: 18, m: 0, weekday: 1, pool: ['c-heart'], title: 'Heart Center', body: 'Your weekly Heart Center exercise. Dim room, 15 minutes.' },
-];
-
-export const NUDGES = [
-  'Feel your feet on the floor. Where is your attention right now?',
-  'Take one deep breath. Let your shoulders drop.',
-  'Whose emotion is this — yours, or picked up from someone nearby?',
-  'Slow down. Let someone go first, and smile about it.',
-  'Check your posture: back straight, head erect, jaw loose.',
-  'Close your eyes for a second. Name everything in the room you can recall.',
-  'Notice the next thing you do automatically. Do it deliberately.',
-  'Is your thinking orderly right now? Push out any negative thought as soon as you notice it.',
-  'Send a quiet blessing to the next person you see.',
-  'Feeling a craving? Redirect it, do not fight it.',
-  'What is the quality of your breath at this moment — shallow or deep?',
-  'Listen: pick out one single sound and follow it for ten seconds.',
-  'Look at the next stranger\'s face. Look away, and hold it in your mind for a minute.',
-  'Fear check: what is there to fear? You have faced this before.',
-  'Notice something you usually miss about this place.',
-  'Put the phone down for one minute. Just be here.',
-  'Notice your first activity today — you will recall it tonight.',
-  'Is this the higher or lower counterpart of what you are feeling?',
-  'Rest your attention on your heart for three breaths.',
-  'Unclench your jaw and hands. Notice what they were doing.',
-  'Whatever you are doing, do it with your full attention for one minute.',
-  'Notice the space around your body. How far does it feel like it extends?',
-  'Count the steps next time you take the stairs.',
-  'A thought is pulling you away. Return to what you are doing.',
-  'Quiet the mind, not the feeling: observe it without being carried along.',
-  'Drink some water. Notice it.',
-  'Are you rushing? There is nothing here to rush for.',
-  'Soften your eyes. Take in the whole view at once.',
-];
-
-export const GAIN = [
-  { id: 'g-breath', label: 'Energy-Building Breath' },
-  { id: 'g-sun', label: 'Child of the Sun' },
-  { id: 'g-diet', label: 'Ate and drank what actually agrees with YOU (not habit or custom)' },
-  { id: 'g-move', label: 'Mild exercise to keep the blood circulating' },
-  { id: 'g-bath', label: 'Bathed / cleanliness' },
-  { id: 'g-med', label: 'Meditated (15+ min is the baseline in the Projection guide)' },
-  { id: 'g-redirect', label: 'Redirected an urge instead of suppressing it' },
-  { id: 'g-think', label: 'Kept thinking orderly and positive; sent a blessing outward' },
-];
-
-export const DRAINS = [
-  { t: 'Suppressing desire or emotion', d: 'Suppression always ends in an explosion. Redirect it instead.' },
-  { t: 'Lower emotions', d: 'Jealousy, suspicion and fear lower your vibratory state — in projection they break it instantly.' },
-  { t: "Absorbing other people's emotions", d: 'Closer bodies transfer more. Ask "whose emotion is this?" and step out of it.' },
-  { t: 'Chaotic or distorted thinking', d: 'Think in an orderly, logical, precise way. Watch prejudice and its consequences.' },
-  { t: 'Using the will to force a feeling down', d: 'Use the mind (self-talk), not the will.' },
-  { t: 'Practicing exhausted, right after eating, or ill', d: 'Blood needs to be in the brain; illness and imbalance spoil the work.' },
-  { t: 'Alcohol before projection', d: 'None for at least 48 hours before an etheric projection attempt.' },
-  { t: 'Frivolous or selfish motives', d: 'Your subconscious will not permit success. Set a worthwhile objective.' },
-  { t: 'Rushing the center sequence', d: 'Heart before throat or head; pituitary before pineal. Jumping ahead does no good.' },
-];
-
 export const CHAKRAS = [
   { n: 1, name: 'Earth', sk: 'Muladhara (Root)', seed: 'LAM', loc: 'Base of the spine', block: 'Fear', gland: 'Adrenal glands', note: 'Reproductive/root center — activating, creative energy; comfort, food, feeling safe.' },
   { n: 2, name: 'Water', sk: 'Svadhisthana (Sacral)', seed: 'VAM', loc: 'Sacrum / lower abdomen', block: 'Guilt', gland: 'Gonads', note: 'Consumption, metabolism, homeostasis. If you feel unsafe, energy moves up and out rather than settling here.' },
@@ -442,4 +363,98 @@ export const CYCLES = {
       bad: ['Men or women trying to deal with women', 'Arguments and strife in general — the outcome is apt to be bad'],
     },
   ],
+};
+
+// Chakra alignment walkthrough (Dispenza method). Deliberately ends on its own — it never chains into the Combined Attunement.
+EXERCISES.push({
+  id: 'c-chakra', cat: 'chakra', title: 'Chakra Alignment Walkthrough', mins: 20,
+  freq: 'In a calm theta/alpha state', summary: "Attention in each chakra's area, root to crown, until it feels coherent. Works on its own; it is not part of the attunement.",
+  steps: [
+    'Focus on the outer body and the space around the body. Let the sense organs become aware of the space around them.',
+    'Narrow the focus outward, then move inward — feel the outer body, then the breath. Take all thoughts and let them go, returning to focus.',
+    'Precision is not required: get your attention into the general area of each chakra. Attention is the mechanism. Hold it there until that center feels settled, aligned, coherent with the rest of your body — then move up.',
+    ...CHAKRAS.map((c) => ({
+      t: `${c.n}. ${c.name} — ${c.sk}\nLocation: ${c.loc}.  Seed sound: ${c.seed}.\nBring your attention into this area and hold it until it feels coherent with the rest of your body.${c.n > 1 ? ' Each one takes less effort than the last.' : ''}`,
+      open: true,
+    })),
+    'Focus on the vastness of the quantum realm. Hold the feeling of wholeness. Then let it go — you are finished.',
+  ],
+});
+
+export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
+
+// ---------- Reminders ----------
+// Each type: how many per day, inside which hours. Pools are exercise ids from the Mental Training guide.
+export const REMIND = {
+  obs: { label: 'Observation', pool: ['obs-room', 'obs-stairs'] },
+  conc: { label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
+  med: { label: 'Meditation', pool: ['med-color', 'med-sound', 'med-cloud'] },
+  emo: { label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow'] },
+  mind: { label: 'Mindfulness', pool: [] },
+};
+export const REMIND_DEFAULTS = {
+  obs: { on: true, n: 2, s: 9, e: 18 },
+  conc: { on: true, n: 1, s: 12, e: 14 },
+  med: { on: true, n: 1, s: 15, e: 17 },
+  emo: { on: true, n: 1, s: 10, e: 16 },
+  mind: { on: true, n: 4, s: 9, e: 20 },
+  recall: { on: true, h: 20, m: 30 },
+};
+
+// Mindfulness sayings: habit notes, emotional-mastery techniques, supporting habits, and energy do's/don'ts.
+export const NUDGES = [
+  // mental habit notes
+  'Think in an orderly, logical, precise way. Push out a negative thought as soon as you notice it.',
+  'Watch for distorted thinking and prejudice. Notice what it does to you.',
+  'Adopt a positive attitude. Send a quiet blessing outward — your own projects grow through it.',
+  // emotional mastery
+  'Feeling a craving? Do not fight it — redirect it. Take the better thing instead of nothing.',
+  'Every emotion has a higher and a lower side. Which one is this? Shift toward the higher.',
+  'Fear: what is there to fear? You are secure. You have faced this before. Use your mind, not your will.',
+  'Whose emotion is this — yours, or picked up from someone nearby?',
+  'A borrowed feeling: step out of it, like stepping out of a room. Keep it only if you want it.',
+  'Do not just block a feeling down. Suppression ends in an explosion; redirection does not.',
+  'Closer bodies share more emotion. Give yourself some distance if you need it.',
+  // supporting habits and do/don't
+  'Eat and drink what actually agrees with YOU, not what is habit or custom.',
+  'A little mild exercise keeps the blood circulating. Stand up and move.',
+  'Clean and refreshed: a bath or shower washes away worries too.',
+  'Jealousy, suspicion, fear: lower emotions lower your energy. Notice, and let them go.',
+  'Do not rush the sequence of your practice. Heart before throat or head.',
+  'Take a breath in, hold, and let it go slowly. Store a little energy.',
+  'Picture the sun for a moment. Let its energy flow through you.',
+  'Is your motive worthwhile and unselfish? Check it before you begin anything important.',
+  // everyday mindfulness
+  'Feel your feet on the floor. Where is your attention right now?',
+  'Take one deep breath. Let your shoulders drop.',
+  'Slow down. Let someone go first, and smile about it.',
+  'Check your posture: back straight, head erect, jaw loose.',
+  'Notice the next thing you do automatically. Do it deliberately.',
+  'What is the quality of your breath right now — shallow or deep?',
+  'Listen: pick out one single sound and follow it for ten seconds.',
+  'Notice something you usually miss about this place.',
+  'Put the phone down for one minute. Just be here.',
+  'Notice your first activity today — tonight you will recall it.',
+  'Rest your attention on your heart for three breaths.',
+  'Unclench your jaw and hands. Notice what they were doing.',
+  'Whatever you are doing, give it your full attention for one minute.',
+  'Notice the space around your body. How far does it feel like it extends?',
+  'A thought is pulling you away. Return to what you are doing.',
+  'Are you rushing? There is nothing here to rush for.',
+  'Soften your eyes. Take in the whole view at once.',
+];
+
+// Short text for reminder notifications.
+export const PING = {
+  'obs-room': 'Close your eyes a second and name every object in this room you can recall.',
+  'obs-stairs': 'Next flight of stairs: count the steps, then recall the number.',
+  'conc-multiply': 'Multiply two 2-digit numbers in your head. Then two 3-digit ones.',
+  'conc-poem': 'Memorize 4 lines of a poem and recite them.',
+  'conc-stranger': 'Next stranger you pass: study the face, look away, hold it in your mind for a minute.',
+  'med-color': 'Three minutes: blue, pink, white — one minute each.',
+  'med-sound': 'Three minutes: violin, horn or sax, piano — one minute each.',
+  'med-cloud': 'One minute wrapped in a pink cloud.',
+  'emo-matches': 'Matchbox drill: mix the matches, then box them all tips the same way.',
+  'emo-tv': 'Attention drill: TV on, picture off. Tune out the picture.',
+  'emo-slow': 'Slowing-down practice: let others go first, with a genuine smile.',
 };
