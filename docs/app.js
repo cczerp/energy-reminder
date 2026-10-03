@@ -201,7 +201,8 @@ function Practice() {
   ${card(`<div class="dim sm">Sequence matters: Heart → Pituitary → Pineal → Throat → Attunement. Tick each when it applies.</div>${ms}`)}
   ${groups}
   <h2>Reference</h2>
-  ${link('#cycles', '<b>Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>')}`;
+  ${link('#cycles', '<b>Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>')}
+  ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
 }
 
 function Exercise(id) {
@@ -219,6 +220,19 @@ function Exercise(id) {
 function Chakras() {
   return `${back()}<h1>Chakras</h1><p class="dim">${esc(CHAKRA_INTRO)}</p>` + CHAKRAS.map((c) => card(`<b>${c.n}. ${c.name} — ${esc(c.sk)}</b>
   <div class="sm">Seed sound: ${esc(c.seed)}</div><div class="sm">Location: ${esc(c.loc)}</div><div class="sm">Blocked by: ${esc(c.block)}</div><div class="sm">Gland: ${esc(c.gland)}</div><div class="dim sm" style="margin-top:4px">${esc(c.note)}</div>`)).join('');
+}
+function About() {
+  return `${back('#practice')}<h1>Credits</h1>
+  <p>No one person created what is in this app. These practices are shared human knowledge, taught and agreed upon across many teachers, texts, and traditions over a very long time. This app is only a way to remember to use them.</p>
+  <p>With gratitude to:</p>
+  <ul>
+    <li><b>Joe Dispenza</b> — chakra attention and coherence work</li>
+    <li><b>Guru Pathik</b>, in <i>Avatar: The Last Airbender</i> — the chakra lesson</li>
+    <li><b>First Steps to the Control of Your Destiny</b> — the mental training, meditation, healing, projection, and cycles teachings</li>
+    <li>The yogic, tantric, and Rosicrucian traditions all of the above draw on</li>
+    <li>Every teacher, student, and practitioner who passed these on</li>
+  </ul>
+  <p class="dim sm">This app supports a practice. It is not medical care, and it does not replace a counselor or doctor.</p>`;
 }
 function Cycles() {
   return `${back()}<h1>Life cycles</h1><p class="dim">${esc(CYCLES.note)}</p>` + CYCLES.periods.map((p) => card(`<b>${esc(p.name)}</b><div class="dim sm">${esc(p.intro)}</div>
@@ -410,12 +424,13 @@ function paint() {
     case 'recall': h = RecallForm(); break;
     case 'chakras': h = Chakras(); break;
     case 'cycles': h = Cycles(); break;
+    case 'about': h = About(); break;
     case 'settings': h = Settings(); break;
     default: h = Today();
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'log', 'settings'].includes(route) ? route : route === 'ex' || route === 'chakras' || route === 'cycles' || route === 'guide' ? 'practice' : 'log';
+  const tab = ['today', 'practice', 'log', 'settings'].includes(route) ? route : route === 'ex' || route === 'chakras' || route === 'cycles' || route === 'about' || route === 'guide' ? 'practice' : 'log';
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   window.scrollTo(0, 0);
