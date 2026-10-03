@@ -244,6 +244,19 @@ export const EXERCISES = [
     ],
   },
   {
+    id: 'funk-reset', cat: 'emotion', title: 'Funk Reset (about 1 minute)', mins: 1,
+    freq: 'Any time you are stuck in a negative loop',
+    summary: 'A quick sequence of tools to step out of a funk. Pick what works and drop the rest.',
+    steps: [
+      { t: 'Slow your body first. Breathe in 4, hold 2, out 6.', breath: { phases: [['Breathe in', 4], ['Hold', 2], ['Out slowly', 6]], reps: 4 } },
+      'Look around. Name 5 things you can see, 4 you can hear, 3 you can feel. Go slowly.',
+      'Is this feeling yours, or picked up from someone or something nearby? If it is borrowed, step out of it like stepping out of a room.',
+      'Redirect, do not fight it. Choose one small thing to do right now: stand up, drink water, step outside, walk into another room.',
+      'Fear check: What is there to fear? I am secure. I have faced this before. Use your mind, not your will.',
+      { t: 'Put on one of your songs and let it do its work.', music: true },
+    ],
+  },
+  {
     id: 'emo-slow', cat: 'emotion', title: 'Deliberate Slowing-Down', mins: 0,
     freq: 'A full month, all day', summary: 'Let others go first — with a genuine smile.',
     steps: ['For a full month: let others go first — walking, driving (yield right of way, drive under the limit), entering/leaving rooms, planes, trains. Do it all with a genuine smile and a cheerful attitude.'],
@@ -397,33 +410,27 @@ export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 // Every exercise below has its own on/off and times-per-day. The three "out in the world" exercises
 // (SPOT) can also fire at random times or when you leave home.
 export const REMIND_GROUPS = [
-  { cat: 'observe', label: 'Observation', ids: ['obs-room', 'obs-stairs'] },
-  { cat: 'concentrate', label: 'Concentration', ids: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
-  { cat: 'meditate', label: 'Meditation', ids: ['med-sit', 'med-color', 'med-sound', 'med-cloud'] },
-  { cat: 'emotion', label: 'Emotional control', ids: ['emo-matches', 'emo-tv', 'emo-slow'] },
+  { id: 'obs', cat: 'observe', label: 'Observation', ids: ['obs-room', 'obs-stairs'] },
+  { id: 'conc', cat: 'concentrate', label: 'Concentration', ids: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
+  { id: 'med', cat: 'meditate', label: 'Meditation', ids: ['med-sit', 'med-color', 'med-sound', 'med-cloud'] },
+  { id: 'emo', cat: 'emotion', label: 'Emotional control', ids: ['emo-matches', 'emo-tv', 'emo-slow'] },
 ];
-export const SPOT = ['obs-room', 'obs-stairs', 'conc-stranger'];
+export const LEAVE_OK = ['obs', 'conc']; // categories that may fire "when I leave home"
 export const CAT_LABEL = Object.fromEntries(REMIND_GROUPS.flatMap((g) => g.ids.map((id) => [id, g.label])));
+// One goal per category per day. Any exercise in the category completes it, and completing it silences that category's later reminders.
 export const REMIND_DEFAULTS = {
-  day: { s: 9, e: 20 }, // hours scheduled and random reminders may appear
+  day: { s: 7, e: 22 }, // hours random reminders and sayings may appear
   leave: { s: 6, e: 24 }, // hours "when I leave home" reminders may appear
-  ex: {
-    'obs-room': { on: true, n: 1, mode: 'random' },
-    'obs-stairs': { on: true, n: 1, mode: 'random' },
-    'conc-multiply': { on: true, n: 1 },
-    'conc-poem': { on: true, n: 1 },
-    'conc-stranger': { on: true, n: 1, mode: 'leave' },
-    'med-sit': { on: true, n: 1 },
-    'med-color': { on: true, n: 2 },
-    'med-sound': { on: true, n: 2 },
-    'med-cloud': { on: true, n: 2 },
-    'emo-matches': { on: true, n: 1 },
-    'emo-tv': { on: true, n: 1 },
-    'emo-slow': { on: false, n: 1 },
+  cat: {
+    obs: { on: true, ex: ['obs-room', 'obs-stairs'], timing: 'random', h: 12, m: 0 },
+    conc: { on: true, ex: ['conc-multiply', 'conc-poem', 'conc-stranger'], timing: 'leave', h: 13, m: 0 },
+    med: { on: true, ex: ['med-sit', 'med-color', 'med-sound', 'med-cloud'], timing: 'time', h: 8, m: 0 },
+    emo: { on: true, ex: ['emo-matches', 'emo-tv'], timing: 'random', h: 15, m: 0 },
   },
-  mind: { on: true, n: 4 },
+  mind: { on: true, n: 5 },
   recall: { on: true, h: 20, m: 30 }, // evening recall: once a day, at night
   home: null, // { latitude, longitude, r } for "when I leave home"
+  playlist: '', // link to the funk playlist
 };
 
 // Mindfulness sayings: habit notes, emotional-mastery techniques, supporting habits, and energy do's/don'ts.
@@ -450,6 +457,7 @@ export const NUDGES = [
   'Picture the sun for a moment. Let its energy flow through you.',
   'Is your motive worthwhile and unselfish? Check it before you begin anything important.',
   // everyday mindfulness
+  'Put on one of your songs. Let it do its work.',
   'Feel your feet on the floor. Where is your attention right now?',
   'Take one deep breath. Let your shoulders drop.',
   'Slow down. Let someone go first, and smile about it.',
@@ -472,8 +480,8 @@ export const NUDGES = [
 // Short text for reminder notifications.
 export const PING = {
   'med-sit': 'Sit for 5–10 minutes and meditate in whatever way you choose. Your daily baseline.',
-  'obs-room': 'Close your eyes a second and name every object in this room you can recall.',
-  'obs-stairs': 'Next flight of stairs: count the steps, then recall the number.',
+  'obs-room': 'Walk into another room. Close your eyes for a second and name every object you can recall.',
+  'obs-stairs': 'Next time you take any steps, count them, then recall the number.',
   'conc-multiply': 'Multiply two 2-digit numbers in your head. Then two 3-digit ones.',
   'conc-poem': 'Memorize 4 lines of a poem and recite them.',
   'conc-stranger': 'Next stranger you pass: study the face, look away, hold it in your mind for a minute.',
