@@ -21,7 +21,7 @@ const tallyOf = (id, day = dayKey()) => (S.tally?.[day] || {})[id] || 0;
 function bump(id) { S.tally ||= {}; const t = (S.tally[dayKey()] ||= {}); t[id] = (t[id] || 0) + 1; save(); }
 function toast(t) {
   const el = document.createElement('div'); el.textContent = t;
-  el.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#6fcf97;color:#12141c;padding:10px 18px;border-radius:20px;font-weight:700;z-index:9';
+  el.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#6fcf97;color:#1e1833;padding:10px 18px;border-radius:20px;font-weight:700;z-index:9';
   document.body.appendChild(el); setTimeout(() => el.remove(), 2200);
 }
 function streak() {
@@ -228,7 +228,7 @@ function About() {
   <ul>
     <li><b>Joe Dispenza</b> — chakra attention and coherence work</li>
     <li><b>Guru Pathik</b>, in <i>Avatar: The Last Airbender</i> — the chakra lesson</li>
-    <li><b>First Steps to the Control of Your Destiny</b> — the mental training, meditation, healing, projection, and cycles teachings</li>
+    <li><b>Wisdom of the Mystic Masters</b> — the mental training, meditation, healing, projection, and cycles teachings</li>
     <li>The yogic, tantric, and Rosicrucian traditions all of the above draw on</li>
     <li>Every teacher, student, and practitioner who passed these on</li>
   </ul>
