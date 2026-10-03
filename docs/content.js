@@ -384,21 +384,34 @@ EXERCISES.push({
 export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 
 // ---------- Reminders ----------
-// Each type: how many per day, inside which hours. Pools are exercise ids from the Mental Training guide.
-export const REMIND = {
-  obs: { label: 'Observation', pool: ['obs-room', 'obs-stairs'] },
-  conc: { label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
-  med: { label: 'Meditation', pool: ['med-color', 'med-sound', 'med-cloud'] },
-  emo: { label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow'] },
-  mind: { label: 'Mindfulness', pool: [] },
-};
+// Every exercise below has its own on/off and times-per-day. The three "out in the world" exercises
+// (SPOT) can also fire at random times or when you leave home.
+export const REMIND_GROUPS = [
+  { cat: 'observe', label: 'Observation', ids: ['obs-room', 'obs-stairs'] },
+  { cat: 'concentrate', label: 'Concentration', ids: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
+  { cat: 'meditate', label: 'Meditation', ids: ['med-color', 'med-sound', 'med-cloud'] },
+  { cat: 'emotion', label: 'Emotional control', ids: ['emo-matches', 'emo-tv', 'emo-slow'] },
+];
+export const SPOT = ['obs-room', 'obs-stairs', 'conc-stranger'];
+export const CAT_LABEL = Object.fromEntries(REMIND_GROUPS.flatMap((g) => g.ids.map((id) => [id, g.label])));
 export const REMIND_DEFAULTS = {
-  obs: { on: true, n: 2, s: 9, e: 18 },
-  conc: { on: true, n: 1, s: 12, e: 14 },
-  med: { on: true, n: 1, s: 15, e: 17 },
-  emo: { on: true, n: 1, s: 10, e: 16 },
-  mind: { on: true, n: 4, s: 9, e: 20 },
-  recall: { on: true, h: 20, m: 30 },
+  day: { s: 9, e: 20 }, // hours reminders may appear
+  ex: {
+    'obs-room': { on: true, n: 1, mode: 'random' },
+    'obs-stairs': { on: true, n: 1, mode: 'random' },
+    'conc-multiply': { on: true, n: 1 },
+    'conc-poem': { on: true, n: 1 },
+    'conc-stranger': { on: false, n: 1, mode: 'random' },
+    'med-color': { on: true, n: 1 },
+    'med-sound': { on: true, n: 1 },
+    'med-cloud': { on: false, n: 1 },
+    'emo-matches': { on: true, n: 1 },
+    'emo-tv': { on: true, n: 1 },
+    'emo-slow': { on: false, n: 1 },
+  },
+  mind: { on: true, n: 4 },
+  recall: { on: true, h: 20, m: 30 }, // evening recall: once a day, at night
+  home: null, // { latitude, longitude, r } for "when I leave home"
 };
 
 // Mindfulness sayings: habit notes, emotional-mastery techniques, supporting habits, and energy do's/don'ts.
