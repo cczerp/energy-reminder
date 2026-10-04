@@ -410,25 +410,27 @@ export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 // Every exercise below has its own on/off and times-per-day. The three "out in the world" exercises
 // (SPOT) can also fire at random times or when you leave home.
 export const REMIND_GROUPS = [
-  { id: 'obs', cat: 'observe', label: 'Observation', ids: ['obs-room', 'obs-stairs'] },
-  { id: 'conc', cat: 'concentrate', label: 'Concentration', ids: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
-  { id: 'med', cat: 'meditate', label: 'Meditation', ids: ['med-sit', 'med-color', 'med-sound', 'med-cloud'] },
-  { id: 'emo', cat: 'emotion', label: 'Emotional control', ids: ['emo-matches', 'emo-tv', 'emo-slow'] },
+  // pool = exercises a timed reminder can ask for; leave = optional exercises that only fire when you leave home; ids = everything in the category
+  { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], ids: ['obs-room', 'obs-stairs'] },
+  { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
+  { id: 'med', cat: 'meditate', label: 'Meditation', pool: ['med-sit', 'med-color', 'med-sound', 'med-cloud'], leave: [], ids: ['med-sit', 'med-color', 'med-sound', 'med-cloud'] },
+  { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow'] },
 ];
-export const LEAVE_OK = ['obs', 'conc']; // categories that may fire "when I leave home"
 export const CAT_LABEL = Object.fromEntries(REMIND_GROUPS.flatMap((g) => g.ids.map((id) => [id, g.label])));
-// One goal per category per day. Any exercise in the category completes it, and completing it silences that category's later reminders.
+// n = reminders per day = completions that meet the day's goal. timing: 'set' (times you pick) | 'even' (spread through the day) | 'random'.
+// choose: when a reminder rings and several exercises are selected, let you pick (otherwise it picks one for you).
 export const REMIND_DEFAULTS = {
-  day: { s: 7, e: 22 }, // hours random reminders and sayings may appear
+  day: { s: 7, e: 22 }, // hours random/even reminders and sayings may appear
   leave: { s: 6, e: 24 }, // hours "when I leave home" reminders may appear
   cat: {
-    obs: { on: true, ex: ['obs-room', 'obs-stairs'], timing: 'random', h: 12, m: 0 },
-    conc: { on: true, ex: ['conc-multiply', 'conc-poem', 'conc-stranger'], timing: 'leave', h: 13, m: 0 },
-    med: { on: true, ex: ['med-sit', 'med-color', 'med-sound', 'med-cloud'], timing: 'time', h: 8, m: 0 },
-    emo: { on: true, ex: ['emo-matches', 'emo-tv'], timing: 'random', h: 15, m: 0 },
+    obs: { on: true, ex: ['obs-room'], n: 1, timing: 'random', times: [720], choose: true },
+    conc: { on: true, ex: ['conc-multiply', 'conc-poem'], n: 1, timing: 'even', times: [780], choose: true },
+    med: { on: true, ex: ['med-sit', 'med-color', 'med-sound', 'med-cloud'], n: 1, timing: 'set', times: [480], choose: true },
+    emo: { on: true, ex: ['emo-matches', 'emo-tv'], n: 1, timing: 'random', times: [900], choose: true },
   },
+  leaveItems: { 'obs-stairs': true, 'conc-stranger': true }, // fire only when you leave home
   mind: { on: true, n: 5 },
-  recall: { on: true, h: 20, m: 30 }, // evening recall: once a day, at night
+  recall: { on: true, h: 20, m: 30 }, // evening recall (part of Observation): once a night at its own time
   home: null, // { latitude, longitude, r } for "when I leave home"
   playlist: '', // link to the funk playlist
 };
