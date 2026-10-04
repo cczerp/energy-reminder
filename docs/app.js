@@ -18,6 +18,7 @@ const mergeRem = (r = {}) => {
     c.timing = c.timing === 'time' ? 'set' : ['set', 'even', 'random'].includes(c.timing) ? c.timing : base.timing;
     c.ex = (c.ex || []).filter((x) => g.pool.includes(x)); if (!c.ex.length) c.ex = base.ex.slice();
     c.n = Math.max(1, Math.min(4, parseInt(c.n, 10) || 1));
+    c.goal = Math.max(1, Math.min(4, parseInt(o.goal, 10) || parseInt(o.n, 10) || 1)); // older saves used one number for both
     if (!Array.isArray(o.times) || !o.times.length) c.times = typeof o.h === 'number' ? [o.h * 60 + (o.m || 0)] : base.times.slice(); // older saves stored one h/m
     const pad = evenMins(c.n); while (c.times.length < c.n) c.times.push(pad[c.times.length]);
     c.times = c.times.slice(0, c.n); c.choose = c.choose !== false; delete c.h; delete c.m;
@@ -60,7 +61,7 @@ function rng(seed) {
 const group = (id) => REMIND_GROUPS.find((g) => g.id === id);
 // completions today in a category's timed exercises (leave-home items keep their own tally)
 const catCount = (gid, day = dayKey()) => group(gid).pool.reduce((a, id) => a + tallyOf(id, day), 0);
-const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].n;
+const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].goal;
 const canLeave = () => native.isNative && !!S.rem.home;
 const choosing = (gid) => S.rem.cat[gid].choose && S.rem.cat[gid].ex.length > 1;
 // the exercise a reminder names when it is not asking you to choose (rotates through the ones you picked)
@@ -206,7 +207,7 @@ function Today() {
   const next = {}; occurrences(now).forEach((o) => { if (o.cat && o.id !== 'recall' && o.at > now && !next[o.cat]) next[o.cat] = o.at; });
   const rows = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on).map((g) => {
     const c = S.rem.cat[g.id]; const cnt = catCount(g.id);
-    const status = cnt >= c.n ? `goal met · ${cnt} of ${c.n}` : `${cnt} of ${c.n} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
+    const status = cnt >= c.goal ? `goal met · ${cnt} of ${c.goal}` : `${cnt} of ${c.goal} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
     let body;
     if (choosing(g.id)) body = '<div class="dim sm" style="margin-top:6px">Pick one:</div>' + c.ex.map(exRow).join('');
     else {
@@ -218,7 +219,8 @@ function Today() {
       `<div class="dim sm" style="margin-top:12px">When you leave home${native.isNative && !S.rem.home ? ' · <a href="#settings" style="color:var(--accent)">set your home in Settings</a>' : ''}</div>${exRow(id)}`).join('');
     const recall = g.id === 'obs' && S.rem.recall.on
       ? `<div class="dim sm" style="margin-top:12px">Tonight · ${fmtTime(S.rem.recall.h, S.rem.recall.m)}</div><a href="#recall" style="color:inherit;text-decoration:none"><b>${recalled ? '✓ ' : ''}Evening recall</b></a><div class="dim sm">Recall your first morning activity and log it</div>` : '';
-    return card(`<div class="dim sm">${g.label} · ${status}</div>${body}${leave}${recall}`);
+    const goalRow = `<div class="row" style="margin-top:10px;justify-content:space-between"><span class="dim sm" style="flex:2">Daily goal</span><span style="flex:3;text-align:right">${stepper(`cg:${g.id}`, c.goal)}</span></div>`;
+    return card(`<div class="dim sm">${g.label} · ${status}</div>${body}${goalRow}${leave}${recall}`);
   }).join('');
   return `<div class="dim">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
   <h1>${n ? `${n}-day streak` : 'Begin today'}</h1>
@@ -234,7 +236,7 @@ function Today() {
 function Choose(gid) {
   const g = group(gid); if (!g) return back('#today') + '<p>Not found.</p>';
   const c = S.rem.cat[gid];
-  return `${back('#today')}<h1>${g.label}</h1><div class="dim">${catCount(gid)} of ${c.n} today. Pick one:</div>` +
+  return `${back('#today')}<h1>${g.label}</h1><div class="dim">${catCount(gid)} of ${c.goal} today. Pick one:</div>` +
     c.ex.map((id) => card(`<a href="#ex/${id}" style="color:inherit;text-decoration:none"><b>${esc(exById[id].title)}</b></a><div class="dim sm">${esc(exById[id].summary)}</div>
       <div class="row" style="margin-top:8px"><a class="btn ghost" href="#ex/${id}">Rules</a><a class="btn" href="#guide/${id}">Start</a><button class="btn ghost" data-act="done:${id}">✓ Done</button></div>`)).join('');
 }
@@ -343,10 +345,11 @@ function Settings() {
     const c = R.cat[g.id];
     const leaveRows = g.leave.map((id) => check(!!R.leaveItems[id], `<b>${esc(exById[id].title)}</b> — remind me when I leave home`, `lv:${id}`, id === 'obs-stairs' ? 'Only rings as you head out. Count the steps you take.' : 'Only rings as you head out.')).join('');
     const nightly = g.id === 'obs' ? `${check(R.recall.on, '<b>Evening Recall</b> — nightly, at its own time', 'recallon', 'Recall your first morning activity. Separate from the reminders above.')}${R.recall.on ? `<div style="margin:0 0 6px 36px">${stepper('rc', R.recall.h * 60 + R.recall.m, fmtMin)}</div>` : ''}` : '';
-    return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, `${c.n} a day. Do ${c.n === 1 ? 'one' : c.n} to meet the goal.`)}
+    return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day`)}
       ${c.on ? `<div class="dim sm" style="margin-top:6px">Exercises</div>
       <div class="chips">${g.pool.map((x) => `<button class="chip ${c.ex.includes(x) ? 'on' : ''}" data-act="cex:${g.id}:${x}">${esc(exById[x].title)}</button>`).join('')}</div>
-      <div class="dim sm">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}
+      <div class="dim sm">Daily goal — how many times you want to do it</div>${stepper(`cg:${g.id}`, c.goal)}
+      <div class="dim sm" style="margin-top:8px">Reminders per day — they keep coming until the goal is met</div>${stepper(`cn:${g.id}`, c.n)}
       <div class="dim sm" style="margin-top:8px">Remind me</div>
       <div class="chips">
         <button class="chip ${c.timing === 'set' ? 'on' : ''}" data-act="ctime:${g.id}:set">At set times</button>
@@ -570,6 +573,7 @@ function stepTo(name, id, d, idx) {
   else {
     if (name === 'rc') { const v = clamp(R.recall.h * 60 + R.recall.m + d * 15, 0, 1425); R.recall.h = Math.floor(v / 60); R.recall.m = v % 60; }
     if (name === 'ct') R.cat[id].times[+idx] = clamp(R.cat[id].times[+idx] + d * 15, 0, 1425);
+    if (name === 'cg') R.cat[id].goal = clamp(R.cat[id].goal + d, 1, 4);
     if (name === 'cn') {
       const c = R.cat[id]; c.n = clamp(c.n + d, 1, 4);
       // changing the count re-spreads the set times evenly through your day; adjust them after

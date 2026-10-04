@@ -131,11 +131,16 @@ export const EXERCISES = [
 
   // ---------- Observation ----------
   {
-    id: 'obs-room', cat: 'observe', title: 'New-Room Recall', mins: 1,
-    freq: 'Every time you enter a new room or space',
-    summary: 'Give it 2–3 weeks before it fully clicks.',
-    steps: ['Entering a new room or place: close your eyes for a second and name as many objects as you can recall.'],
+    id: 'obs-room', cat: 'observe', title: 'New-Room Recall', mins: 0,
+    freq: 'Whenever you step into a different room or space — even at home, where things move and change',
+    summary: 'Name what you recall in depth and accuracy, until you cannot think of any more. Give it 2–3 weeks before it fully clicks.',
+    steps: [
+      'Walk into a different room or space (even in your own home — things are always moving and changing). Look around for a moment.',
+      { t: 'Close your eyes and name every object you can recall: where it is, its color, its size, what is near it. Ramble on in as much depth and accuracy as you can, until you cannot think of any more. Speed does not matter.', open: true },
+      'Open your eyes and check: what did you miss, and what did you get wrong?',
+    ],
   },
+
   {
     id: 'obs-stairs', cat: 'observe', title: 'Stair Count', mins: 1,
     freq: 'Every flight of stairs',
@@ -417,16 +422,16 @@ export const REMIND_GROUPS = [
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow'] },
 ];
 export const CAT_LABEL = Object.fromEntries(REMIND_GROUPS.flatMap((g) => g.ids.map((id) => [id, g.label])));
-// n = reminders per day = completions that meet the day's goal. timing: 'set' (times you pick) | 'even' (spread through the day) | 'random'.
+// goal = how many times you want to do it each day. n = reminders per day (they keep coming until the goal is met). timing: 'set' (times you pick) | 'even' (spread through the day) | 'random'.
 // choose: when a reminder rings and several exercises are selected, let you pick (otherwise it picks one for you).
 export const REMIND_DEFAULTS = {
   day: { s: 7, e: 22 }, // hours random/even reminders and sayings may appear
   leave: { s: 6, e: 24 }, // hours "when I leave home" reminders may appear
   cat: {
-    obs: { on: true, ex: ['obs-room'], n: 1, timing: 'random', times: [720], choose: true },
-    conc: { on: true, ex: ['conc-multiply', 'conc-poem'], n: 1, timing: 'even', times: [780], choose: true },
-    med: { on: true, ex: ['med-sit', 'med-color', 'med-sound', 'med-cloud'], n: 1, timing: 'set', times: [480], choose: true },
-    emo: { on: true, ex: ['emo-matches', 'emo-tv'], n: 1, timing: 'random', times: [900], choose: true },
+    obs: { on: true, ex: ['obs-room'], goal: 1, n: 1, timing: 'random', times: [720], choose: true },
+    conc: { on: true, ex: ['conc-multiply', 'conc-poem'], goal: 1, n: 1, timing: 'even', times: [780], choose: true },
+    med: { on: true, ex: ['med-sit', 'med-color', 'med-sound', 'med-cloud'], goal: 1, n: 1, timing: 'set', times: [480], choose: true },
+    emo: { on: true, ex: ['emo-matches', 'emo-tv'], goal: 1, n: 1, timing: 'random', times: [900], choose: true },
   },
   leaveItems: { 'obs-stairs': true, 'conc-stranger': true }, // fire only when you leave home
   mind: { on: true, n: 5 },
@@ -482,7 +487,7 @@ export const NUDGES = [
 // Short text for reminder notifications.
 export const PING = {
   'med-sit': 'Sit for 5–10 minutes and meditate in whatever way you choose. Your daily baseline.',
-  'obs-room': 'Walk into another room. Close your eyes for a second and name every object you can recall.',
+  'obs-room': 'Walk into a different room. Close your eyes and name everything you recall — depth and accuracy, until you run out.',
   'obs-stairs': 'Next time you take any steps, count them, then recall the number.',
   'conc-multiply': 'Multiply two 2-digit numbers in your head. Then two 3-digit ones.',
   'conc-poem': 'Memorize 4 lines of a poem and recite them.',
