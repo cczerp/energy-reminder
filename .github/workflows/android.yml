@@ -37,9 +37,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete latest-apk --cleanup-tag --yes || true
+          cat > notes.md <<NOTES
+          ## Install Mindful (Android phones only)
+          **Easiest:** tap **mindful.apk** under *Assets* below, then follow these steps.
+
+          1. If the phone says the file "can harm your device", tap **Download anyway**, then **Open**.
+          2. If it says it isn't allowed to install unknown apps from this source, tap **Settings**, switch on **Allow from this source**, then press Back.
+          3. Tap **Install**.
+          4. If **Google Play Protect** appears, tap **More details**, then **Install anyway**. (Not "Got it" or "OK" - those do not install it.)
+          5. Open Mindful and tap **Allow notifications**.
+
+          Already have Mindful? Install this over it - your settings stay. If it says "App not installed", uninstall the old Mindful first.
+          The bottom of the Today screen shows **Mindful - build ${{ github.run_number }}** so you can tell which version you have.
+
+          Printable one-page guide with a QR code: https://github.com/${GITHUB_REPOSITORY}/blob/main/share/Mindful-install-guide.pdf
+
+          _Built from ${GITHUB_REF_NAME} (${GITHUB_SHA:0:7})._
+          NOTES
           gh release create latest-apk mindful.apk --target "$GITHUB_SHA" --latest \
-            --title "Mindful build ${{ github.run_number }}" \
-            --notes "Install mindful.apk. The Today screen shows 'Mindful · build ${{ github.run_number }}' at the bottom. Built from ${GITHUB_REF_NAME} (${GITHUB_SHA:0:7})."
+            --title "Mindful build ${{ github.run_number }}" --notes-file notes.md
 
   smoke:
     # Installs the built APK in a real Android emulator and prints what the app shows, so problems are visible here.

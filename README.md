@@ -2,12 +2,14 @@
 
 An offline-capable web app (PWA) built from a set of meditation and energy-work guides. No account, no server: everything is stored on the phone. Source lives in `docs/` (plain HTML/JS, no build step).
 
-## Install on Android (recommended: the native app)
-1. On GitHub open **Releases → "Mindful (latest Android build)"** and download `mindful.apk` on your phone (built automatically by `.github/workflows/android.yml` on every push; first install asks to allow "install unknown apps" for your browser).
-2. Open Mindful → **Settings → Allow notifications** (and allow exact alarms when asked).
-3. For "when I leave home" reminders: Settings → set home, and give the app location access **"Allow all the time"**.
+## Install on Android (the native app)
+Direct download (works for anyone, no GitHub account): https://github.com/cczerp/energy-reminder/releases/latest/download/mindful.apk
 
-The native app is the same code as the web app, wrapped with Capacitor. It needs no internet permission at all and schedules real on-device alarms, so reminders ring when the app is closed.
+**Sharing it with someone non-technical:** give them `share/Mindful-install-guide.pdf` (one page with a QR code and big-button steps; the HTML source is `share/install-guide.html`). The steps cover the Play Protect screen, where you must tap **More details → Install anyway** (not "Got it").
+
+Every build replaces the release on the [Releases page](https://github.com/cczerp/energy-reminder/releases) with a new "Mindful build N". The app shows its build number at the bottom of the Today screen and Android shows version 1.0.N under Settings → Apps → Mindful. Builds are signed with a fixed key (`android/debug.keystore`), so each one installs over the last.
+
+Android phones only. The same code runs as a web app, but notifications only fire reliably in the native app.
 
 ## Install on Android (web version)
 Settings → Pages → deploy `main` / `/docs`, open `https://cczerp.github.io/energy-reminder/` in Chrome → Install app. Notifications only fire while it is open.
