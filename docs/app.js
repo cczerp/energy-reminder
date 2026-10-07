@@ -226,6 +226,7 @@ function Today() {
   <h1>${n ? `${n}-day streak` : 'Begin today'}</h1>
   <div class="row"><a class="btn" href="#guide/funk-reset">I'm in a funk</a>${S.rem.playlist ? '<button class="btn ghost" data-act="music">♪ Play my songs</button>' : ''}</div>
   ${card(`<div class="dim sm">Mindful moment</div><div style="font-size:17px;margin-top:4px">${esc(nudge)}</div>`, 'accent')}
+  ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">Mindful needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → Mindful → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
   <h2>Today's goals</h2>
   ${rows || '<div class="dim">No reminders on. Turn some on in Settings.</div>'}
   <div class="row" style="margin-top:8px"><a class="btn ghost" href="#note">Quick note</a></div>
