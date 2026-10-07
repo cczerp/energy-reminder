@@ -31,21 +31,15 @@ jobs:
         run: unzip -l mindful.apk | grep "assets/public/"
       - uses: actions/upload-artifact@v4
         with: { name: mindful-apk, path: mindful.apk }
-      - name: Point the release tag at this build
+      - name: Publish the APK as a fresh release
+        # Recreated every build so the release shows a new date and "build N" instead of looking unchanged.
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git tag -f latest-apk "$GITHUB_SHA"
-          git push -f origin latest-apk
-      - name: Publish latest APK
-        uses: ncipollo/release-action@v1
-        with:
-          tag: latest-apk
-          name: Mindful (latest Android build)
-          body: Install `mindful.apk` on your Android phone. Built from ${{ github.sha }}.
-          artifacts: mindful.apk
-          allowUpdates: true
-          replacesArtifacts: true
-          prerelease: true
-          commit: ${{ github.sha }}
+          gh release delete latest-apk --cleanup-tag --yes || true
+          gh release create latest-apk mindful.apk --target "$GITHUB_SHA" --latest \
+            --title "Mindful build ${{ github.run_number }}" \
+            --notes "Install mindful.apk. The Today screen shows 'Mindful · build ${{ github.run_number }}' at the bottom. Built from ${GITHUB_REF_NAME} (${GITHUB_SHA:0:7})."
 
   smoke:
     # Installs the built APK in a real Android emulator and prints what the app shows, so problems are visible here.
