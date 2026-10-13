@@ -134,8 +134,9 @@ async function syncNative() {
       occurrences(d).filter((o) => o.at > now).forEach((o, k) => list.push({ id: (dayNum(d) % 1000) * 1000 + k, title: o.title, body: o.body, at: o.at, route: o.route, exId: o.exId }));
     }
     await native.scheduleAll(list);
-    const leaving = REMIND_GROUPS.some((g) => S.rem.cat[g.id].on && g.leave.some((id) => S.rem.leaveItems[id]));
-    await native.watchLeave(leaving && canLeave() ? S.rem.home : null, onLeave);
+    const items = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on).flatMap((g) => g.leave.filter((id) => S.rem.leaveItems[id]).map((id) =>
+      ({ id, title: `${g.label}: ${exById[id].title}`, body: PING[id] || exById[id].summary, route: `#ex/${id}`, doneDay: tallyOf(id) > 0 ? dayKey() : '' })));
+    await native.setFence(canLeave() ? S.rem.home : null, items, S.rem.leave);
   } catch (e) { console.error('sync failed', e); }
 }
 // Fired when you step out of the home circle: remind each switched-on leave-home exercise (Stair Count, Stranger's Face), once a day each.
@@ -416,7 +417,7 @@ function Settings() {
     <div class="dim sm" style="margin-top:6px">Until</div>${stepper('leaveE', R.leave.e, (v) => fmtTime(v))}
     ${native.isNative ? `<button class="btn ghost" data-act="sethome">${R.home ? 'Update' : 'Set'} home to my current location</button>
     ${R.home ? `<div class="dim sm">Distance to count as "left"</div>${stepper('homer', R.home.r, (v) => v + ' m')}` : ''}
-    <div class="dim sm" style="margin-top:6px">Needs location set to "Allow all the time". A small notification shows while it watches. It uses some battery.</div>` : ''}`) : '';
+    <div class="dim sm" style="margin-top:6px">Uses your phone\'s built-in home-area alert, so it barely touches the battery and shows no ongoing notification. Needs location set to "Allow all the time".</div>` : ''}`) : '';
   return `<h1>Settings</h1>
   <h2>Notifications</h2>
   ${permState === 'granted' ? '<div class="good sm">Notifications are on.</div>' : `<button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked — enable notifications for this app in your phone settings.</div>' : ''}`}
@@ -662,6 +663,7 @@ native.onTap((route, action, exId) => {
   if (action === 'done' && exId) { bump(exId); toast(`✓ ${exById[exId].title} — ${tallyOf(exId)} today`); location.hash = '#today'; paint(); }
   else if (route) location.hash = route;
 });
+native.onRoute((route) => { location.hash = route; });
 if (native.isNative) native.permState().then((p) => { permState = p; changed(); });
 paint(); checkDue();
 window.__mindfulBooted = true;

@@ -4,6 +4,7 @@ const cap = globalThis.Capacitor;
 export const isNative = !!cap?.isNativePlatform?.() && typeof cap.registerPlugin === 'function';
 const LN = isNative ? cap.registerPlugin('LocalNotifications') : null;
 const BG = isNative ? cap.registerPlugin('BackgroundGeolocation') : null;
+const FENCE = isNative ? cap.registerPlugin('LeaveFence') : null;
 
 // Notification buttons on exercise reminders.
 LN?.registerActionTypes({ types: [{ id: 'EX', actions: [{ id: 'rules', title: 'See rules' }, { id: 'done', title: 'Completed' }] }] }).catch(() => {});
@@ -68,19 +69,19 @@ export async function currentPosition() {
   return new Promise((res, rej) => navigator.geolocation.getCurrentPosition((p) => res(p.coords), rej, { enableHighAccuracy: true, timeout: 20000 }));
 }
 
-// Calls onLeave() each time you move out of the home circle (with some hysteresis). Pass home=null to stop watching.
-export async function watchLeave(home, onLeave) {
-  if (!BG) return;
-  if (watcher) { try { await BG.removeWatcher({ id: watcher }); } catch (e) {} watcher = null; }
-  if (!home) return;
-  let inside = null;
-  watcher = await BG.addWatcher(
-    { backgroundTitle: 'MindCue', backgroundMessage: 'Watching for when you leave home', requestPermissions: true, stale: false, distanceFilter: 40 },
-    (loc, err) => {
-      if (err || !loc) return;
-      const d = dist(home, loc);
-      if (d <= home.r * 0.8) inside = true;
-      else if (d > home.r * 1.2) { if (inside === true) onLeave(); inside = false; }
-    }
-  );
+// Hands the phone's own geofencing the edge of home. The phone, not this app, watches for you leaving (almost no battery),
+// and posts the reminders itself. home=null (or no items) switches it off.
+export async function setFence(home, items, win) {
+  if (!FENCE) return;
+  try {
+    await FENCE.set(home && items.length ? { lat: home.latitude, lng: home.longitude, radius: home.r, startH: win.s, endH: win.e, items } : {});
+  } catch (e) { console.error('fence', e); }
+}
+
+// Opens the page of a "leaving home" notification that was tapped.
+export function onRoute(fn) {
+  if (!FENCE) return;
+  FENCE.addListener('route', (ev) => ev?.route && fn(ev.route));
+  const take = () => FENCE.takeRoute().then((r) => r?.route && fn(r.route)).catch(() => {});
+  take(); document.addEventListener('visibilitychange', () => { if (!document.hidden) take(); });
 }
