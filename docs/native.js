@@ -75,7 +75,7 @@ export async function watchLeave(home, onLeave) {
   if (!home) return;
   let inside = null;
   watcher = await BG.addWatcher(
-    { backgroundTitle: 'Mindful', backgroundMessage: 'Watching for when you leave home', requestPermissions: true, stale: false, distanceFilter: 40 },
+    { backgroundTitle: 'MindTap', backgroundMessage: 'Watching for when you leave home', requestPermissions: true, stale: false, distanceFilter: 40 },
     (loc, err) => {
       if (err || !loc) return;
       const d = dist(home, loc);
