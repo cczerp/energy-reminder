@@ -22,6 +22,7 @@ const mergeRem = (r = {}) => {
     c.goal = Math.max(1, Math.min(4, parseInt(o.goal, 10) || parseInt(o.n, 10) || 1)); // older saves used one number for both
     if (!Array.isArray(o.times) || !o.times.length) c.times = typeof o.h === 'number' ? [o.h * 60 + (o.m || 0)] : base.times.slice(); // older saves stored one h/m
     const pad = evenMins(c.n); while (c.times.length < c.n) c.times.push(pad[c.times.length]);
+    if (g.simple) { c.ex = g.pool.slice(); c.goal = c.n; c.timing = 'even'; c.choose = true; } // routine meditation: you only choose how many reminders, then pick a meditation when one rings
     c.times = c.times.slice(0, c.n); c.choose = c.choose !== false; delete c.h; delete c.m;
     cat[g.id] = c;
   }
@@ -216,8 +217,8 @@ const back = (href = '#practice') => `<a class="back" href="${href}">‹ Back</a
 let openCat = null;
 const exRow = (id) => {
   const t = tallyOf(id);
-  return `<div class="row" style="align-items:flex-start;margin-top:8px"><div style="flex:3"><a href="#ex/${id}" style="color:inherit;text-decoration:none"><b>${t ? '✓ ' : ''}${esc(exById[id].title)}</b></a><div class="dim sm">${t} today</div></div>
-    <div style="flex:2;display:flex;gap:6px"><a class="chip" href="#ex/${id}" style="text-decoration:none;text-align:center;flex:1">Rules</a><button class="chip on" data-act="done:${id}" style="flex:1">✓ Done</button></div></div>`;
+  return `<div style="margin-top:14px"><a href="#ex/${id}" style="color:inherit;text-decoration:none"><b style="font-size:19px">${t ? '✓ ' : ''}${esc(exById[id].title)}</b></a>${t ? `<div class="dim sm">${t} today</div>` : ''}
+    <div class="row" style="margin-top:8px"><a class="btn ghost" href="#ex/${id}" style="margin:0">Rules</a><button class="btn" data-act="done:${id}" style="margin:0">✓ Done</button></div></div>`;
 };
 function Today() {
   snapPlan();
@@ -233,7 +234,8 @@ function Today() {
     const status = `${cnt} of ${c.goal} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
     let body;
     const sx = schedEx(g.id);
-    if (!sx.length) body = '';
+    if (g.simple) body = '<a class="btn" href="#cat/' + g.id + '" style="margin-top:8px">Choose a meditation</a>';
+    else if (!sx.length) body = '';
     else if (choosing(g.id)) body = '<div class="dim sm" style="margin-top:6px">Pick one:</div>' + sx.map(exRow).join('');
     else {
       const id = planned(g.id);
@@ -242,7 +244,7 @@ function Today() {
     }
     const leave = g.leave.filter((id) => S.rem.leaveItems[id] && !tallyOf(id)).map((id) =>
       `<div class="dim sm" style="margin-top:12px">When you leave home${native.isNative && !S.rem.home ? ' · <a href="#settings" style="color:var(--accent)">set your home in Settings</a>' : ''}</div>${exRow(id)}`).join('');
-    const goalRow = `<div class="row" style="margin-top:10px;justify-content:space-between"><span class="dim sm" style="flex:2">Daily goal</span><span style="flex:3;text-align:right">${stepper(`cg:${g.id}`, c.goal)}</span></div>`;
+    const goalRow = g.simple ? '' : `<div class="row" style="margin-top:10px;justify-content:space-between"><span class="dim sm" style="flex:2">Daily goal</span><span style="flex:3;text-align:right">${stepper(`cg:${g.id}`, c.goal)}</span></div>`;
     return card(`<div class="dim sm">${g.label} · ${status}</div>${body}${goalRow}${leave}`);
   }).join('');
   const recallCard = S.rem.recall.on && !recalled
@@ -398,6 +400,7 @@ function Settings() {
   const groups = REMIND_GROUPS.map((g) => {
     const c = R.cat[g.id];
     const nightly = g.id === 'obs' ? `${check(R.recall.on, '<b>Evening Recall</b> — nightly, at its own time', 'recallon', 'Recall your first morning activity. Separate from the reminders above.')}${R.recall.on ? `<div style="margin:0 0 6px 36px">${stepper('rc', R.recall.h * 60 + R.recall.m, fmtMin)}</div>` : ''}` : '';
+    if (g.simple) return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, 'Each reminder opens a list of meditations to choose from.')}${c.on ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
     return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day`)}
       ${c.on ? `<div class="dim sm" style="margin-top:6px">Exercises</div>
       <div class="chips">${[...g.pool, ...g.leave].map((x) => `<button class="chip ${c.ex.includes(x) ? 'on' : ''}" data-act="cex:${g.id}:${x}">${esc(exById[x].title)}${g.leave.includes(x) ? ' · on leaving home' : ''}</button>`).join('')}</div>${g.leave.some((x) => c.ex.includes(x)) ? '<div class="dim sm">Ones marked "on leaving home" ring as you head out (set them up at the bottom of Settings) and count toward the goal.</div>' : ''}
@@ -413,7 +416,7 @@ function Settings() {
       ${schedEx(g.id).length > 1 ? `<div class="dim sm" style="margin-top:10px">When a reminder rings</div><div class="chips">
         <button class="chip ${c.choose ? 'on' : ''}" data-act="cch:${g.id}:1">Let me choose</button>
         <button class="chip ${!c.choose ? 'on' : ''}" data-act="cch:${g.id}:0">Pick one for me</button></div>` : ''}
-      ${nightly ? `<div class="dim sm" style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">Also in ${g.label}</div>${nightly}` : ''}` : ''}`);
+      ${nightly ? `<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:6px">${nightly}</div>` : ''}` : ''}`);
   }).join('');
   const anyLeave = REMIND_GROUPS.some((g) => R.cat[g.id].on && g.leave.some((id) => R.leaveItems[id]));
   const home = anyLeave ? card(`<b>Leaving home</b>
@@ -456,7 +459,7 @@ let G = null;
 const pad = (n) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`;
 const vib = (p) => navigator.vibrate?.(p);
 async function wake() { try { G.lock = await navigator.wakeLock?.request('screen'); } catch (e) {} }
-function stopGuide() { if (G) { clearInterval(G.timer); G.lock?.release?.().catch(() => {}); } G = null; document.body.classList.remove('guided'); }
+function stopGuide() { if (G) { clearInterval(G.timer); clearInterval(G.xi); G.lock?.release?.().catch(() => {}); } G = null; document.body.classList.remove('guided'); }
 
 function startGuide(id) {
   stopGuide();
@@ -464,7 +467,7 @@ function startGuide(id) {
   initStep(); wake();
 }
 function initStep() {
-  clearInterval(G.timer); G.run = false; G.stepDone = false;
+  clearInterval(G.timer); clearInterval(G.xi); G.xt = null; G.run = false; G.stepDone = false;
   const st = stepOf();
   G.left = st.secs || 0; G.elapsed = 0;
   if (st.pick) G.left = G.pickSecs || st.pick[0];
@@ -512,6 +515,9 @@ function Guide() {
   if (st.open) widget = `<div class="big" id="tm">${pad(G.elapsed)}</div><div class="center dim sm">Take as long as you need</div><button class="btn ghost" data-act="trun">${G.run ? 'Pause clock' : G.elapsed ? 'Resume clock' : 'Start clock'}</button>`;
   else if (st.secs) widget = `${st.pick && !G.run && !G.stepDone && G.left === (G.pickSecs || st.pick[0]) ? `<div class="chips" style="justify-content:center">${st.pick.map((v) => `<button class="chip ${(G.pickSecs || st.pick[0]) === v ? 'on' : ''}" data-act="pick:${v}">${v / 60} min</button>`).join('')}</div>` : ''}<div class="big" id="tm">${pad(G.left)}</div>${G.stepDone ? '<div class="center good">Done</div>' : `<button class="btn ghost" data-act="trun">${label} timer</button>`}`;
   else if (st.breath) widget = `<div class="center" style="font-size:22px" id="ph">${G.stepDone ? 'Complete' : st.breath.phases[G.ph][0]}</div><div class="big" id="tm">${G.stepDone ? '✓' : G.left}</div><div class="center dim" id="rp">Round ${Math.min(G.rep, st.breath.reps)} of ${st.breath.reps}</div>${G.stepDone ? '' : `<button class="btn ghost" data-act="trun">${label}</button>`}`;
+  if (!st.open && !st.secs && !st.breath && !st.music) widget = G.xt
+    ? `<div class="center dim sm">Timer</div><div class="big" id="xtm">${pad(G.xt.left)}</div><button class="btn ghost" data-act="xstop">${G.xt.left > 0 ? 'Stop timer' : 'Clear'}</button>`
+    : `<div class="center dim sm" style="margin-top:10px">Need a timer for this step?</div><div class="chips" style="justify-content:center">${[1, 5, 10].map((m) => `<button class="chip" data-act="xt:${m * 60}">⏱ ${m} min</button>`).join('')}</div>`;
   if (st.music) widget = `<button class="btn ghost" data-act="music">${S.rem.playlist ? '♪ Play my songs' : '♪ Add a playlist in Settings'}</button>`;
   return `<div class="dim sm">${esc(ex.title)} · step ${G.i + 1} of ${ex.steps.length}</div>
     ${ex.caution && G.i === 0 ? card(`<div class="warn sm">${esc(ex.caution)}</div>`, 'warnb') : ''}
@@ -610,6 +616,8 @@ document.addEventListener('click', async (e) => {
     case 'ics': exportCalendar(); msg('Calendar file created — open it to add the reminders.'); break;
     case 'export': exportBackup(); break;
     case 'trun': toggleRun(); break;
+    case 'xt': clearInterval(G.xi); G.xt = { left: +a }; G.xi = setInterval(() => { G.xt.left--; const e = $('#xtm'); if (e) e.textContent = pad(Math.max(0, G.xt.left)); if (G.xt.left <= 0) { clearInterval(G.xi); vib([0, 300, 150, 300]); paint(); } }, 1000); paint(); break;
+    case 'xstop': clearInterval(G.xi); G.xt = null; paint(); break;
     case 'pick': G.pickSecs = +a; G.left = +a; paint(); break;
     case 'undo': { const t = S.tally?.[dayKey()]; if (t && t[a] > 0) { t[a]--; if (!t[a]) delete t[a]; save(); } repaintKeep(); break; }
     case 'done': bump(a); openCat = null; toast(`✓ ${exById[a].title} — ${tallyOf(a)} today`); repaintKeep(); break;
@@ -631,7 +639,7 @@ function stepTo(name, id, d, idx) {
     if (name === 'ct') R.cat[id].times[+idx] = clamp(R.cat[id].times[+idx] + d * 15, 0, 1425);
     if (name === 'cg') R.cat[id].goal = clamp(R.cat[id].goal + d, 1, 4);
     if (name === 'cn') {
-      const c = R.cat[id]; c.n = clamp(c.n + d, 1, 4);
+      const c = R.cat[id]; c.n = clamp(c.n + d, 1, 4); if (group(id).simple) c.goal = c.n;
       // changing the count re-spreads the set times evenly through your day; adjust them after
       c.times = Array.from({ length: c.n }, (_, k) => Math.round((R.day.s * 60 + ((R.day.e - R.day.s) * 60 * (k + 0.5)) / c.n) / 15) * 15);
     }

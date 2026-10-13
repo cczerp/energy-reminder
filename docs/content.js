@@ -572,7 +572,7 @@ export const REMIND_GROUPS = [
   // pool = exercises a timed reminder can ask for; leave = optional exercises that only fire when you leave home; ids = everything in the category
   { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], ids: ['obs-room', 'obs-stairs'] },
   { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
-  { id: 'med', cat: 'meditate', label: 'Meditation', pool: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
+  { id: 'med', cat: 'meditate', label: 'Routine meditation', simple: true, pool: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
   { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-color', 'med-sound', 'med-cloud'], leave: [], ids: ['med-color', 'med-sound', 'med-cloud'] },
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow'] },
 ];
@@ -585,7 +585,7 @@ export const REMIND_DEFAULTS = {
   cat: {
     obs: { on: true, ex: ['obs-room', 'obs-stairs'], goal: 1, n: 1, timing: 'random', times: [720], choose: true },
     conc: { on: true, ex: ['conc-multiply', 'conc-poem', 'conc-stranger'], goal: 1, n: 1, timing: 'even', times: [780], choose: true },
-    med: { on: true, ex: ['med-sit', 'med-quiet'], goal: 1, n: 1, timing: 'set', times: [480], choose: true },
+    med: { on: true, ex: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], goal: 1, n: 1, timing: 'even', times: [480], choose: true },
     medp: { on: true, ex: ['med-color', 'med-sound', 'med-cloud'], goal: 1, n: 1, timing: 'even', times: [1020], choose: true },
     emo: { on: true, ex: ['emo-matches', 'emo-tv'], goal: 1, n: 1, timing: 'random', times: [900], choose: true },
   },
