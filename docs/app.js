@@ -16,7 +16,8 @@ const mergeRem = (r = {}) => {
   for (const g of REMIND_GROUPS) {
     const o = (r.cat || {})[g.id] || {}; const base = d.cat[g.id]; const c = { ...base, ...o };
     c.timing = c.timing === 'time' ? 'set' : ['set', 'even', 'random'].includes(c.timing) ? c.timing : base.timing;
-    c.ex = (c.ex || []).filter((x) => g.pool.includes(x)); if (!c.ex.length) c.ex = base.ex.slice();
+    c.ex = (c.ex || []).filter((x) => g.pool.includes(x) || g.leave.includes(x)); if (!c.ex.length) c.ex = base.ex.slice();
+    g.leave.forEach((id) => { const was = (r.leaveItems || {})[id]; if (was && !c.ex.includes(id)) c.ex.push(id); if (was === false && !o.ex) c.ex = c.ex.filter((x) => x !== id); }); // older saves kept leave-home on/off separately
     c.n = Math.max(1, Math.min(4, parseInt(c.n, 10) || 1));
     c.goal = Math.max(1, Math.min(4, parseInt(o.goal, 10) || parseInt(o.n, 10) || 1)); // older saves used one number for both
     if (!Array.isArray(o.times) || !o.times.length) c.times = typeof o.h === 'number' ? [o.h * 60 + (o.m || 0)] : base.times.slice(); // older saves stored one h/m
@@ -24,7 +25,8 @@ const mergeRem = (r = {}) => {
     c.times = c.times.slice(0, c.n); c.choose = c.choose !== false; delete c.h; delete c.m;
     cat[g.id] = c;
   }
-  return { ...d, ...r, cat, day, mind: { ...d.mind, ...r.mind }, leave: { ...d.leave, ...r.leave }, recall: { ...d.recall, ...r.recall }, leaveItems: { ...d.leaveItems, ...r.leaveItems } };
+  const leaveItems = {}; REMIND_GROUPS.forEach((g) => g.leave.forEach((id) => { leaveItems[id] = cat[g.id].ex.includes(id); })); // leave-home exercises are simply ticked in their group
+  return { ...d, ...r, cat, day, mind: { ...d.mind, ...r.mind }, leave: { ...d.leave, ...r.leave }, recall: { ...d.recall, ...r.recall }, leaveItems };
 };
 S.rem = mergeRem(S.rem);
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} changed(); };
@@ -76,12 +78,13 @@ function rng(seed) {
 }
 const group = (id) => REMIND_GROUPS.find((g) => g.id === id);
 // completions today in a category's timed exercises (leave-home items keep their own tally)
-const catCount = (gid, day = dayKey()) => group(gid).pool.reduce((a, id) => a + tallyOf(id, day), 0);
+const catCount = (gid, day = dayKey()) => [...group(gid).pool, ...group(gid).leave].reduce((a, id) => a + tallyOf(id, day), 0);
 const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].goal;
 const canLeave = () => native.isNative && !!S.rem.home;
-const choosing = (gid) => S.rem.cat[gid].choose && S.rem.cat[gid].ex.length > 1;
+const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id)); // exercises that ring at scheduled times (not leave-home ones)
+const choosing = (gid) => S.rem.cat[gid].choose && schedEx(gid).length > 1;
 // the exercise a reminder names when it is not asking you to choose (rotates through the ones you picked)
-function planned(gid, date = new Date(), k = 0) { const list = S.rem.cat[gid].ex; return list[(dayNum(date) + k + REMIND_GROUPS.findIndex((g) => g.id === gid)) % list.length]; }
+function planned(gid, date = new Date(), k = 0) { const list = schedEx(gid); return list[(dayNum(date) + k + REMIND_GROUPS.findIndex((g) => g.id === gid)) % list.length]; }
 // minutes after midnight for n reminders on one day
 function minutesFor(id, n, mode, date) {
   const { s, e } = S.rem.day; const lo = s * 60, hi = e * 60, span = hi - lo;
@@ -100,12 +103,12 @@ function occurrences(date) {
   if (rc.on) out.push({ id: 'recall', cat: 'obs', at: at(date, rc.h, rc.m), label: 'Evening recall', title: 'Observation: Evening recall', body: 'Recall your first activity this morning in as much detail as you can, then log it.', route: '#recall' });
   for (const g of REMIND_GROUPS) {
     const c = S.rem.cat[g.id];
-    if (!c.on || (isToday && catDone(g.id))) continue;
+    if (!c.on || !schedEx(g.id).length || (isToday && catDone(g.id))) continue;
     const mins = c.timing === 'set' ? c.times.slice(0, c.n) : minutesFor(g.id, c.n, c.timing, date);
     mins.forEach((m, k) => {
       const base = { id: `${g.id}${k}`, cat: g.id, at: at(date, Math.floor(m / 60), m % 60), label: g.label };
       if (choosing(g.id)) {
-        out.push({ ...base, title: `${g.label}: pick one`, body: c.ex.map((x) => exById[x].title).join(' · '), route: `#cat/${g.id}` });
+        out.push({ ...base, title: `${g.label}: pick one`, body: schedEx(g.id).map((x) => exById[x].title).join(' · '), route: `#cat/${g.id}` });
       } else {
         const id = planned(g.id, date, k); const ex = exById[id];
         out.push({ ...base, title: `${g.label}: ${ex.title}`, body: PING[id] || ex.summary, route: `#ex/${id}`, exId: id });
@@ -229,10 +232,12 @@ function Today() {
     const c = S.rem.cat[g.id]; const cnt = catCount(g.id);
     const status = `${cnt} of ${c.goal} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
     let body;
-    if (choosing(g.id)) body = '<div class="dim sm" style="margin-top:6px">Pick one:</div>' + c.ex.map(exRow).join('');
+    const sx = schedEx(g.id);
+    if (!sx.length) body = '';
+    else if (choosing(g.id)) body = '<div class="dim sm" style="margin-top:6px">Pick one:</div>' + sx.map(exRow).join('');
     else {
       const id = planned(g.id);
-      body = exRow(id) + (c.ex.length > 1 || g.pool.length > 1 ? `<button class="chip" data-act="other:${g.id}" style="margin-top:8px">I did a different one</button>` : '');
+      body = exRow(id) + (sx.length > 1 || g.pool.length > 1 ? `<button class="chip" data-act="other:${g.id}" style="margin-top:8px">I did a different one</button>` : '');
       if (openCat === g.id) body += `<div class="chips">${g.pool.map((x) => `<button class="chip" data-act="done:${x}">${esc(exById[x].title)}</button>`).join('')}</div>`;
     }
     const leave = g.leave.filter((id) => S.rem.leaveItems[id] && !tallyOf(id)).map((id) =>
@@ -284,7 +289,7 @@ function Choose(gid) {
   const g = group(gid); if (!g) return back('#today') + '<p>Not found.</p>';
   const c = S.rem.cat[gid];
   return `${back('#today')}<h1>${g.label}</h1><div class="dim">${catCount(gid)} of ${c.goal} today. Pick one:</div>` +
-    c.ex.map((id) => card(`<a href="#ex/${id}" style="color:inherit;text-decoration:none"><b>${esc(exById[id].title)}</b></a><div class="dim sm">${esc(exById[id].summary)}</div>
+    schedEx(gid).map((id) => card(`<a href="#ex/${id}" style="color:inherit;text-decoration:none"><b>${esc(exById[id].title)}</b></a><div class="dim sm">${esc(exById[id].summary)}</div>
       <div class="row" style="margin-top:8px"><a class="btn ghost" href="#ex/${id}">Rules</a><a class="btn" href="#guide/${id}">Start</a><button class="btn ghost" data-act="done:${id}">✓ Done</button></div>`)).join('');
 }
 
@@ -392,11 +397,10 @@ function Settings() {
   const fmtMin = (v) => fmtTime(Math.floor(v / 60), v % 60);
   const groups = REMIND_GROUPS.map((g) => {
     const c = R.cat[g.id];
-    const leaveRows = g.leave.map((id) => check(!!R.leaveItems[id], `<b>${esc(exById[id].title)}</b> — remind me when I leave home`, `lv:${id}`, id === 'obs-stairs' ? 'Only rings as you head out. Count the steps you take.' : 'Only rings as you head out.')).join('');
     const nightly = g.id === 'obs' ? `${check(R.recall.on, '<b>Evening Recall</b> — nightly, at its own time', 'recallon', 'Recall your first morning activity. Separate from the reminders above.')}${R.recall.on ? `<div style="margin:0 0 6px 36px">${stepper('rc', R.recall.h * 60 + R.recall.m, fmtMin)}</div>` : ''}` : '';
     return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day`)}
       ${c.on ? `<div class="dim sm" style="margin-top:6px">Exercises</div>
-      <div class="chips">${g.pool.map((x) => `<button class="chip ${c.ex.includes(x) ? 'on' : ''}" data-act="cex:${g.id}:${x}">${esc(exById[x].title)}</button>`).join('')}</div>
+      <div class="chips">${[...g.pool, ...g.leave].map((x) => `<button class="chip ${c.ex.includes(x) ? 'on' : ''}" data-act="cex:${g.id}:${x}">${esc(exById[x].title)}${g.leave.includes(x) ? ' · on leaving home' : ''}</button>`).join('')}</div>${g.leave.some((x) => c.ex.includes(x)) ? '<div class="dim sm">Ones marked "on leaving home" ring as you head out (set them up at the bottom of Settings) and count toward the goal.</div>' : ''}
       <div class="dim sm">Daily goal — how many times you want to do it</div>${stepper(`cg:${g.id}`, c.goal)}
       <div class="dim sm" style="margin-top:8px">Reminders per day — they keep coming until the goal is met</div>${stepper(`cn:${g.id}`, c.n)}
       <div class="dim sm" style="margin-top:8px">Remind me</div>
@@ -406,15 +410,15 @@ function Settings() {
         <button class="chip ${c.timing === 'random' ? 'on' : ''}" data-act="ctime:${g.id}:random">At random times</button></div>
       <div class="dim sm">${c.timing === 'set' ? 'You pick each time.' : c.timing === 'even' ? `Evenly across ${fmtTime(R.day.s)}–${fmtTime(R.day.e)}.` : `Random times between ${fmtTime(R.day.s)} and ${fmtTime(R.day.e)}.`}</div>
       ${c.timing === 'set' ? c.times.map((t, k) => `<div class="dim sm" style="margin-top:6px">Reminder ${k + 1}</div>${stepper(`ct:${g.id}:${k}`, t, fmtMin)}`).join('') : ''}
-      ${c.ex.length > 1 ? `<div class="dim sm" style="margin-top:10px">When a reminder rings</div><div class="chips">
+      ${schedEx(g.id).length > 1 ? `<div class="dim sm" style="margin-top:10px">When a reminder rings</div><div class="chips">
         <button class="chip ${c.choose ? 'on' : ''}" data-act="cch:${g.id}:1">Let me choose</button>
         <button class="chip ${!c.choose ? 'on' : ''}" data-act="cch:${g.id}:0">Pick one for me</button></div>` : ''}
-      ${leaveRows || nightly ? `<div class="dim sm" style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">Also in ${g.label}</div>${nightly}${leaveRows}` : ''}` : ''}`);
+      ${nightly ? `<div class="dim sm" style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">Also in ${g.label}</div>${nightly}` : ''}` : ''}`);
   }).join('');
   const anyLeave = REMIND_GROUPS.some((g) => R.cat[g.id].on && g.leave.some((id) => R.leaveItems[id]));
   const home = anyLeave ? card(`<b>Leaving home</b>
     <div class="dim sm">${!native.isNative ? 'Works in the Android app only. Until then these stay quiet.' : R.home ? `Home is set. Reminders fire when you move ${R.home.r} m away.` : 'Set your home first — until then these stay quiet.'}</div>
-    <div class="dim sm" style="margin-top:6px">Reminders while you're away from home (spread out until you're back)</div>${stepper('leaven', R.leave.n)}
+    <div class="dim sm" style="margin-top:6px">How many reminders when you leave home (spread out until you're back; one is picked at random if you've ticked several)</div>${stepper('leaven', R.leave.n)}
     <div class="dim sm" style="margin-top:6px">Leave-home reminders allowed from</div>${stepper('leaveS', R.leave.s, (v) => fmtTime(v))}
     <div class="dim sm" style="margin-top:6px">Until</div>${stepper('leaveE', R.leave.e, (v) => fmtTime(v))}
     ${native.isNative ? `<button class="btn ghost" data-act="sethome">${R.home ? 'Update' : 'Set'} home to my current location</button>
@@ -577,7 +581,7 @@ document.addEventListener('click', async (e) => {
     case 'savenote': S.sessions.unshift({ id: uid(), ts: Date.now(), ex: form.ex, focus: form.focus || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
     case 'saverecall': S.recalls.unshift({ id: uid(), ts: Date.now(), details: form.details, accuracy: form.accuracy || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
     case 'con': S.rem.cat[a].on = !S.rem.cat[a].on; save(); repaintKeep(); break;
-    case 'cex': { const l = S.rem.cat[a].ex; const i = l.indexOf(b); if (i >= 0 && l.length > 1) l.splice(i, 1); else if (i < 0) l.push(b); save(); repaintKeep(); break; }
+    case 'cex': { const l = S.rem.cat[a].ex; const i = l.indexOf(b); if (i >= 0 && l.length > 1) l.splice(i, 1); else if (i < 0) l.push(b); REMIND_GROUPS.forEach((g) => g.leave.forEach((id) => { S.rem.leaveItems[id] = S.rem.cat[g.id].ex.includes(id); })); save(); repaintKeep(); break; }
     case 'ctime': S.rem.cat[a].timing = b; save(); repaintKeep(); break;
     case 'cch': S.rem.cat[a].choose = b === '1'; save(); repaintKeep(); break;
     case 'lv': S.rem.leaveItems[a] = !S.rem.leaveItems[a]; save(); repaintKeep(); break;

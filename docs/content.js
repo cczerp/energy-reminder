@@ -455,7 +455,7 @@ EXERCISES.push(
       'Lie down or sit comfortably and let your body settle. Breathe slowly and deeply.',
       'Bring your attention to the area that needs help. Rest your hands there if you like.',
       'Call the energy in: picture warm light gathering around you and flowing toward that area. Believe it is happening.',
-      { t: 'Let it flow wherever it is needed. The body knows what to repair, so do not direct the details. Keep your attention gently on the area.', open: true },
+      { t: 'Let it flow wherever it is needed. The body knows what to repair, so do not direct the details. Keep your attention gently on the area.', pick: [300, 480, 720], secs: 480 },
       'Thank your body. Take a deep breath and come back.',
     ],
   },
@@ -466,10 +466,10 @@ EXERCISES.push(
     caution: 'Do this lying down somewhere safe and never while driving. If anything upsets you, open your eyes, breathe, and stop. You are always in control.',
     steps: [
       'Lie down, close your eyes, and let your breathing slow. Do not worry about doing it right.',
-      { t: 'Relax from the top of your head to your toes. Tell each part to let go: face, jaw, neck, shoulders, arms, chest, belly, hips, legs, feet. Take your time.', open: true },
+      { t: 'Relax from the top of your head to your toes. Tell each part to let go: face, jaw, neck, shoulders, arms, chest, belly, hips, legs, feet. Take your time. Pick your length.', pick: [120, 240, 360], secs: 240 },
       'Picture the top of a staircase. Count down from 10 to 1, one step per number, and feel yourself going deeper and more relaxed with every step.',
       'At the bottom, step into "the most appropriate time and place" for you right now. It may be a scene, a memory, a feeling, or only a color. Whatever it is, accept it.',
-      { t: 'Allow it. Do not analyze, judge, or fix what comes. Just notice what you see, hear, and feel, and let it unfold.', open: true },
+      { t: 'Allow it. Do not analyze, judge, or fix what comes. Just notice what you see, hear, and feel, and let it unfold. Pick your length.', pick: [300, 600, 900], secs: 600 },
       'When you are ready, ask a question you want answered, or ask for what you need to know. Answers may come as pictures, feelings, or a sudden knowing. Wait quietly.',
       'Thank whatever you met. Climb the staircase, counting from 1 to 10. At 10, take a deep breath and open your eyes. Write down what you remember before it fades.',
     ],
@@ -483,7 +483,7 @@ EXERCISES.push(
       'Picture a path leading to a door. Walk to it and open it.',
       'Step into a vast library. Look around: the shelves, the light, the quiet.',
       'Find the book of your life. It may call to you. Take it down and open it.',
-      { t: 'Read, or let the pages show you. Allow whatever comes: memories, pictures, words, a feeling of knowing. Do not judge it.', open: true },
+      { t: 'Read, or let the pages show you. Allow whatever comes: memories, pictures, words, a feeling of knowing. Do not judge it. Pick your length.', pick: [300, 600], secs: 300 },
       'Ask the book a question, and turn to the page that answers it.',
       'Close the book, return it, thank the library, and walk back out the door. Take a deep breath, open your eyes, and write down what you were shown.',
     ],
@@ -496,7 +496,7 @@ EXERCISES.push(
       'Lie down, close your eyes, breathe slowly, and relax from head to toe.',
       'Picture a beautiful, peaceful place: a garden, a meadow, a shore. Feel the air, hear the sounds, take your time arriving.',
       'Ask to meet your guide or your Higher Self. Wait. They may appear as a person, a light, or only a presence.',
-      { t: 'Ask your questions, one at a time, and wait after each. Answers may come as pictures, feelings, or knowing. Accept them without judging.', open: true },
+      { t: 'Ask your questions, one at a time, and wait after each. Answers may come as pictures, feelings, or knowing. Accept them without judging. Pick your length.', pick: [300, 600], secs: 300 },
       'Thank them, and ask how to reach them again. Then walk back out of the place, take a deep breath, and open your eyes. Write down what you were told.',
     ],
   },
@@ -572,7 +572,8 @@ export const REMIND_GROUPS = [
   // pool = exercises a timed reminder can ask for; leave = optional exercises that only fire when you leave home; ids = everything in the category
   { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], ids: ['obs-room', 'obs-stairs'] },
   { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
-  { id: 'med', cat: 'meditate', label: 'Meditation', pool: ['med-sit', 'med-color', 'med-sound', 'med-cloud', 'med-quiet'], leave: [], ids: ['med-sit', 'med-color', 'med-sound', 'med-cloud', 'med-quiet'] },
+  { id: 'med', cat: 'meditate', label: 'Meditation', pool: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
+  { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-color', 'med-sound', 'med-cloud'], leave: [], ids: ['med-color', 'med-sound', 'med-cloud'] },
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow'] },
 ];
 export const CAT_LABEL = Object.fromEntries(REMIND_GROUPS.flatMap((g) => g.ids.map((id) => [id, g.label])));
@@ -582,9 +583,10 @@ export const REMIND_DEFAULTS = {
   day: { s: 7, e: 22 }, // hours random/even reminders and sayings may appear
   leave: { s: 6, e: 24, n: 2 }, // hours "when I leave home" reminders may appear
   cat: {
-    obs: { on: true, ex: ['obs-room'], goal: 1, n: 1, timing: 'random', times: [720], choose: true },
-    conc: { on: true, ex: ['conc-multiply', 'conc-poem'], goal: 1, n: 1, timing: 'even', times: [780], choose: true },
-    med: { on: true, ex: ['med-sit', 'med-color', 'med-sound', 'med-cloud'], goal: 1, n: 1, timing: 'set', times: [480], choose: true },
+    obs: { on: true, ex: ['obs-room', 'obs-stairs'], goal: 1, n: 1, timing: 'random', times: [720], choose: true },
+    conc: { on: true, ex: ['conc-multiply', 'conc-poem', 'conc-stranger'], goal: 1, n: 1, timing: 'even', times: [780], choose: true },
+    med: { on: true, ex: ['med-sit', 'med-quiet'], goal: 1, n: 1, timing: 'set', times: [480], choose: true },
+    medp: { on: true, ex: ['med-color', 'med-sound', 'med-cloud'], goal: 1, n: 1, timing: 'even', times: [1020], choose: true },
     emo: { on: true, ex: ['emo-matches', 'emo-tv'], goal: 1, n: 1, timing: 'random', times: [900], choose: true },
   },
   leaveItems: { 'obs-stairs': true, 'conc-stranger': true }, // fire only when you leave home

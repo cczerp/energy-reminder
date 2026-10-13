@@ -103,7 +103,7 @@ public class LeaveFenceReceiver extends BroadcastReceiver {
         try {
             JSONArray items = new JSONArray(p.getString("items", "[]"));
             if (items.length() == 0) return;
-            int idx = p.getInt("idx", 0);
+            int idx = new java.util.Random().nextInt(items.length()); // several ticked leave-home exercises: pick one at random
             for (int tries = 0; tries < items.length(); tries++) {
                 JSONObject it = items.getJSONObject((idx + tries) % items.length());
                 if (it.optString("doneDay", "").equals(today)) continue;
@@ -120,7 +120,7 @@ public class LeaveFenceReceiver extends BroadcastReceiver {
                     .setContentIntent(tap)
                     .setAutoCancel(true)
                     .build());
-                p.edit().putString("cntDay", today).putInt("cnt", cnt + 1).putInt("idx", (idx + tries + 1) % items.length()).apply();
+                p.edit().putString("cntDay", today).putInt("cnt", cnt + 1).apply();
                 return;
             }
         } catch (Exception ex) {
