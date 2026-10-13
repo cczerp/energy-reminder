@@ -31,13 +31,13 @@ export async function scheduleAll(list) {
   if (pend.notifications.length) await LN.cancel({ notifications: pend.notifications.map((n) => ({ id: n.id })) });
   if (!list.length) return;
   await LN.schedule({
-    notifications: list.map((o) => ({ id: o.id, title: o.title, body: o.body, schedule: { at: o.at, allowWhileIdle: true }, extra: { route: o.route, exId: o.exId }, ...(o.exId ? { actionTypeId: 'EX' } : {}) })),
+    notifications: list.map((o) => ({ id: o.id, title: o.title, body: o.body, largeBody: o.body, schedule: { at: o.at, allowWhileIdle: true }, extra: { route: o.route, exId: o.exId }, ...(o.exId ? { actionTypeId: 'EX' } : {}) })),
   });
 }
 
 export async function fireNow(id, title, body, route, exId) {
   if (!LN) return;
-  await LN.schedule({ notifications: [{ id, title, body, schedule: { at: new Date(Date.now() + 1500), allowWhileIdle: true }, extra: { route, exId }, ...(exId ? { actionTypeId: 'EX' } : {}) }] });
+  await LN.schedule({ notifications: [{ id, title, body, largeBody: body, schedule: { at: new Date(Date.now() + 1500), allowWhileIdle: true }, extra: { route, exId }, ...(exId ? { actionTypeId: 'EX' } : {}) }] });
 }
 
 export function onTap(fn) {
