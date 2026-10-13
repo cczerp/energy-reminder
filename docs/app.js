@@ -5,7 +5,7 @@ import { BUILD } from './build.js';
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -48,6 +48,22 @@ function streak() {
   if (!days.has(dayKey(d.getTime()))) d.setDate(d.getDate() - 1);
   while (days.has(dayKey(d.getTime()))) { n++; d.setDate(d.getDate() - 1); }
   return n;
+}
+// Remembers what today's plan was, so the day can be reviewed later even if settings change.
+function snapPlan() {
+  const k = dayKey(); const p = { cats: {}, recall: !!S.rem.recall.on };
+  REMIND_GROUPS.forEach((g) => { if (S.rem.cat[g.id].on) p.cats[g.id] = S.rem.cat[g.id].goal; });
+  if (!S.days) S.days = {};
+  if (JSON.stringify(S.days[k]) !== JSON.stringify(p)) { S.days[k] = p; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+}
+function dayStatus(k) {
+  const p = S.days?.[k]; const done = []; const miss = [];
+  if (p) {
+    for (const gid of Object.keys(p.cats)) { const cnt = catCount(gid, k); (cnt >= p.cats[gid] ? done : miss).push(`${group(gid).label} · ${cnt} of ${p.cats[gid]}`); }
+    if (p.recall) (S.recalls.some((r) => dayKey(r.ts) === k) ? done : miss).push('Evening recall');
+  }
+  const extra = Object.entries(S.tally?.[k] || {}).filter(([id, n]) => n && !REMIND_GROUPS.some((g) => g.pool.includes(id))).map(([id, n]) => `${exById[id]?.title || id} × ${n}`);
+  return { done, miss, extra, total: done.length + miss.length, perfect: !!p && !miss.length && done.length > 0 };
 }
 const isLocked = (ex) => (ex.needs || []).some((n) => !S.milestones[n]);
 
@@ -200,14 +216,17 @@ const exRow = (id) => {
     <div style="flex:2;display:flex;gap:6px"><a class="chip" href="#ex/${id}" style="text-decoration:none;text-align:center;flex:1">Rules</a><button class="chip on" data-act="done:${id}" style="flex:1">✓ Done</button></div></div>`;
 };
 function Today() {
+  snapPlan();
   const now = new Date();
   const recalled = S.recalls.some((r) => dayKey(r.ts) === dayKey());
   const nudge = NUDGES[dayNum() % NUDGES.length];
   const n = streak();
   const next = {}; occurrences(now).forEach((o) => { if (o.cat && o.id !== 'recall' && o.at > now && !next[o.cat]) next[o.cat] = o.at; });
-  const rows = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on).map((g) => {
+  const on = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on);
+  const pending = on.filter((g) => !catDone(g.id));
+  const rows = pending.map((g) => {
     const c = S.rem.cat[g.id]; const cnt = catCount(g.id);
-    const status = cnt >= c.goal ? `goal met · ${cnt} of ${c.goal}` : `${cnt} of ${c.goal} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
+    const status = `${cnt} of ${c.goal} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
     let body;
     if (choosing(g.id)) body = '<div class="dim sm" style="margin-top:6px">Pick one:</div>' + c.ex.map(exRow).join('');
     else {
@@ -215,22 +234,47 @@ function Today() {
       body = exRow(id) + (c.ex.length > 1 || g.pool.length > 1 ? `<button class="chip" data-act="other:${g.id}" style="margin-top:8px">I did a different one</button>` : '');
       if (openCat === g.id) body += `<div class="chips">${g.pool.map((x) => `<button class="chip" data-act="done:${x}">${esc(exById[x].title)}</button>`).join('')}</div>`;
     }
-    const leave = g.leave.filter((id) => S.rem.leaveItems[id]).map((id) =>
+    const leave = g.leave.filter((id) => S.rem.leaveItems[id] && !tallyOf(id)).map((id) =>
       `<div class="dim sm" style="margin-top:12px">When you leave home${native.isNative && !S.rem.home ? ' · <a href="#settings" style="color:var(--accent)">set your home in Settings</a>' : ''}</div>${exRow(id)}`).join('');
-    const recall = g.id === 'obs' && S.rem.recall.on
-      ? `<div class="dim sm" style="margin-top:12px">Tonight · ${fmtTime(S.rem.recall.h, S.rem.recall.m)}</div><a href="#recall" style="color:inherit;text-decoration:none"><b>${recalled ? '✓ ' : ''}Evening recall</b></a><div class="dim sm">Recall your first morning activity and log it</div>` : '';
     const goalRow = `<div class="row" style="margin-top:10px;justify-content:space-between"><span class="dim sm" style="flex:2">Daily goal</span><span style="flex:3;text-align:right">${stepper(`cg:${g.id}`, c.goal)}</span></div>`;
-    return card(`<div class="dim sm">${g.label} · ${status}</div>${body}${goalRow}${leave}${recall}`);
+    return card(`<div class="dim sm">${g.label} · ${status}</div>${body}${goalRow}${leave}`);
   }).join('');
+  const recallCard = S.rem.recall.on && !recalled
+    ? card(`<div class="dim sm">Tonight · ${fmtTime(S.rem.recall.h, S.rem.recall.m)}</div><a href="#recall" style="color:inherit;text-decoration:none"><b>Evening recall</b></a><div class="dim sm">Recall your first morning activity and log it</div>`) : '';
+  const doneIds = [...new Set(REMIND_GROUPS.flatMap((g) => [...g.pool, ...g.leave]))].filter((id) => tallyOf(id));
+  const doneCard = doneIds.length || recalled
+    ? card(`<div class="dim sm">Done today</div>` + doneIds.map((id) => `<div class="row" style="margin-top:6px;justify-content:space-between"><span>✓ ${esc(exById[id].title)}${tallyOf(id) > 1 ? ` × ${tallyOf(id)}` : ''}</span><button class="chip" data-act="undo:${id}">Undo</button></div>`).join('') + (recalled ? '<div style="margin-top:6px">✓ Evening recall</div>' : '')) : '';
+  const all = on.length && !pending.length && !recallCard;
+  const cheer = all ? card(`<div class="cheer"><div class="pop">🎉</div><b style="font-size:18px">Everything done today!</b><div class="dim sm" style="margin-top:4px">${n ? `${n}-day streak. ` : ''}You showed up for yourself. Rest easy.</div></div>`, 'accent') : '';
   return `<div class="dim">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
   <h1>${n ? `${n}-day streak` : 'Begin today'}</h1>
   <div class="row"><a class="btn" href="#guide/funk-reset">I'm in a funk</a>${S.rem.playlist ? '<button class="btn ghost" data-act="music">♪ Play my songs</button>' : ''}</div>
   ${card(`<div class="dim sm">Mindful moment</div><div style="font-size:17px;margin-top:4px">${esc(nudge)}</div>`, 'accent')}
   ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">MindTap needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → MindTap → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
-  <h2>Today's goals</h2>
-  ${rows || '<div class="dim">No reminders on. Turn some on in Settings.</div>'}
+  ${cheer}
+  ${rows || recallCard ? `<h2>Today's goals</h2>${rows}${recallCard}` : on.length ? '' : '<h2>Today\'s goals</h2><div class="dim">No reminders on. Turn some on in Settings.</div>'}
+  ${doneCard}
   <div class="row" style="margin-top:8px"><a class="btn ghost" href="#note">Quick note</a></div>
   <div class="dim sm center" style="margin-top:18px">MindTap · build ${esc(BUILD)}</div>`;
+}
+
+function Day(k) {
+  if (!/^\d{4}-\d\d-\d\d$/.test(k || '')) return back('#log') + '<p>Not found.</p>';
+  const st = dayStatus(k); const [y, m, d] = k.split('-').map(Number);
+  const notes = [...S.sessions.map((x) => ({ ...x, k: 's' })), ...S.recalls.map((x) => ({ ...x, k: 'r' }))].filter((x) => dayKey(x.ts) === k).sort((a, b) => a.ts - b.ts);
+  const list = (a, mark) => a.map((t) => `<div style="margin-top:4px">${mark} ${esc(t)}</div>`).join('');
+  return `${back('#log')}<div class="dim">${new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
+  <h1>${st.perfect ? '★ ' : ''}${st.total ? `${st.done.length} of ${st.total} done` : 'Day review'}</h1>
+  ${st.done.length || st.extra.length ? card(`<div class="dim sm">Completed</div>${list(st.done, '✓')}${list(st.extra, '✓')}`) : ''}
+  ${st.miss.length ? card(`<div class="dim sm">Not completed</div>${list(st.miss, '○')}`) : ''}
+  ${card(`<div class="dim sm">Notes</div>` + (notes.length ? notes.map((r) => `<div style="margin-top:8px"><div class="dim sm">${new Date(r.ts).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })} · ${r.k === 'r' ? `Evening recall · ${r.details} details` : r.ex ? esc(exById[r.ex]?.title) : 'Note'}</div>${r.note ? `<div style="white-space:pre-line">${esc(r.note)}</div>` : ''}</div>`).join('') : '<div class="dim" style="margin-top:4px">No notes this day.</div>'))}`;
+}
+
+function Days() {
+  const ks = [...new Set([...Object.keys(S.days || {}), ...Object.keys(S.tally || {}), ...S.sessions.map((x) => dayKey(x.ts)), ...S.recalls.map((x) => dayKey(x.ts))])].sort().reverse();
+  if (!ks.length) return '<p class="dim">Days will appear here as you use the app.</p>';
+  return ks.map((k) => { const st = dayStatus(k); const [y, m, d] = k.split('-').map(Number);
+    return `<a class="card" href="#day/${k}" style="display:flex;justify-content:space-between;color:inherit;text-decoration:none"><span>${new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span><span class="${st.perfect ? 'good' : 'dim'}">${st.perfect ? '★ ' : ''}${st.total ? `${st.done.length} of ${st.total}` : 'view'}</span></a>`; }).join('');
 }
 
 // Where a "pick one" reminder lands: the exercises you chose for that category.
@@ -295,7 +339,8 @@ function Cycles() {
 let logTab = 'entries';
 function Log() {
   const rows = [...S.sessions.map((x) => ({ ...x, k: 's' })), ...S.recalls.map((x) => ({ ...x, k: 'r' }))].sort((a, b) => b.ts - a.ts);
-  const tabs = `<div class="chips"><button class="chip ${logTab === 'entries' ? 'on' : ''}" data-act="logtab:entries">Entries</button><button class="chip ${logTab === 'prog' ? 'on' : ''}" data-act="logtab:prog">Progress</button></div>`;
+  const tabs = `<div class="chips"><button class="chip ${logTab === 'entries' ? 'on' : ''}" data-act="logtab:entries">Entries</button><button class="chip ${logTab === 'days' ? 'on' : ''}" data-act="logtab:days">Days</button><button class="chip ${logTab === 'prog' ? 'on' : ''}" data-act="logtab:prog">Progress</button></div>`;
+  if (logTab === 'days') return `<h1>Log</h1>${tabs}${Days()}`;
   if (logTab === 'prog') return `<h1>Log</h1>${tabs}${Progress()}`;
   return `<h1>Log</h1>${tabs}<div class="row"><a class="btn" href="#note">+ Note</a><a class="btn" href="#recall">+ Evening recall</a></div>
   ${rows.length ? rows.map((r) => `<div class="card" data-act="del:${r.k}:${r.id}"><div class="dim sm">${when(r.ts)} · ${r.k === 'r' ? `Evening recall · ${r.details} details${r.accuracy ? ` · accuracy ${r.accuracy}/5` : ''}` : `${r.ex ? esc(exById[r.ex]?.title) : 'Note'}${r.focus ? ` · focus ${r.focus}/5` : ''}`}</div>${r.note ? `<div style="white-space:pre-line;margin-top:4px">${esc(r.note)}</div>` : ''}</div>`).join('') + '<div class="dim sm">Tap an entry to delete it.</div>' : '<p class="dim">Nothing logged yet.</p>'}`;
@@ -487,6 +532,7 @@ function paint() {
     case 'cycles': h = Cycles(); break;
     case 'about': h = About(); break;
     case 'cat': h = Choose(a); break;
+    case 'day': h = Day(a); break;
     case 'settings': h = Settings(); break;
     default: h = Today();
   }
@@ -557,6 +603,7 @@ document.addEventListener('click', async (e) => {
     case 'export': exportBackup(); break;
     case 'trun': toggleRun(); break;
     case 'pick': G.pickSecs = +a; G.left = +a; paint(); break;
+    case 'undo': { const t = S.tally?.[dayKey()]; if (t && t[a] > 0) { t[a]--; if (!t[a]) delete t[a]; save(); } repaintKeep(); break; }
     case 'done': bump(a); openCat = null; toast(`✓ ${exById[a].title} — ${tallyOf(a)} today`); repaintKeep(); break;
     case 'gnext': if (G.ex.steps.length - 1 === G.i) { G.done = true; clearInterval(G.timer); paint(); } else { G.i++; initStep(); paint(); } break;
     case 'gprev': G.i--; initStep(); paint(); break;
