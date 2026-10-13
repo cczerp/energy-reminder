@@ -1,13 +1,13 @@
-# Mindful — meditation & mindfulness reminder app
+# MindTap — meditation & mindfulness reminder app
 
 An offline-capable web app (PWA) built from a set of meditation and energy-work guides. No account, no server: everything is stored on the phone. Source lives in `docs/` (plain HTML/JS, no build step).
 
 ## Install on Android (the native app)
-Direct download (works for anyone, no GitHub account): https://github.com/cczerp/energy-reminder/releases/latest/download/mindful.apk
+Direct download (works for anyone, no GitHub account): https://github.com/cczerp/energy-reminder/releases/latest/download/mindtap.apk
 
-**Sharing it with someone non-technical:** give them `share/Mindful-install-guide.pdf` (one page with a QR code and big-button steps; the HTML source is `share/install-guide.html`). The steps cover the Play Protect screen, where you must tap **More details → Install anyway** (not "Got it").
+**Sharing it with someone non-technical:** give them `share/MindTap-install-guide.pdf` (one page with a QR code and big-button steps; the HTML source is `share/install-guide.html`). The steps cover the Play Protect screen, where you must tap **More details → Install anyway** (not "Got it").
 
-Every build replaces the release on the [Releases page](https://github.com/cczerp/energy-reminder/releases) with a new "Mindful build N". The app shows its build number at the bottom of the Today screen and Android shows version 1.0.N under Settings → Apps → Mindful. Builds are signed with a fixed key (`android/debug.keystore`), so each one installs over the last.
+Every build replaces the release on the [Releases page](https://github.com/cczerp/energy-reminder/releases) with a new "MindTap build N". The app shows its build number at the bottom of the Today screen and Android shows version 1.0.N under Settings → Apps → MindTap. Builds are signed with a fixed key (`android/debug.keystore`), so each one installs over the last.
 
 Android phones only. The same code runs as a web app, but notifications only fire reliably in the native app.
 

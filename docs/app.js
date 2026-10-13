@@ -164,19 +164,19 @@ function exportCalendar() {
   const pad = (n) => String(n).padStart(2, '0');
   const stamp = (d) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
   const tx = (s) => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
-  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Mindful//EN', 'CALSCALE:GREGORIAN'];
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MindTap//EN', 'CALSCALE:GREGORIAN'];
   const now = new Date().toISOString().replace(/[-:]|\.\d+/g, '');
   for (let i = 0; i < 14; i++) {
     const d = new Date(); d.setDate(d.getDate() + i);
     for (const o of occurrences(d)) {
       if (o.at < new Date()) continue;
       const end = new Date(o.at.getTime() + 5 * 60000);
-      L.push('BEGIN:VEVENT', `UID:${dayKey(o.at.getTime())}-${o.id}@mindful`, `DTSTAMP:${now}`, `DTSTART:${stamp(o.at)}`, `DTEND:${stamp(end)}`,
+      L.push('BEGIN:VEVENT', `UID:${dayKey(o.at.getTime())}-${o.id}@mindtap`, `DTSTAMP:${now}`, `DTSTART:${stamp(o.at)}`, `DTEND:${stamp(end)}`,
         `SUMMARY:${tx(o.title)}`, `DESCRIPTION:${tx(o.body)}`, 'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${tx(o.title)}`, 'TRIGGER:PT0S', 'END:VALARM', 'END:VEVENT');
     }
   }
   L.push('END:VCALENDAR');
-  download('mindful-reminders.ics', 'text/calendar', L.join('\r\n'));
+  download('mindtap-reminders.ics', 'text/calendar', L.join('\r\n'));
 }
 function download(name, type, text) {
   const a = document.createElement('a');
@@ -226,11 +226,11 @@ function Today() {
   <h1>${n ? `${n}-day streak` : 'Begin today'}</h1>
   <div class="row"><a class="btn" href="#guide/funk-reset">I'm in a funk</a>${S.rem.playlist ? '<button class="btn ghost" data-act="music">♪ Play my songs</button>' : ''}</div>
   ${card(`<div class="dim sm">Mindful moment</div><div style="font-size:17px;margin-top:4px">${esc(nudge)}</div>`, 'accent')}
-  ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">Mindful needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → Mindful → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
+  ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">MindTap needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → MindTap → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
   <h2>Today's goals</h2>
   ${rows || '<div class="dim">No reminders on. Turn some on in Settings.</div>'}
   <div class="row" style="margin-top:8px"><a class="btn ghost" href="#note">Quick note</a></div>
-  <div class="dim sm center" style="margin-top:18px">Mindful · build ${esc(BUILD)}</div>`;
+  <div class="dim sm center" style="margin-top:18px">MindTap · build ${esc(BUILD)}</div>`;
 }
 
 // Where a "pick one" reminder lands: the exercises you chose for that category.
@@ -395,7 +395,7 @@ function Settings() {
   <button class="btn" data-act="export">Export backup</button>
   <label class="btn ghost" style="cursor:pointer">Restore from backup file<input type="file" id="restore" accept=".json,application/json" hidden></label>
   <div id="msg" class="good sm"></div>
-  <div class="dim sm center" style="margin-top:18px">Mindful · build ${esc(BUILD)}</div>`;
+  <div class="dim sm center" style="margin-top:18px">MindTap · build ${esc(BUILD)}</div>`;
 }
 
 /* ----- guided runner ----- */
@@ -591,10 +591,10 @@ function stepTo(name, id, d, idx) {
   repaintKeep();
 }
 async function exportBackup() {
-  const text = JSON.stringify(S, null, 1); const name = `mindful-backup-${dayKey()}.json`;
+  const text = JSON.stringify(S, null, 1); const name = `mindtap-backup-${dayKey()}.json`;
   try {
     const f = new File([text], name, { type: 'application/json' });
-    if (navigator.canShare?.({ files: [f] })) { await navigator.share({ files: [f], title: 'Mindful backup' }); return msg('Backup shared.'); }
+    if (navigator.canShare?.({ files: [f] })) { await navigator.share({ files: [f], title: 'MindTap backup' }); return msg('Backup shared.'); }
   } catch (e) { if (e.name === 'AbortError') return; }
   download(name, 'application/json', text); msg('Backup downloaded.');
 }
