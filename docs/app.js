@@ -325,6 +325,7 @@ function About() {
   <ul>
     <li><b>Joe Dispenza</b> — chakra attention and coherence work</li>
     <li><b>Guru Pathik</b>, in <i>Avatar: The Last Airbender</i> — the chakra lesson</li>
+    <li><b>Dolores Cannon</b> — the quiet-listening, inner-journey, energy, and everyday-living practices, written here in our own words from teachings associated with her work</li>
     <li><b>Wisdom of the Mystic Masters</b> — the mental training, meditation, healing, projection, and cycles teachings</li>
     <li>The yogic, tantric, and Rosicrucian traditions all of the above draw on</li>
     <li>Every teacher, student, and practitioner who passed these on</li>

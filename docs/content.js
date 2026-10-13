@@ -9,6 +9,8 @@ export const CATS = {
   concentrate: 'Concentration',
   meditate: 'Meditation',
   emotion: 'Emotional control',
+  journey: 'Inner journeys',
+  living: 'Living practices',
   centers: 'Psychic centers',
   chakra: 'Chakra alignment',
   project: 'Projection',
@@ -431,6 +433,136 @@ EXERCISES.push({
   ],
 });
 
+
+// Practices drawn from Dolores Cannon's teachings, rewritten in this app's own words.
+EXERCISES.push(
+  {
+    id: 'med-quiet', cat: 'meditate', title: 'Quiet Listening', mins: 10,
+    freq: 'Daily if you can, 10–15 minutes',
+    summary: 'Be alone in quiet and go within. You are not trying to do anything, only to listen.',
+    steps: [
+      'Find somewhere quiet where you will not be interrupted. Silence the phone. Sit or lie comfortably and close your eyes.',
+      'Let your attention turn inward. When thoughts come, do not argue with them or analyze them. Let them pass, and go back to listening.',
+      { t: 'Simply listen. Intuition, pictures, feelings, or a quiet knowing may come, or nothing at all. Both are fine. Pick your length, then start.', pick: [600, 900], secs: 600 },
+      'Come back slowly. Take a deep breath. If anything came up, you can note it in your log.',
+    ],
+  },
+  {
+    id: 'energy-direct', cat: 'energy', title: 'Call the Energy In', mins: 8,
+    freq: 'Whenever the body needs it', summary: 'Focus on a part of the body, call energy to it, and let it flow wherever it is needed. Intention and belief direct it.',
+    caution: 'This supports healing and does not replace medical care. See a doctor for anything that worries you or lasts.',
+    steps: [
+      'Lie down or sit comfortably and let your body settle. Breathe slowly and deeply.',
+      'Bring your attention to the area that needs help. Rest your hands there if you like.',
+      'Call the energy in: picture warm light gathering around you and flowing toward that area. Believe it is happening.',
+      { t: 'Let it flow wherever it is needed. The body knows what to repair, so do not direct the details. Keep your attention gently on the area.', open: true },
+      'Thank your body. Take a deep breath and come back.',
+    ],
+  },
+  {
+    id: 'j-stair', cat: 'journey', title: 'The Staircase Journey', mins: 30,
+    freq: 'When you have 30 quiet minutes',
+    summary: 'Relax deeply, go down a staircase, and let a scene appear. Then ask what you want to know. The only rule is: allow it.',
+    caution: 'Do this lying down somewhere safe and never while driving. If anything upsets you, open your eyes, breathe, and stop. You are always in control.',
+    steps: [
+      'Lie down, close your eyes, and let your breathing slow. Do not worry about doing it right.',
+      { t: 'Relax from the top of your head to your toes. Tell each part to let go: face, jaw, neck, shoulders, arms, chest, belly, hips, legs, feet. Take your time.', open: true },
+      'Picture the top of a staircase. Count down from 10 to 1, one step per number, and feel yourself going deeper and more relaxed with every step.',
+      'At the bottom, step into "the most appropriate time and place" for you right now. It may be a scene, a memory, a feeling, or only a color. Whatever it is, accept it.',
+      { t: 'Allow it. Do not analyze, judge, or fix what comes. Just notice what you see, hear, and feel, and let it unfold.', open: true },
+      'When you are ready, ask a question you want answered, or ask for what you need to know. Answers may come as pictures, feelings, or a sudden knowing. Wait quietly.',
+      'Thank whatever you met. Climb the staircase, counting from 1 to 10. At 10, take a deep breath and open your eyes. Write down what you remember before it fades.',
+    ],
+  },
+  {
+    id: 'j-library', cat: 'journey', title: 'The Library — Book of Your Life', mins: 20,
+    freq: 'When you want memories, knowledge, or guidance', summary: 'Walk into a vast library, find the book of your life, and read what you are shown.',
+    caution: 'Lie down somewhere safe. If anything upsets you, open your eyes and stop.',
+    steps: [
+      'Lie down, close your eyes, breathe slowly, and relax your body from head to toe. A few minutes is enough.',
+      'Picture a path leading to a door. Walk to it and open it.',
+      'Step into a vast library. Look around: the shelves, the light, the quiet.',
+      'Find the book of your life. It may call to you. Take it down and open it.',
+      { t: 'Read, or let the pages show you. Allow whatever comes: memories, pictures, words, a feeling of knowing. Do not judge it.', open: true },
+      'Ask the book a question, and turn to the page that answers it.',
+      'Close the book, return it, thank the library, and walk back out the door. Take a deep breath, open your eyes, and write down what you were shown.',
+    ],
+  },
+  {
+    id: 'j-guide', cat: 'journey', title: 'Meet Your Guide or Higher Self', mins: 20,
+    freq: 'When you want direct guidance', summary: 'In deep relaxation, meet your guide or Higher Self in a beautiful place and ask questions.',
+    caution: 'Lie down somewhere safe. If anything upsets you, open your eyes and stop.',
+    steps: [
+      'Lie down, close your eyes, breathe slowly, and relax from head to toe.',
+      'Picture a beautiful, peaceful place: a garden, a meadow, a shore. Feel the air, hear the sounds, take your time arriving.',
+      'Ask to meet your guide or your Higher Self. Wait. They may appear as a person, a light, or only a presence.',
+      { t: 'Ask your questions, one at a time, and wait after each. Answers may come as pictures, feelings, or knowing. Accept them without judging.', open: true },
+      'Thank them, and ask how to reach them again. Then walk back out of the place, take a deep breath, and open your eyes. Write down what you were told.',
+    ],
+  },
+  {
+    id: 'live-vibe', cat: 'living', title: 'Raise Your Vibration', mins: 3,
+    freq: 'Every day, a few times', summary: 'Vibration rises through what you think, feel, and do. Love and gratitude raise it. Fear lowers it.',
+    steps: [
+      'Think of three things you are grateful for. Feel each one, not only name it.',
+      'Is there a fear running in the background? Name it, and then choose not to stay in it.',
+      'Do one thing now that comes from love or kindness: a message, a thank-you, a small favor.',
+      'Picture yourself filling with light, then the room, then the whole world. Hold it for a few breaths.',
+    ],
+  },
+  {
+    id: 'live-speech', cat: 'living', title: 'Say It as True — "I Am"', mins: 0,
+    freq: 'All day, as practice', summary: 'Your words shape what you attract. Drop "I want", which announces lack. Say it as already true.',
+    steps: [
+      'For today, listen to your own speech. Each time you hear yourself say "I want…", pause.',
+      'Say it again in the present tense as if it is already so: "I am…", "I have…". For example, "I am healthy" instead of "I want to be healthy".',
+      'Keep it truthful and kind. This is not for denying a real problem you need to deal with.',
+      'Also notice what you say about yourself in passing. Do not say things you would not want to be true.',
+    ],
+  },
+  {
+    id: 'live-body', cat: 'living', title: 'Listen to Your Body', mins: 3,
+    freq: 'A few times a day', summary: 'Cravings, aches, and aversions are messages. Learn to listen rather than override.',
+    caution: 'Pain that is new, severe, or lasting needs a doctor. Listening to your body does not replace medical care.',
+    steps: [
+      'Pause and scan from head to feet. Where is there tension, ache, heaviness, or ease?',
+      'What does the body crave right now? Water, food, rest, movement, fresh air, quiet? What does it turn away from?',
+      'Ask the part that speaks up: "What do you need?" Wait for a feeling or an idea.',
+      'Do one small thing it asked for. Notice how it responds.',
+    ],
+  },
+  {
+    id: 'live-now', cat: 'living', title: 'Here and Now — Letting Go', mins: 3,
+    freq: 'Whenever you are stuck in the past or future', summary: 'Release what is behind you, stop rehearsing what is ahead, and be fully here. This is where your energy works.',
+    steps: [
+      'Take three slow breaths. With each out-breath, let your shoulders fall.',
+      'Name one thing from the past you keep replaying. Say: "That is done. I let it go."',
+      'Name one thing in the future you keep worrying about. Say: "I will deal with it when it is here."',
+      'Notice what you can see, hear, and feel right now. Give this moment your full attention for a minute.',
+    ],
+  },
+  {
+    id: 'live-clean', cat: 'living', title: 'Clean Body, Clean Mind', mins: 0,
+    freq: 'Daily habits', summary: 'A clean body holds energy better, and so does a clean mind.',
+    caution: 'Check with a doctor before fasting or big diet changes, especially if you have a medical condition or take medicine.',
+    steps: [
+      'Drink pure water through the day.',
+      'Choose vegetables and fruit, and notice how your body responds to what you eat.',
+      'Go easy on alcohol, drugs, sugar, and heavily processed food.',
+      'Cleanse or rest from food only when your body is clearly asking for it, and safely.',
+      'Clean the inputs too: toxic media, fear-driven news, and endless drama. Choose what you let in.',
+    ],
+  },
+  {
+    id: 'live-dos', cat: 'living', title: "Do's and Don'ts for Life", mins: 0,
+    freq: 'Read now and then', summary: 'Twenty reminders to live by, drawn from the teachings above.',
+    steps: [
+      'DO\n1. Meditate daily and seek quiet. Go within and listen.\n2. Watch your thoughts and words. Speak what you want as present tense, "I am", not "I want".\n3. Release fear. It is the biggest block.\n4. Eat high-vibration food: vegetables, fruit, pure water.\n5. Follow your passion. It is what you came to do.\n6. Practice love, compassion, and non-judgment, especially toward yourself.\n7. Trust your intuition and your body.\n8. Surround yourself with uplifting people and media, and get out in nature often.\n9. Let go of the past and live now.\n10. Be of service. Help others wake up by being an example.',
+      "DON'T\n1. Don't soak in fear-based news or negativity.\n2. Don't speak lack. Skip \"I want\".\n3. Don't let the critical mind override what you sense.\n4. Don't judge or condemn others. Different paths, same destination.\n5. Don't dwell on drama, grudges, or the past.\n6. Don't poison the body: excess alcohol, drugs, sugar, processed food.\n7. Don't hand your choices to anyone, not gurus, governments, or doctors. Take their advice, then decide for yourself, and keep seeing your doctor.\n8. Don't resist change. Flow with it.\n9. Don't ignore your body or its messages.\n10. Don't take \"I don't belong here\" as the truth. You came here on purpose. If that feeling is heavy or you think of ending your life, reach out now: in the US call or text 988.",
+    ],
+  },
+);
+
 export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 
 // ---------- Reminders ----------
@@ -440,7 +572,7 @@ export const REMIND_GROUPS = [
   // pool = exercises a timed reminder can ask for; leave = optional exercises that only fire when you leave home; ids = everything in the category
   { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], ids: ['obs-room', 'obs-stairs'] },
   { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
-  { id: 'med', cat: 'meditate', label: 'Meditation', pool: ['med-sit', 'med-color', 'med-sound', 'med-cloud'], leave: [], ids: ['med-sit', 'med-color', 'med-sound', 'med-cloud'] },
+  { id: 'med', cat: 'meditate', label: 'Meditation', pool: ['med-sit', 'med-color', 'med-sound', 'med-cloud', 'med-quiet'], leave: [], ids: ['med-sit', 'med-color', 'med-sound', 'med-cloud', 'med-quiet'] },
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow'] },
 ];
 export const CAT_LABEL = Object.fromEntries(REMIND_GROUPS.flatMap((g) => g.ids.map((id) => [id, g.label])));
@@ -501,6 +633,25 @@ export const NUDGES = [
   'Unclench your jaw and hands. Notice what they were doing.',
   'Whatever you are doing, give it your full attention for one minute.',
   'Notice the space around your body. How far does it feel like it extends?',
+  'Allow it. Do not analyze or judge what comes up. Just let it be there.',
+  'Ten or fifteen minutes of quiet today. Go within and simply listen.',
+  'Fear lowers your frequency and love raises it. Which one are you feeding?',
+  'Say it as already true: "I am…", not "I want…".',
+  'Catch one "I want" today and turn it into "I am".',
+  'Your body is talking: a craving, an ache, an aversion. Listen instead of overriding it.',
+  'Let the past go and stop rehearsing the future. This moment is where you act.',
+  'Pure water, fruit, vegetables. What does your body actually ask for today?',
+  'Is what you are watching or reading feeding fear? Change the channel.',
+  'Judgment, especially of yourself, poisons the well. Put it down for one minute.',
+  'Different paths, same destination. Let someone else walk theirs.',
+  'Get outside. A few minutes in nature resets the day.',
+  'Your intuition has answers. Ask, then be quiet and listen.',
+  'Do what lights you up. It is part of what you came here to do.',
+  'Help someone today, or simply be an example. That wakes others up.',
+  'Watch your words today. Choose what you say.',
+  'You chose to be here, on purpose.',
+  'Take advice from anyone, then decide for yourself.',
+  'Picture light filling you, the room, and the whole world, for one breath.',
   'A thought is pulling you away. Return to what you are doing.',
   'Are you rushing? There is nothing here to rush for.',
   'Soften your eyes. Take in the whole view at once.',
@@ -508,6 +659,7 @@ export const NUDGES = [
 
 // Short text for reminder notifications.
 export const PING = {
+  'med-quiet': 'Quiet time: 10–15 minutes alone in silence. Go within and simply listen.',
   'med-sit': 'Sit for 5–10 minutes and meditate in whatever way you choose. Your daily baseline.',
   'obs-room': 'Walk into a different room. Close your eyes and name everything you recall — depth and accuracy, until you run out.',
   'obs-stairs': 'Next time you take any steps, count them, then recall the number.',
