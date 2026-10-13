@@ -1,6 +1,6 @@
 {
-  "name": "MindTap",
-  "short_name": "MindTap",
+  "name": "MindCue",
+  "short_name": "MindCue",
   "description": "Meditation, energy, and mindfulness reminders with a practice log. Works offline.",
   "start_url": "./",
   "scope": "./",

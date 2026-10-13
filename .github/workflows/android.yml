@@ -27,12 +27,30 @@ jobs:
         run: ./gradlew assembleDebug --no-daemon
       - name: Name the APK
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk mindtap.apk
-          cp mindtap.apk mindful.apk   # the old file name, so links and QR codes made before the rename keep working
-      - name: List the web files packed into the APK
-        run: unzip -l mindtap.apk | grep "assets/public/"
+          cp android/app/build/outputs/apk/debug/app-debug.apk mindcue.apk
+          cp mindcue.apk mindtap.apk   # old file names, so links and QR codes made before the renames keep working
+          cp mindcue.apk mindful.apk
+      - name: Build the Google Play bundle (only when the upload key secret is set)
+        env:
+          UPLOAD_KEYSTORE_B64: ${{ secrets.UPLOAD_KEYSTORE }}
+          UPLOAD_STORE_PASSWORD: ${{ secrets.UPLOAD_STORE_PASSWORD }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -n "$UPLOAD_KEYSTORE_B64" ]; then
+            echo "$UPLOAD_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            export UPLOAD_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
+            (cd android && ./gradlew bundleRelease --no-daemon)
+            cp android/app/build/outputs/bundle/release/app-release.aab mindcue.aab
+          else
+            echo "No upload key secret; skipping the Play bundle."
+          fi
       - uses: actions/upload-artifact@v4
-        with: { name: mindtap-apk, path: mindtap.apk }
+        if: hashFiles('mindcue.aab') != ''
+        with: { name: mindcue-aab, path: mindcue.aab }
+      - name: List the web files packed into the APK
+        run: unzip -l mindcue.apk | grep "assets/public/"
+      - uses: actions/upload-artifact@v4
+        with: { name: mindcue-apk, path: mindcue.apk }
       - name: Publish the APK as a fresh release
         # Recreated every build so the release shows a new date and "build N" instead of looking unchanged.
         env:
@@ -40,26 +58,26 @@ jobs:
         run: |
           gh release delete latest-apk --cleanup-tag --yes || true
           cat > notes.md <<NOTES
-          ## Install MindTap (Android phones only)
-          **Easiest:** tap **mindtap.apk** under *Assets* below, then follow these steps.
+          ## Install MindCue (Android phones only)
+          **Easiest:** tap **mindcue.apk** under *Assets* below, then follow these steps.
 
           1. If the phone says the file "can harm your device", tap **Download anyway**, then **Open**.
           2. If it says it isn't allowed to install unknown apps from this source, tap **Settings**, switch on **Allow from this source**, then press Back.
           3. Tap **Install**.
           4. If **Google Play Protect** appears, tap **More details**, then **Install anyway**. (Not "Got it" or "OK" - those do not install it.)
-          5. Open MindTap and tap **Allow notifications**.
+          5. Open MindCue and tap **Allow notifications**.
 
-          Already have MindTap? Install this over it - your settings stay. If it says "App not installed", uninstall the old copy first.
-          The bottom of the Today screen shows **MindTap - build ${{ github.run_number }}** so you can tell which version you have.
+          Already have MindCue? Install this over it - your settings stay. If it says "App not installed", uninstall the old copy first.
+          The bottom of the Today screen shows **MindCue - build ${{ github.run_number }}** so you can tell which version you have.
 
-          Printable one-page guide with a QR code: https://github.com/${GITHUB_REPOSITORY}/blob/main/share/MindTap-install-guide.pdf
+          Printable one-page guide with a QR code: https://github.com/${GITHUB_REPOSITORY}/blob/main/share/MindCue-install-guide.pdf
 
           (mindful.apk is the same file under its old name, so older links still work.)
 
           _Built from ${GITHUB_REF_NAME} (${GITHUB_SHA:0:7})._
           NOTES
-          gh release create latest-apk mindtap.apk mindful.apk --target "$GITHUB_SHA" --latest \
-            --title "MindTap build ${{ github.run_number }}" --notes-file notes.md
+          gh release create latest-apk mindcue.apk mindtap.apk mindful.apk --target "$GITHUB_SHA" --latest \
+            --title "MindCue build ${{ github.run_number }}" --notes-file notes.md
 
   smoke:
     # Installs the built APK in a real Android emulator and prints what the app shows, so problems are visible here.
@@ -69,7 +87,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
-        with: { name: mindtap-apk }
+        with: { name: mindcue-apk }
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules

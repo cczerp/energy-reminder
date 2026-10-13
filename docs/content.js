@@ -235,9 +235,31 @@ export const EXERCISES = [
 
   // ---------- Emotional control ----------
   {
-    id: 'emo-matches', cat: 'emotion', title: 'Matchbox Drill', mins: 10,
-    freq: 'Once or more daily until mastered', summary: 'Patience and calm under a fiddly task.',
-    steps: ['Dump a box of kitchen matches on the table, mix thoroughly, and put them all back in the box with every tip facing the same direction.'],
+    // The id stays 'emo-matches' (it began as the Matchbox Drill) so saved settings and tallies carry over.
+    id: 'emo-matches', cat: 'emotion', title: 'Patience Drill', mins: 10,
+    freq: 'Once or more daily until mastered',
+    summary: 'Put a jumble in order, slowly and calmly, one piece at a time. Patience and a steady mind under a fiddly task — and a more orderly space.',
+    steps: [
+      `Choose your jumble.
+
+SMALL PILES (you can scramble them again and repeat):
+• A deck of cards: shuffle, then put it in order by suit and number.
+• Coins: mix a handful, sort into piles, and stack each pile with every head facing the same way.
+• Buttons, screws, or beads: sort by type into small dishes.
+• The original: dump a box of matches, mix them well, and put them all back with every head pointing the same way. Handle matches carefully and away from any flame. Toothpicks or bobby pins work too.
+• Untangle a necklace, earbud cord, or string of lights. Pulling harder only tightens it, so ease it out.
+• Pair up a pile of mismatched socks.
+
+SPACES TO PUT IN ORDER (bigger jobs, good for a clean, livable home; do them in pieces):
+• Pantry or canned goods: group by type, labels facing out.
+• Spice rack: alphabetical, or by how you use them.
+• Bookshelf: by author, subject, or size.
+• Movies, music, or games: alphabetical.
+• A junk drawer, a closet shelf, or a toolbox.`,
+      'Set it up. For a small pile, dump it out and mix it thoroughly. For a space, start with one shelf or one section and take everything out of just that part.',
+      { t: 'Put it in order slowly. Handle one item at a time, with a calm face. When you feel the urge to hurry, or irritation, or boredom, notice it, take a breath, and carry on gently. That is the exercise. Take as long as you need.', open: true },
+      'Finish where you can. A big space can be done in pieces, and you can come back to it later. There is no need to feel bad about leaving it half done. Look at what you put in order, and notice how it feels to see it clear.',
+    ],
   },
   {
     id: 'emo-tv', cat: 'emotion', title: 'TV / Radio Attention Drill', mins: 10,
@@ -426,7 +448,7 @@ export const CAT_LABEL = Object.fromEntries(REMIND_GROUPS.flatMap((g) => g.ids.m
 // choose: when a reminder rings and several exercises are selected, let you pick (otherwise it picks one for you).
 export const REMIND_DEFAULTS = {
   day: { s: 7, e: 22 }, // hours random/even reminders and sayings may appear
-  leave: { s: 6, e: 24 }, // hours "when I leave home" reminders may appear
+  leave: { s: 6, e: 24, n: 2 }, // hours "when I leave home" reminders may appear
   cat: {
     obs: { on: true, ex: ['obs-room'], goal: 1, n: 1, timing: 'random', times: [720], choose: true },
     conc: { on: true, ex: ['conc-multiply', 'conc-poem'], goal: 1, n: 1, timing: 'even', times: [780], choose: true },
@@ -495,7 +517,7 @@ export const PING = {
   'med-color': 'Three minutes: blue, pink, white — one minute each.',
   'med-sound': 'Three minutes: violin, horn or sax, piano — one minute each.',
   'med-cloud': 'One minute wrapped in a pink cloud.',
-  'emo-matches': 'Matchbox drill: mix the matches, then box them all tips the same way.',
+  'emo-matches': 'Patience drill: pick a jumble (cards, coins, a shelf) and put it in order slowly and calmly.',
   'emo-tv': 'Attention drill: TV on, picture off. Tune out the picture.',
   'emo-slow': 'Slowing-down practice: let others go first, with a genuine smile.',
 };

@@ -5,7 +5,7 @@ import { BUILD } from './build.js';
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -41,13 +41,29 @@ function bump(id) { const k = dayKey(); if (!S.tally) S.tally = {}; if (!S.tally
 function toast(t) {
   const el = document.createElement('div'); el.textContent = t;
   el.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#6fcf97;color:#1e1833;padding:10px 18px;border-radius:20px;font-weight:700;z-index:9';
-  document.body.appendChild(el); setTimeout(() => el.remove(), 2200);
+  document.body.appendChild(el); setTimeout(() => el.remove(), 2200 + t.length * 40);
 }
 function streak() {
   const days = practiceDays(); let n = 0; const d = new Date();
   if (!days.has(dayKey(d.getTime()))) d.setDate(d.getDate() - 1);
   while (days.has(dayKey(d.getTime()))) { n++; d.setDate(d.getDate() - 1); }
   return n;
+}
+// Remembers what today's plan was, so the day can be reviewed later even if settings change.
+function snapPlan() {
+  const k = dayKey(); const p = { cats: {}, recall: !!S.rem.recall.on };
+  REMIND_GROUPS.forEach((g) => { if (S.rem.cat[g.id].on) p.cats[g.id] = S.rem.cat[g.id].goal; });
+  if (!S.days) S.days = {};
+  if (JSON.stringify(S.days[k]) !== JSON.stringify(p)) { S.days[k] = p; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+}
+function dayStatus(k) {
+  const p = S.days?.[k]; const done = []; const miss = [];
+  if (p) {
+    for (const gid of Object.keys(p.cats)) { const cnt = catCount(gid, k); (cnt >= p.cats[gid] ? done : miss).push(`${group(gid).label} · ${cnt} of ${p.cats[gid]}`); }
+    if (p.recall) (S.recalls.some((r) => dayKey(r.ts) === k) ? done : miss).push('Evening recall');
+  }
+  const extra = Object.entries(S.tally?.[k] || {}).filter(([id, n]) => n && !REMIND_GROUPS.some((g) => g.pool.includes(id))).map(([id, n]) => `${exById[id]?.title || id} × ${n}`);
+  return { done, miss, extra, total: done.length + miss.length, perfect: !!p && !miss.length && done.length > 0 };
 }
 const isLocked = (ex) => (ex.needs || []).some((n) => !S.milestones[n]);
 
@@ -118,8 +134,9 @@ async function syncNative() {
       occurrences(d).filter((o) => o.at > now).forEach((o, k) => list.push({ id: (dayNum(d) % 1000) * 1000 + k, title: o.title, body: o.body, at: o.at, route: o.route, exId: o.exId }));
     }
     await native.scheduleAll(list);
-    const leaving = REMIND_GROUPS.some((g) => S.rem.cat[g.id].on && g.leave.some((id) => S.rem.leaveItems[id]));
-    await native.watchLeave(leaving && canLeave() ? S.rem.home : null, onLeave);
+    const items = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on).flatMap((g) => g.leave.filter((id) => S.rem.leaveItems[id]).map((id) =>
+      ({ id, title: `${g.label}: ${exById[id].title}`, body: PING[id] || exById[id].summary, route: `#ex/${id}`, doneDay: tallyOf(id) > 0 ? dayKey() : '' })));
+    await native.setFence(canLeave() ? S.rem.home : null, items, S.rem.leave);
   } catch (e) { console.error('sync failed', e); }
 }
 // Fired when you step out of the home circle: remind each switched-on leave-home exercise (Stair Count, Stranger's Face), once a day each.
@@ -164,19 +181,19 @@ function exportCalendar() {
   const pad = (n) => String(n).padStart(2, '0');
   const stamp = (d) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
   const tx = (s) => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
-  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MindTap//EN', 'CALSCALE:GREGORIAN'];
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MindCue//EN', 'CALSCALE:GREGORIAN'];
   const now = new Date().toISOString().replace(/[-:]|\.\d+/g, '');
   for (let i = 0; i < 14; i++) {
     const d = new Date(); d.setDate(d.getDate() + i);
     for (const o of occurrences(d)) {
       if (o.at < new Date()) continue;
       const end = new Date(o.at.getTime() + 5 * 60000);
-      L.push('BEGIN:VEVENT', `UID:${dayKey(o.at.getTime())}-${o.id}@mindtap`, `DTSTAMP:${now}`, `DTSTART:${stamp(o.at)}`, `DTEND:${stamp(end)}`,
+      L.push('BEGIN:VEVENT', `UID:${dayKey(o.at.getTime())}-${o.id}@mindcue`, `DTSTAMP:${now}`, `DTSTART:${stamp(o.at)}`, `DTEND:${stamp(end)}`,
         `SUMMARY:${tx(o.title)}`, `DESCRIPTION:${tx(o.body)}`, 'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${tx(o.title)}`, 'TRIGGER:PT0S', 'END:VALARM', 'END:VEVENT');
     }
   }
   L.push('END:VCALENDAR');
-  download('mindtap-reminders.ics', 'text/calendar', L.join('\r\n'));
+  download('mindcue-reminders.ics', 'text/calendar', L.join('\r\n'));
 }
 function download(name, type, text) {
   const a = document.createElement('a');
@@ -200,14 +217,17 @@ const exRow = (id) => {
     <div style="flex:2;display:flex;gap:6px"><a class="chip" href="#ex/${id}" style="text-decoration:none;text-align:center;flex:1">Rules</a><button class="chip on" data-act="done:${id}" style="flex:1">✓ Done</button></div></div>`;
 };
 function Today() {
+  snapPlan();
   const now = new Date();
   const recalled = S.recalls.some((r) => dayKey(r.ts) === dayKey());
   const nudge = NUDGES[dayNum() % NUDGES.length];
   const n = streak();
   const next = {}; occurrences(now).forEach((o) => { if (o.cat && o.id !== 'recall' && o.at > now && !next[o.cat]) next[o.cat] = o.at; });
-  const rows = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on).map((g) => {
+  const on = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on);
+  const pending = on.filter((g) => !catDone(g.id));
+  const rows = pending.map((g) => {
     const c = S.rem.cat[g.id]; const cnt = catCount(g.id);
-    const status = cnt >= c.goal ? `goal met · ${cnt} of ${c.goal}` : `${cnt} of ${c.goal} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
+    const status = `${cnt} of ${c.goal} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
     let body;
     if (choosing(g.id)) body = '<div class="dim sm" style="margin-top:6px">Pick one:</div>' + c.ex.map(exRow).join('');
     else {
@@ -215,22 +235,48 @@ function Today() {
       body = exRow(id) + (c.ex.length > 1 || g.pool.length > 1 ? `<button class="chip" data-act="other:${g.id}" style="margin-top:8px">I did a different one</button>` : '');
       if (openCat === g.id) body += `<div class="chips">${g.pool.map((x) => `<button class="chip" data-act="done:${x}">${esc(exById[x].title)}</button>`).join('')}</div>`;
     }
-    const leave = g.leave.filter((id) => S.rem.leaveItems[id]).map((id) =>
+    const leave = g.leave.filter((id) => S.rem.leaveItems[id] && !tallyOf(id)).map((id) =>
       `<div class="dim sm" style="margin-top:12px">When you leave home${native.isNative && !S.rem.home ? ' · <a href="#settings" style="color:var(--accent)">set your home in Settings</a>' : ''}</div>${exRow(id)}`).join('');
-    const recall = g.id === 'obs' && S.rem.recall.on
-      ? `<div class="dim sm" style="margin-top:12px">Tonight · ${fmtTime(S.rem.recall.h, S.rem.recall.m)}</div><a href="#recall" style="color:inherit;text-decoration:none"><b>${recalled ? '✓ ' : ''}Evening recall</b></a><div class="dim sm">Recall your first morning activity and log it</div>` : '';
     const goalRow = `<div class="row" style="margin-top:10px;justify-content:space-between"><span class="dim sm" style="flex:2">Daily goal</span><span style="flex:3;text-align:right">${stepper(`cg:${g.id}`, c.goal)}</span></div>`;
-    return card(`<div class="dim sm">${g.label} · ${status}</div>${body}${goalRow}${leave}${recall}`);
+    return card(`<div class="dim sm">${g.label} · ${status}</div>${body}${goalRow}${leave}`);
   }).join('');
+  const recallCard = S.rem.recall.on && !recalled
+    ? card(`<div class="dim sm">Tonight · ${fmtTime(S.rem.recall.h, S.rem.recall.m)}</div><a href="#recall" style="color:inherit;text-decoration:none"><b>Evening recall</b></a><div class="dim sm">Recall your first morning activity and log it</div>`) : '';
+  const doneIds = [...new Set(REMIND_GROUPS.flatMap((g) => [...g.pool, ...g.leave]))].filter((id) => tallyOf(id));
+  const doneCard = doneIds.length || recalled
+    ? card(`<div class="dim sm">Done today</div>` + doneIds.map((id) => `<div class="row" style="margin-top:6px;justify-content:space-between"><span>✓ ${esc(exById[id].title)}${tallyOf(id) > 1 ? ` × ${tallyOf(id)}` : ''}</span><button class="chip" data-act="undo:${id}">Undo</button></div>`).join('') + (recalled ? '<div style="margin-top:6px">✓ Evening recall</div>' : '')) : '';
+  const all = on.length && !pending.length && !recallCard;
+  const cheer = all ? card(`<div class="cheer"><div class="pop">🎉</div><b style="font-size:18px">Everything done today!</b><div class="dim sm" style="margin-top:4px">${n ? `${n}-day streak. ` : ''}You showed up for yourself. Rest easy.</div></div>`, 'accent') : '';
   return `<div class="dim">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
   <h1>${n ? `${n}-day streak` : 'Begin today'}</h1>
   <div class="row"><a class="btn" href="#guide/funk-reset">I'm in a funk</a>${S.rem.playlist ? '<button class="btn ghost" data-act="music">♪ Play my songs</button>' : ''}</div>
   ${card(`<div class="dim sm">Mindful moment</div><div style="font-size:17px;margin-top:4px">${esc(nudge)}</div>`, 'accent')}
-  ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">MindTap needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → MindTap → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
-  <h2>Today's goals</h2>
-  ${rows || '<div class="dim">No reminders on. Turn some on in Settings.</div>'}
+  ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">MindCue needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → MindCue → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
+  ${native.isNative && !S.rem.home && Object.values(S.rem.leaveItems).some(Boolean) ? card(`<b>Set your home</b><div class="dim sm" style="margin:4px 0 8px">Stair Count and Stranger's Face remind you as you leave the house. Stand at home and tap the button. When your phone asks about location, choose <b>While using the app</b>, then open your phone's Settings → Apps → MindCue → Permissions → Location and pick <b>Allow all the time</b>.</div><button class="btn" data-act="sethome">Set my home here</button><div id="msg" class="warn sm"></div>`, 'accent') : ''}
+  ${cheer}
+  ${rows || recallCard ? `<h2>Today's goals</h2>${rows}${recallCard}` : on.length ? '' : '<h2>Today\'s goals</h2><div class="dim">No reminders on. Turn some on in Settings.</div>'}
+  ${doneCard}
   <div class="row" style="margin-top:8px"><a class="btn ghost" href="#note">Quick note</a></div>
-  <div class="dim sm center" style="margin-top:18px">MindTap · build ${esc(BUILD)}</div>`;
+  <div class="dim sm center" style="margin-top:18px">MindCue · build ${esc(BUILD)}</div>`;
+}
+
+function Day(k) {
+  if (!/^\d{4}-\d\d-\d\d$/.test(k || '')) return back('#log') + '<p>Not found.</p>';
+  const st = dayStatus(k); const [y, m, d] = k.split('-').map(Number);
+  const notes = [...S.sessions.map((x) => ({ ...x, k: 's' })), ...S.recalls.map((x) => ({ ...x, k: 'r' }))].filter((x) => dayKey(x.ts) === k).sort((a, b) => a.ts - b.ts);
+  const list = (a, mark) => a.map((t) => `<div style="margin-top:4px">${mark} ${esc(t)}</div>`).join('');
+  return `${back('#log')}<div class="dim">${new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
+  <h1>${st.perfect ? '★ ' : ''}${st.total ? `${st.done.length} of ${st.total} done` : 'Day review'}</h1>
+  ${st.done.length || st.extra.length ? card(`<div class="dim sm">Completed</div>${list(st.done, '✓')}${list(st.extra, '✓')}`) : ''}
+  ${st.miss.length ? card(`<div class="dim sm">Not completed</div>${list(st.miss, '○')}`) : ''}
+  ${card(`<div class="dim sm">Notes</div>` + (notes.length ? notes.map((r) => `<div style="margin-top:8px"><div class="dim sm">${new Date(r.ts).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })} · ${r.k === 'r' ? `Evening recall · ${r.details} details` : r.ex ? esc(exById[r.ex]?.title) : 'Note'}</div>${r.note ? `<div style="white-space:pre-line">${esc(r.note)}</div>` : ''}</div>`).join('') : '<div class="dim" style="margin-top:4px">No notes this day.</div>'))}`;
+}
+
+function Days() {
+  const ks = [...new Set([...Object.keys(S.days || {}), ...Object.keys(S.tally || {}), ...S.sessions.map((x) => dayKey(x.ts)), ...S.recalls.map((x) => dayKey(x.ts))])].sort().reverse();
+  if (!ks.length) return '<p class="dim">Days will appear here as you use the app.</p>';
+  return ks.map((k) => { const st = dayStatus(k); const [y, m, d] = k.split('-').map(Number);
+    return `<a class="card" href="#day/${k}" style="display:flex;justify-content:space-between;color:inherit;text-decoration:none"><span>${new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span><span class="${st.perfect ? 'good' : 'dim'}">${st.perfect ? '★ ' : ''}${st.total ? `${st.done.length} of ${st.total}` : 'view'}</span></a>`; }).join('');
 }
 
 // Where a "pick one" reminder lands: the exercises you chose for that category.
@@ -295,7 +341,8 @@ function Cycles() {
 let logTab = 'entries';
 function Log() {
   const rows = [...S.sessions.map((x) => ({ ...x, k: 's' })), ...S.recalls.map((x) => ({ ...x, k: 'r' }))].sort((a, b) => b.ts - a.ts);
-  const tabs = `<div class="chips"><button class="chip ${logTab === 'entries' ? 'on' : ''}" data-act="logtab:entries">Entries</button><button class="chip ${logTab === 'prog' ? 'on' : ''}" data-act="logtab:prog">Progress</button></div>`;
+  const tabs = `<div class="chips"><button class="chip ${logTab === 'entries' ? 'on' : ''}" data-act="logtab:entries">Entries</button><button class="chip ${logTab === 'days' ? 'on' : ''}" data-act="logtab:days">Days</button><button class="chip ${logTab === 'prog' ? 'on' : ''}" data-act="logtab:prog">Progress</button></div>`;
+  if (logTab === 'days') return `<h1>Log</h1>${tabs}${Days()}`;
   if (logTab === 'prog') return `<h1>Log</h1>${tabs}${Progress()}`;
   return `<h1>Log</h1>${tabs}<div class="row"><a class="btn" href="#note">+ Note</a><a class="btn" href="#recall">+ Evening recall</a></div>
   ${rows.length ? rows.map((r) => `<div class="card" data-act="del:${r.k}:${r.id}"><div class="dim sm">${when(r.ts)} · ${r.k === 'r' ? `Evening recall · ${r.details} details${r.accuracy ? ` · accuracy ${r.accuracy}/5` : ''}` : `${r.ex ? esc(exById[r.ex]?.title) : 'Note'}${r.focus ? ` · focus ${r.focus}/5` : ''}`}</div>${r.note ? `<div style="white-space:pre-line;margin-top:4px">${esc(r.note)}</div>` : ''}</div>`).join('') + '<div class="dim sm">Tap an entry to delete it.</div>' : '<p class="dim">Nothing logged yet.</p>'}`;
@@ -366,11 +413,12 @@ function Settings() {
   const anyLeave = REMIND_GROUPS.some((g) => R.cat[g.id].on && g.leave.some((id) => R.leaveItems[id]));
   const home = anyLeave ? card(`<b>Leaving home</b>
     <div class="dim sm">${!native.isNative ? 'Works in the Android app only. Until then these stay quiet.' : R.home ? `Home is set. Reminders fire when you move ${R.home.r} m away.` : 'Set your home first — until then these stay quiet.'}</div>
+    <div class="dim sm" style="margin-top:6px">Reminders while you're away from home (spread out until you're back)</div>${stepper('leaven', R.leave.n)}
     <div class="dim sm" style="margin-top:6px">Leave-home reminders allowed from</div>${stepper('leaveS', R.leave.s, (v) => fmtTime(v))}
     <div class="dim sm" style="margin-top:6px">Until</div>${stepper('leaveE', R.leave.e, (v) => fmtTime(v))}
     ${native.isNative ? `<button class="btn ghost" data-act="sethome">${R.home ? 'Update' : 'Set'} home to my current location</button>
     ${R.home ? `<div class="dim sm">Distance to count as "left"</div>${stepper('homer', R.home.r, (v) => v + ' m')}` : ''}
-    <div class="dim sm" style="margin-top:6px">Needs location set to "Allow all the time". A small notification shows while it watches. It uses some battery.</div>` : ''}`) : '';
+    <div class="dim sm" style="margin-top:6px">Uses your phone\'s built-in home-area alert, so it barely touches the battery and shows no ongoing notification. Needs location set to "Allow all the time".</div>` : ''}`) : '';
   return `<h1>Settings</h1>
   <h2>Notifications</h2>
   ${permState === 'granted' ? '<div class="good sm">Notifications are on.</div>' : `<button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked — enable notifications for this app in your phone settings.</div>' : ''}`}
@@ -395,7 +443,7 @@ function Settings() {
   <button class="btn" data-act="export">Export backup</button>
   <label class="btn ghost" style="cursor:pointer">Restore from backup file<input type="file" id="restore" accept=".json,application/json" hidden></label>
   <div id="msg" class="good sm"></div>
-  <div class="dim sm center" style="margin-top:18px">MindTap · build ${esc(BUILD)}</div>`;
+  <div class="dim sm center" style="margin-top:18px">MindCue · build ${esc(BUILD)}</div>`;
 }
 
 /* ----- guided runner ----- */
@@ -487,6 +535,7 @@ function paint() {
     case 'cycles': h = Cycles(); break;
     case 'about': h = About(); break;
     case 'cat': h = Choose(a); break;
+    case 'day': h = Day(a); break;
     case 'settings': h = Settings(); break;
     default: h = Today();
   }
@@ -537,7 +586,7 @@ document.addEventListener('click', async (e) => {
     case 'recallon': S.rem.recall.on = !S.rem.recall.on; save(); repaintKeep(); break;
     case 'sethome': {
       msg('Finding your location…');
-      try { const p = await native.currentPosition(); S.rem.home = { latitude: p.latitude, longitude: p.longitude, r: S.rem.home?.r || 150 }; save(); repaintKeep(); msg('Home set.'); }
+      try { const p = await native.currentPosition(); S.rem.home = { latitude: p.latitude, longitude: p.longitude, r: S.rem.home?.r || 150 }; save(); repaintKeep(); msg('Home set.'); toast('Home set. Last step: phone Settings → Apps → MindCue → Permissions → Location → Allow all the time.'); }
       catch (err) { msg('Could not get your location. Allow location "all the time" for this app and try again.'); }
       break;
     }
@@ -557,6 +606,7 @@ document.addEventListener('click', async (e) => {
     case 'export': exportBackup(); break;
     case 'trun': toggleRun(); break;
     case 'pick': G.pickSecs = +a; G.left = +a; paint(); break;
+    case 'undo': { const t = S.tally?.[dayKey()]; if (t && t[a] > 0) { t[a]--; if (!t[a]) delete t[a]; save(); } repaintKeep(); break; }
     case 'done': bump(a); openCat = null; toast(`✓ ${exById[a].title} — ${tallyOf(a)} today`); repaintKeep(); break;
     case 'gnext': if (G.ex.steps.length - 1 === G.i) { G.done = true; clearInterval(G.timer); paint(); } else { G.i++; initStep(); paint(); } break;
     case 'gprev': G.i--; initStep(); paint(); break;
@@ -583,6 +633,7 @@ function stepTo(name, id, d, idx) {
     if (name === 'mindn') R.mind.n = clamp(R.mind.n + d, 1, 12);
     if (name === 'dayS') R.day.s = clamp(R.day.s + d, 0, R.day.e - 1);
     if (name === 'dayE') R.day.e = clamp(R.day.e + d, R.day.s + 1, 23);
+    if (name === 'leaven') R.leave.n = clamp(R.leave.n + d, 1, 6);
     if (name === 'leaveS') R.leave.s = clamp(R.leave.s + d, 0, R.leave.e - 1);
     if (name === 'leaveE') R.leave.e = clamp(R.leave.e + d, R.leave.s + 1, 24);
     if (name === 'homer') R.home.r = clamp(R.home.r + d * 50, 50, 1000);
@@ -591,10 +642,10 @@ function stepTo(name, id, d, idx) {
   repaintKeep();
 }
 async function exportBackup() {
-  const text = JSON.stringify(S, null, 1); const name = `mindtap-backup-${dayKey()}.json`;
+  const text = JSON.stringify(S, null, 1); const name = `mindcue-backup-${dayKey()}.json`;
   try {
     const f = new File([text], name, { type: 'application/json' });
-    if (navigator.canShare?.({ files: [f] })) { await navigator.share({ files: [f], title: 'MindTap backup' }); return msg('Backup shared.'); }
+    if (navigator.canShare?.({ files: [f] })) { await navigator.share({ files: [f], title: 'MindCue backup' }); return msg('Backup shared.'); }
   } catch (e) { if (e.name === 'AbortError') return; }
   download(name, 'application/json', text); msg('Backup downloaded.');
 }
@@ -614,6 +665,7 @@ native.onTap((route, action, exId) => {
   if (action === 'done' && exId) { bump(exId); toast(`✓ ${exById[exId].title} — ${tallyOf(exId)} today`); location.hash = '#today'; paint(); }
   else if (route) location.hash = route;
 });
+native.onRoute((route) => { location.hash = route; });
 if (native.isNative) native.permState().then((p) => { permState = p; changed(); });
 paint(); checkDue();
 window.__mindfulBooted = true;

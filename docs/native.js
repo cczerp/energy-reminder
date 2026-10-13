@@ -4,6 +4,7 @@ const cap = globalThis.Capacitor;
 export const isNative = !!cap?.isNativePlatform?.() && typeof cap.registerPlugin === 'function';
 const LN = isNative ? cap.registerPlugin('LocalNotifications') : null;
 const BG = isNative ? cap.registerPlugin('BackgroundGeolocation') : null;
+const FENCE = isNative ? cap.registerPlugin('LeaveFence') : null;
 
 // Notification buttons on exercise reminders.
 LN?.registerActionTypes({ types: [{ id: 'EX', actions: [{ id: 'rules', title: 'See rules' }, { id: 'done', title: 'Completed' }] }] }).catch(() => {});
@@ -31,13 +32,13 @@ export async function scheduleAll(list) {
   if (pend.notifications.length) await LN.cancel({ notifications: pend.notifications.map((n) => ({ id: n.id })) });
   if (!list.length) return;
   await LN.schedule({
-    notifications: list.map((o) => ({ id: o.id, title: o.title, body: o.body, schedule: { at: o.at, allowWhileIdle: true }, extra: { route: o.route, exId: o.exId }, ...(o.exId ? { actionTypeId: 'EX' } : {}) })),
+    notifications: list.map((o) => ({ id: o.id, title: o.title, body: o.body, largeBody: o.body, schedule: { at: o.at, allowWhileIdle: true }, extra: { route: o.route, exId: o.exId }, ...(o.exId ? { actionTypeId: 'EX' } : {}) })),
   });
 }
 
 export async function fireNow(id, title, body, route, exId) {
   if (!LN) return;
-  await LN.schedule({ notifications: [{ id, title, body, schedule: { at: new Date(Date.now() + 1500), allowWhileIdle: true }, extra: { route, exId }, ...(exId ? { actionTypeId: 'EX' } : {}) }] });
+  await LN.schedule({ notifications: [{ id, title, body, largeBody: body, schedule: { at: new Date(Date.now() + 1500), allowWhileIdle: true }, extra: { route, exId }, ...(exId ? { actionTypeId: 'EX' } : {}) }] });
 }
 
 export function onTap(fn) {
@@ -68,19 +69,19 @@ export async function currentPosition() {
   return new Promise((res, rej) => navigator.geolocation.getCurrentPosition((p) => res(p.coords), rej, { enableHighAccuracy: true, timeout: 20000 }));
 }
 
-// Calls onLeave() each time you move out of the home circle (with some hysteresis). Pass home=null to stop watching.
-export async function watchLeave(home, onLeave) {
-  if (!BG) return;
-  if (watcher) { try { await BG.removeWatcher({ id: watcher }); } catch (e) {} watcher = null; }
-  if (!home) return;
-  let inside = null;
-  watcher = await BG.addWatcher(
-    { backgroundTitle: 'MindTap', backgroundMessage: 'Watching for when you leave home', requestPermissions: true, stale: false, distanceFilter: 40 },
-    (loc, err) => {
-      if (err || !loc) return;
-      const d = dist(home, loc);
-      if (d <= home.r * 0.8) inside = true;
-      else if (d > home.r * 1.2) { if (inside === true) onLeave(); inside = false; }
-    }
-  );
+// Hands the phone's own geofencing the edge of home. The phone, not this app, watches for you leaving (almost no battery),
+// and posts the reminders itself. home=null (or no items) switches it off.
+export async function setFence(home, items, win) {
+  if (!FENCE) return;
+  try {
+    await FENCE.set(home && items.length ? { lat: home.latitude, lng: home.longitude, radius: home.r, startH: win.s, endH: win.e, n: win.n, items } : {});
+  } catch (e) { console.error('fence', e); }
+}
+
+// Opens the page of a "leaving home" notification that was tapped.
+export function onRoute(fn) {
+  if (!FENCE) return;
+  FENCE.addListener('route', (ev) => ev?.route && fn(ev.route));
+  const take = () => FENCE.takeRoute().then((r) => r?.route && fn(r.route)).catch(() => {});
+  take(); document.addEventListener('visibilitychange', () => { if (!document.hidden) take(); });
 }
