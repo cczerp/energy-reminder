@@ -41,7 +41,7 @@ function bump(id) { const k = dayKey(); if (!S.tally) S.tally = {}; if (!S.tally
 function toast(t) {
   const el = document.createElement('div'); el.textContent = t;
   el.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#6fcf97;color:#1e1833;padding:10px 18px;border-radius:20px;font-weight:700;z-index:9';
-  document.body.appendChild(el); setTimeout(() => el.remove(), 2200);
+  document.body.appendChild(el); setTimeout(() => el.remove(), 2200 + t.length * 40);
 }
 function streak() {
   const days = practiceDays(); let n = 0; const d = new Date();
@@ -251,6 +251,7 @@ function Today() {
   <div class="row"><a class="btn" href="#guide/funk-reset">I'm in a funk</a>${S.rem.playlist ? '<button class="btn ghost" data-act="music">♪ Play my songs</button>' : ''}</div>
   ${card(`<div class="dim sm">Mindful moment</div><div style="font-size:17px;margin-top:4px">${esc(nudge)}</div>`, 'accent')}
   ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">MindCue needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → MindCue → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
+  ${native.isNative && !S.rem.home && Object.values(S.rem.leaveItems).some(Boolean) ? card(`<b>Set your home</b><div class="dim sm" style="margin:4px 0 8px">Stair Count and Stranger's Face remind you as you leave the house. Stand at home and tap the button. When your phone asks about location, choose <b>While using the app</b>, then open your phone's Settings → Apps → MindCue → Permissions → Location and pick <b>Allow all the time</b>.</div><button class="btn" data-act="sethome">Set my home here</button><div id="msg" class="warn sm"></div>`, 'accent') : ''}
   ${cheer}
   ${rows || recallCard ? `<h2>Today's goals</h2>${rows}${recallCard}` : on.length ? '' : '<h2>Today\'s goals</h2><div class="dim">No reminders on. Turn some on in Settings.</div>'}
   ${doneCard}
@@ -583,7 +584,7 @@ document.addEventListener('click', async (e) => {
     case 'recallon': S.rem.recall.on = !S.rem.recall.on; save(); repaintKeep(); break;
     case 'sethome': {
       msg('Finding your location…');
-      try { const p = await native.currentPosition(); S.rem.home = { latitude: p.latitude, longitude: p.longitude, r: S.rem.home?.r || 150 }; save(); repaintKeep(); msg('Home set.'); }
+      try { const p = await native.currentPosition(); S.rem.home = { latitude: p.latitude, longitude: p.longitude, r: S.rem.home?.r || 150 }; save(); repaintKeep(); msg('Home set.'); toast('Home set. Last step: phone Settings → Apps → MindCue → Permissions → Location → Allow all the time.'); }
       catch (err) { msg('Could not get your location. Allow location "all the time" for this app and try again.'); }
       break;
     }
