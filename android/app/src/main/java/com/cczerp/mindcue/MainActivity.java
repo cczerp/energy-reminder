@@ -1,4 +1,4 @@
-package com.cczerp.mindful;
+package com.cczerp.mindcue;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;

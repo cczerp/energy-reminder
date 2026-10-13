@@ -74,7 +74,7 @@ export async function currentPosition() {
 export async function setFence(home, items, win) {
   if (!FENCE) return;
   try {
-    await FENCE.set(home && items.length ? { lat: home.latitude, lng: home.longitude, radius: home.r, startH: win.s, endH: win.e, items } : {});
+    await FENCE.set(home && items.length ? { lat: home.latitude, lng: home.longitude, radius: home.r, startH: win.s, endH: win.e, n: win.n, items } : {});
   } catch (e) { console.error('fence', e); }
 }
 

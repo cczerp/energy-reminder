@@ -413,6 +413,7 @@ function Settings() {
   const anyLeave = REMIND_GROUPS.some((g) => R.cat[g.id].on && g.leave.some((id) => R.leaveItems[id]));
   const home = anyLeave ? card(`<b>Leaving home</b>
     <div class="dim sm">${!native.isNative ? 'Works in the Android app only. Until then these stay quiet.' : R.home ? `Home is set. Reminders fire when you move ${R.home.r} m away.` : 'Set your home first — until then these stay quiet.'}</div>
+    <div class="dim sm" style="margin-top:6px">Reminders while you're away from home (spread out until you're back)</div>${stepper('leaven', R.leave.n)}
     <div class="dim sm" style="margin-top:6px">Leave-home reminders allowed from</div>${stepper('leaveS', R.leave.s, (v) => fmtTime(v))}
     <div class="dim sm" style="margin-top:6px">Until</div>${stepper('leaveE', R.leave.e, (v) => fmtTime(v))}
     ${native.isNative ? `<button class="btn ghost" data-act="sethome">${R.home ? 'Update' : 'Set'} home to my current location</button>
@@ -632,6 +633,7 @@ function stepTo(name, id, d, idx) {
     if (name === 'mindn') R.mind.n = clamp(R.mind.n + d, 1, 12);
     if (name === 'dayS') R.day.s = clamp(R.day.s + d, 0, R.day.e - 1);
     if (name === 'dayE') R.day.e = clamp(R.day.e + d, R.day.s + 1, 23);
+    if (name === 'leaven') R.leave.n = clamp(R.leave.n + d, 1, 6);
     if (name === 'leaveS') R.leave.s = clamp(R.leave.s + d, 0, R.leave.e - 1);
     if (name === 'leaveE') R.leave.e = clamp(R.leave.e + d, R.leave.s + 1, 24);
     if (name === 'homer') R.home.r = clamp(R.home.r + d * 50, 50, 1000);

@@ -1,4 +1,4 @@
-package com.cczerp.mindful;
+package com.cczerp.mindcue;
 
 import android.content.Context;
 import android.content.Intent;
@@ -60,6 +60,7 @@ public class LeaveFencePlugin extends Plugin {
         e.putFloat("radius", call.getFloat("radius", 150f));
         e.putFloat("startH", call.getFloat("startH", 6f));
         e.putFloat("endH", call.getFloat("endH", 24f));
+        e.putInt("n", call.getInt("n", 2));
         e.putString("items", items.toString());
         e.apply();
         LeaveFenceReceiver.register(c);

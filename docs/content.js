@@ -448,7 +448,7 @@ export const CAT_LABEL = Object.fromEntries(REMIND_GROUPS.flatMap((g) => g.ids.m
 // choose: when a reminder rings and several exercises are selected, let you pick (otherwise it picks one for you).
 export const REMIND_DEFAULTS = {
   day: { s: 7, e: 22 }, // hours random/even reminders and sayings may appear
-  leave: { s: 6, e: 24 }, // hours "when I leave home" reminders may appear
+  leave: { s: 6, e: 24, n: 2 }, // hours "when I leave home" reminders may appear
   cat: {
     obs: { on: true, ex: ['obs-room'], goal: 1, n: 1, timing: 'random', times: [720], choose: true },
     conc: { on: true, ex: ['conc-multiply', 'conc-poem'], goal: 1, n: 1, timing: 'even', times: [780], choose: true },

@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.cczerp.mindful"
+    namespace = "com.cczerp.mindcue"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.cczerp.mindful"
+        applicationId "com.cczerp.mindcue"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Each CI build gets a higher version so a new APK installs over the previous one.
