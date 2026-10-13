@@ -27,8 +27,20 @@ android {
             keyPassword 'android'
         }
     }
+    // Google Play upload key: supplied by CI from secrets, never stored in the repo.
+    if (System.getenv("UPLOAD_KEYSTORE_PATH")) {
+        signingConfigs {
+            upload {
+                storeFile file(System.getenv("UPLOAD_KEYSTORE_PATH"))
+                storePassword System.getenv("UPLOAD_STORE_PASSWORD")
+                keyAlias 'upload'
+                keyPassword System.getenv("UPLOAD_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
+            if (System.getenv("UPLOAD_KEYSTORE_PATH")) signingConfig signingConfigs.upload
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

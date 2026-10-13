@@ -30,6 +30,23 @@ jobs:
           cp android/app/build/outputs/apk/debug/app-debug.apk mindcue.apk
           cp mindcue.apk mindtap.apk   # old file names, so links and QR codes made before the renames keep working
           cp mindcue.apk mindful.apk
+      - name: Build the Google Play bundle (only when the upload key secret is set)
+        env:
+          UPLOAD_KEYSTORE_B64: ${{ secrets.UPLOAD_KEYSTORE }}
+          UPLOAD_STORE_PASSWORD: ${{ secrets.UPLOAD_STORE_PASSWORD }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -n "$UPLOAD_KEYSTORE_B64" ]; then
+            echo "$UPLOAD_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            export UPLOAD_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
+            (cd android && ./gradlew bundleRelease --no-daemon)
+            cp android/app/build/outputs/bundle/release/app-release.aab mindcue.aab
+          else
+            echo "No upload key secret; skipping the Play bundle."
+          fi
+      - uses: actions/upload-artifact@v4
+        if: hashFiles('mindcue.aab') != ''
+        with: { name: mindcue-aab, path: mindcue.aab }
       - name: List the web files packed into the APK
         run: unzip -l mindcue.apk | grep "assets/public/"
       - uses: actions/upload-artifact@v4
