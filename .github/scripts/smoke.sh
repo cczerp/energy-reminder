@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs inside the Android emulator: installs the APK, launches it, taps the tab bar, and prints what the app logged and drew.
-adb install -r mindtap.apk
+adb install -r mindcue.apk
 adb logcat -c
 adb shell am start -n com.cczerp.mindful/.MainActivity
 sleep 30

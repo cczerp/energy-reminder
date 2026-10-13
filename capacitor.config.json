@@ -1,6 +1,6 @@
 {
   "appId": "com.cczerp.mindful",
-  "appName": "MindTap",
+  "appName": "MindCue",
   "webDir": "docs",
   "backgroundColor": "#1e1833",
   "android": { "allowMixedContent": false }

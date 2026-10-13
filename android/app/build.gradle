@@ -9,7 +9,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Each CI build gets a higher version so a new APK installs over the previous one.
         versionCode = Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER") ?: "1")
-        // Shown in Android Settings > Apps > MindTap, so the installed build can be checked without opening the app.
+        // Shown in Android Settings > Apps > MindCue, so the installed build can be checked without opening the app.
         versionName = "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
