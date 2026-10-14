@@ -373,7 +373,7 @@ function Choose(gid) {
 
 function Practice() {
   const ms = MILESTONES.map((m) => check(!!S.milestones[m.id], esc(m.label), `ms:${m.id}`)).join('');
-  const groups = Object.entries(CATS).map(([cat, label]) => `<h2>${label}</h2>` + EXERCISES.filter((e) => e.cat === cat).map((e) =>
+  const groups = Object.entries(CATS).map(([cat, label]) => `<h2>${label}</h2>` + EXERCISES.filter((e) => e.cat === cat && !e.hidden).map((e) =>
     link(`#ex/${e.id}`, `<b>${isLocked(e) ? '🔒 ' : ''}${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`, isLocked(e) ? 'locked' : '')
   ).join('') + (cat === 'chakra' ? link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>') : '') + (cat === 'emotion' ? link('#scale', '<b>Climbing the Scale</b><div class="dim sm">Tell it what you feel. It walks you up, one rung at a time</div>') + link('#wheel', '<b>Focus Wheel</b><div class="dim sm">Build 12 believable statements toward what you want</div>') : '')).join('');
   return `<h1>Practice</h1>

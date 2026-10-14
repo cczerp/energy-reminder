@@ -564,6 +564,25 @@ EXERCISES.push(
   },
 );
 
+// Color, Sound and the Pink Cloud as ONE meditation practice (the three originals stay available but hidden).
+{
+  const [color, sound, cloud] = ['med-color', 'med-sound', 'med-cloud'].map((id) => EXERCISES.find((e) => e.id === id));
+  [color, sound, cloud].forEach((e) => { e.hidden = true; });
+  EXERCISES.push({
+    id: 'med-practice', cat: 'meditate', title: 'Meditation Practice', mins: 0,
+    freq: 'Daily', summary: 'Color, then sound, then the pink cloud, in one sitting. Builds your overall ability to meditate.',
+    steps: [
+      BODY,
+      { ...color.steps[1], t: 'Color. ' + color.steps[1].t },
+      color.steps[2], color.steps[3],
+      { ...sound.steps[1], t: 'Sound. ' + sound.steps[1].t },
+      sound.steps[2], sound.steps[3],
+      { ...cloud.steps[1], t: 'The Pink Cloud. ' + cloud.steps[1].t },
+      'Dismiss it, rise, deep breath, relax.',
+    ],
+  });
+}
+
 // Practices inspired by Barbara Marciniak, Neville Goddard, Bashar and Esther & Abraham Hicks, written in this app's own words.
 EXERCISES.push(
   {
@@ -706,7 +725,7 @@ export const REMIND_GROUPS = [
   { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], both: ['obs-room'], ids: ['obs-room', 'obs-stairs'] },
   { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger'] },
   { id: 'med', cat: 'meditate', label: 'Routine meditation', simple: true, pool: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
-  { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-color', 'med-sound', 'med-cloud'], leave: [], ids: ['med-color', 'med-sound', 'med-cloud'] },
+  { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-practice'], leave: [], ids: ['med-practice', 'med-color', 'med-sound', 'med-cloud'] },
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'] },
   { id: 'bed', cat: 'bedtime', label: 'Bedtime', pool: ['obs-recall', 'bed-belief', 'bed-revision', 'bed-sats'], leave: [], ids: ['obs-recall', 'bed-belief', 'bed-revision', 'bed-sats'] },
 ];
@@ -720,7 +739,7 @@ export const REMIND_DEFAULTS = {
     obs: { on: true, ex: ['obs-room', 'obs-stairs'], goal: 1, n: 1, timing: 'random', times: [720], choose: true },
     conc: { on: true, ex: ['conc-multiply', 'conc-poem', 'conc-stranger'], goal: 1, n: 1, timing: 'even', times: [780], choose: true },
     med: { on: true, ex: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], goal: 1, n: 1, timing: 'even', times: [480], choose: true },
-    medp: { on: true, ex: ['med-color', 'med-sound', 'med-cloud'], goal: 1, n: 1, timing: 'even', times: [1020], choose: true },
+    medp: { on: true, ex: ['med-practice'], goal: 1, n: 1, timing: 'even', times: [1020], choose: true },
     bed: { on: true, ex: ['obs-recall'], goal: 1, n: 1, timing: 'set', times: [1230], choose: true },
     emo: { on: true, ex: ['emo-matches', 'emo-tv'], goal: 1, n: 1, timing: 'random', times: [900], choose: true },
   },
@@ -793,6 +812,13 @@ export const NUDGES = [
   "Don't check for evidence and don't talk it over. Once the state is assumed, let it work.",
   "Brazen impudence: pray as the answered man. Bold, shameless certainty.",
   "You are not stressed, broke, or shy. Those are states you are wearing. You are the one wearing them.",
+  "You are a frequency, a halo of consciousness, having a physical experience. Thought is creative. Choose your thoughts the way you choose your words.",
+  "Fear is a currency. Notice where you are spending your energy on it.",
+  "Your body is a library of light, being rewritten all the time. Treat it as something precious.",
+  "Much of what runs your life is inherited belief. Whose script are you reading from today?",
+  "Stop the merry-go-round. You can step out of the role your family, culture, or media handed you.",
+  "Time is not a line. This moment is the only point of power, and from here the past and the future can both be changed.",
+  "States of consciousness are the only true cause. Change the state and what follows changes.",
   "Follow the whim: one small, safe, instant impulse today.",
   "Notice one thought pulling you. You are not the thought, you are where it appears.",
   "Where are you on the scale right now? Aim one rung up, no more.",
@@ -830,6 +856,7 @@ export const PING = {
   'conc-multiply': 'Multiply two 2-digit numbers in your head. Then two 3-digit ones.',
   'conc-poem': 'Memorize 4 lines of a poem and recite them.',
   'conc-stranger': 'Next stranger you pass: study the face, look away, hold it in your mind for a minute.',
+  'med-practice': 'Meditation practice: color, then sound, then the pink cloud, in one sitting.',
   'med-color': 'Blue, then pink, then white, one minute each.',
   'med-sound': 'Violin, then horn or sax, then piano, one minute each.',
   'med-cloud': 'One minute wrapped in a pink cloud.',
