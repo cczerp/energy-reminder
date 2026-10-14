@@ -9,7 +9,7 @@ body.guided #tabs { display: none; }
 h1 { font-size: 32px; font-weight: 700; line-height: 1.2; margin: 4px 0 14px; }
 h2 { font-size: 22px; font-weight: 700; color: var(--accent); margin: 26px 0 10px; }
 .dim { color: var(--dim); } .sm { font-size: 15px; } .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
-.card { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 12px; color: inherit; text-decoration: none; }
+.card { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; color: inherit; text-decoration: none; }
 a.card:active, .card[data-go]:active { opacity: .7; }
 .card.warnb { border-color: var(--warn); } .card.accent { border-color: var(--peri); }
 .btn { display: block; width: 100%; background: var(--accent); color: var(--bg); border: 0; border-radius: 12px; padding: 16px 18px; min-height: 54px; font-weight: 700; font-size: 18px; font-family: inherit; text-align: center; margin: 6px 0; text-decoration: none; }
@@ -22,8 +22,8 @@ a.card:active, .card[data-go]:active { opacity: .7; }
 .check { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; cursor: pointer; }
 .box { flex: none; width: 28px; height: 28px; border: 2px solid var(--dim); border-radius: 6px; display: grid; place-items: center; color: var(--bg); font-weight: 700; }
 .check.on .box { background: var(--good); border-color: var(--good); }
-.stepper { display: inline-flex; align-items: center; } .stepper button { width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--peri); color: var(--bg); font-size: 26px; font-weight: 700; }
-.stepper span { min-width: 84px; text-align: center; font-size: 19px; font-weight: 700; }
+.stepper { display: inline-flex; align-items: center; } .stepper button { width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--peri); color: var(--bg); font-size: 20px; line-height: 1; font-weight: 700; }
+.stepper span { min-width: 68px; text-align: center; font-size: 16px; font-weight: 700; }
 textarea, input[type=text] { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font: inherit; margin: 6px 0; }
 textarea { min-height: 120px; }
 .rating { display: flex; gap: 8px; } .rating button { width: 46px; height: 46px; font-size: 17px; border-radius: 50%; border: 1px solid var(--line); background: none; color: var(--dim); } .rating button.on { background: var(--peri); border-color: var(--peri); color: var(--bg); }
@@ -39,7 +39,7 @@ textarea { min-height: 120px; }
 
 button, input, textarea, select { font-family: inherit; }
 .stepper { gap: 6px; }
-.btn { white-space: nowrap; }
+.btn.mini, .row .btn { white-space: nowrap; }
 .row .btn { padding-left: 8px; padding-right: 8px; }
 
 .title, .ttl { font-size: 24px; font-weight: 800; color: var(--pd); line-height: 1.2; }
@@ -63,3 +63,4 @@ button, input, textarea, select { font-family: inherit; }
 @keyframes spin { to { transform: rotate(360deg); } } .spin { animation: spin 6s linear infinite; }
 input[type=text] { font-size: 16px; }
 .tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); border: 1px solid var(--line); border-radius: 8px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
+h3 { font-size: 18px; color: var(--pd); margin: 14px 0 6px; } .bul.dis { opacity: .38; pointer-events: none; }
