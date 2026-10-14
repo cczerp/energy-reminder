@@ -572,6 +572,7 @@ function tick() {
   if (st.open) { G.elapsed++; $('#tm').textContent = pad(G.elapsed); return; }
   if (st.secs) {
     G.left--; $('#tm').textContent = pad(G.left);
+    if (st.buzz && G.left > 0 && ((G.pickSecs || st.secs) - G.left) % st.buzz === 0) vib([0, 250, 120, 250]); // keeps track of time with eyes closed
     if (G.left <= 0) { vib([0, 300, 150, 300]); G.run = false; G.stepDone = true; clearInterval(G.timer); paint(); }
     return;
   }

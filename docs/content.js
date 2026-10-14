@@ -564,21 +564,19 @@ EXERCISES.push(
   },
 );
 
-// Color, Sound and the Pink Cloud as ONE meditation practice (the three originals stay available but hidden).
+// Color and Sound as ONE practice (the two originals stay available but hidden). The Pink Cloud stays its own exercise.
 {
   const [color, sound, cloud] = ['med-color', 'med-sound', 'med-cloud'].map((id) => EXERCISES.find((e) => e.id === id));
-  [color, sound, cloud].forEach((e) => { e.hidden = true; });
+  [color, sound].forEach((e) => { e.hidden = true; });
+  cloud.title = 'Meditation 3 — The Pink Cloud'; cloud.freq = 'Daily'; cloud.summary = 'Wrapped in a pink cloud, held steady.';
+  cloud.steps = [BODY, { t: cloud.steps[1].t + ' Pick your length.', pick: [180], secs: 180 }, 'Dismiss it, rise, deep breath, relax.'];
   EXERCISES.push({
-    id: 'med-practice', cat: 'meditate', title: 'Meditation Practice', mins: 0,
-    freq: 'Daily', summary: 'Color, then sound, then the pink cloud, in one sitting. Builds your overall ability to meditate.',
+    id: 'med-practice', cat: 'meditate', title: 'Meditation 1 & 2 — Color and Sound', mins: 0,
+    freq: 'Daily', summary: 'Blue, pink, white, then violin, horn, piano, in one sitting. A gentle buzz keeps track of time.',
     steps: [
       BODY,
-      { ...color.steps[1], t: 'Color. ' + color.steps[1].t },
-      color.steps[2], color.steps[3],
-      { ...sound.steps[1], t: 'Sound. ' + sound.steps[1].t },
-      sound.steps[2], sound.steps[3],
-      { ...cloud.steps[1], t: 'The Pink Cloud. ' + cloud.steps[1].t },
-      'Dismiss it, rise, deep breath, relax.',
+      { t: 'COLOR: picture one shade of blue, filling the whole room around you. Then switch to pink. Then to pure white (fresh-snow bright).\n\nSOUND: hear a violin playing something familiar. If other instruments swell in, filter back to just the violin. Then a horn or saxophone (one or the other). Then a piano playing something familiar, hardest of all: chords, not single notes.\n\nSpend about the same time on each. Your phone buzzes gently every 90 seconds so you do not lose track of time. Pick your length.', pick: [240], secs: 240, buzz: 90 },
+      'Rise, deep breath, relax.',
     ],
   });
 }
@@ -725,7 +723,7 @@ export const REMIND_GROUPS = [
   { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], both: ['obs-room'], ids: ['obs-room', 'obs-stairs'] },
   { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger'] },
   { id: 'med', cat: 'meditate', label: 'Routine meditation', simple: true, pool: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
-  { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-practice'], leave: [], ids: ['med-practice', 'med-color', 'med-sound', 'med-cloud'] },
+  { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-practice', 'med-cloud'], leave: [], ids: ['med-practice', 'med-color', 'med-sound', 'med-cloud'] },
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'] },
   { id: 'bed', cat: 'bedtime', label: 'Bedtime', pool: ['obs-recall', 'bed-belief', 'bed-revision', 'bed-sats'], leave: [], ids: ['obs-recall', 'bed-belief', 'bed-revision', 'bed-sats'] },
 ];
@@ -739,7 +737,7 @@ export const REMIND_DEFAULTS = {
     obs: { on: true, ex: ['obs-room', 'obs-stairs'], goal: 1, n: 1, timing: 'random', times: [720], choose: true },
     conc: { on: true, ex: ['conc-multiply', 'conc-poem', 'conc-stranger'], goal: 1, n: 1, timing: 'even', times: [780], choose: true },
     med: { on: true, ex: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], goal: 1, n: 1, timing: 'even', times: [480], choose: true },
-    medp: { on: true, ex: ['med-practice'], goal: 1, n: 1, timing: 'even', times: [1020], choose: true },
+    medp: { on: true, ex: ['med-practice', 'med-cloud'], goal: 1, n: 1, timing: 'even', times: [1020], choose: true },
     bed: { on: true, ex: ['obs-recall'], goal: 1, n: 1, timing: 'set', times: [1230], choose: true },
     emo: { on: true, ex: ['emo-matches', 'emo-tv'], goal: 1, n: 1, timing: 'random', times: [900], choose: true },
   },
@@ -856,10 +854,10 @@ export const PING = {
   'conc-multiply': 'Multiply two 2-digit numbers in your head. Then two 3-digit ones.',
   'conc-poem': 'Memorize 4 lines of a poem and recite them.',
   'conc-stranger': 'Next stranger you pass: study the face, look away, hold it in your mind for a minute.',
-  'med-practice': 'Meditation practice: color, then sound, then the pink cloud, in one sitting.',
+  'med-practice': 'Meditation practice: color, then sound, in one sitting. A gentle buzz keeps track of time.',
   'med-color': 'Blue, then pink, then white, one minute each.',
   'med-sound': 'Violin, then horn or sax, then piano, one minute each.',
-  'med-cloud': 'One minute wrapped in a pink cloud.',
+  'med-cloud': 'Wrapped in a pink cloud, held steady.',
   'emo-matches': 'Patience drill: pick a jumble (cards, coins, a shelf) and put it in order slowly and calmly.',
   'emo-tv': 'Attention drill: TV on, picture off. Tune out the picture.',
   'emo-whim': 'Follow a whim: a small, safe impulse. Act within five seconds.',
