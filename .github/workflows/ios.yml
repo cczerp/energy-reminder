@@ -1,0 +1,50 @@
+name: Build iPhone app
+
+on:
+  push:
+    branches: [main, 'claude/**']
+    paths: ['docs/**', 'ios/**', 'package*.json', 'capacitor.config.json', '.github/workflows/ios.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ipa:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Stamp the build number into the app
+        run: echo "export const BUILD = '${{ github.run_number }}';" > docs/build.js
+      - run: npx cap sync ios
+      - name: Build an unsigned app (Sideloadly or AltStore signs it when it is installed)
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} MARKETING_VERSION=1.0.${{ github.run_number }} \
+            archive | tail -40
+      - name: Package the .ipa
+        run: |
+          mkdir -p Payload
+          cp -R "$RUNNER_TEMP/App.xcarchive/Products/Applications/App.app" Payload/
+          zip -qr mindcue.ipa Payload
+          ls -l mindcue.ipa
+      - uses: actions/upload-artifact@v4
+        with: { name: mindcue-ipa, path: mindcue.ipa }
+      - name: Publish the .ipa as its own release (separate from the Android one)
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest-ios --cleanup-tag --yes || true
+          cat > notes.md <<NOTES
+          ## MindCue for iPhone (test version)
+          This is a test build for installing with Sideloadly or AltStore. See the instructions in the repository: share/iphone-install.md
+
+          Build ${{ github.run_number }}, from main (${GITHUB_SHA::7}).
+          NOTES
+          gh release create latest-ios mindcue.ipa --target "$GITHUB_SHA" --title "MindCue iPhone build ${{ github.run_number }}" --notes-file notes.md
