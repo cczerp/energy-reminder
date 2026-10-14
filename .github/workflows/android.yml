@@ -38,7 +38,11 @@ jobs:
           UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
         run: |
           if [ -n "$UPLOAD_KEYSTORE_B64" ]; then
-            echo "$UPLOAD_KEYSTORE_B64" | tr -d " \r\n" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            # The secret can carry stray text after the keystore: keep only the leading base64, then cut to the length the file itself declares.
+            C=$(printf %s "$UPLOAD_KEYSTORE_B64" | tr -d " \r\n\t")
+            C=${C%%[^A-Za-z0-9+/=]*}
+            printf %s "${C:0:$(( ${#C} / 4 * 4 ))}" | base64 -d > "$RUNNER_TEMP/raw.bin"
+            python3 -c "import sys;d=open(sys.argv[1],'rb').read();b=d[1];n=0 if b<128 else b&127;L=b if b<128 else int.from_bytes(d[2:2+n],'big');open(sys.argv[2],'wb').write(d[:2+n+L])" "$RUNNER_TEMP/raw.bin" "$RUNNER_TEMP/upload.jks"
             export UPLOAD_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
             (cd android && ./gradlew bundleRelease --no-daemon)
             cp android/app/build/outputs/bundle/release/app-release.aab mindcue.aab
