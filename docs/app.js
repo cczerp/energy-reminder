@@ -24,6 +24,8 @@ const mergeRem = (r = {}) => {
     c.goal = Math.max(1, Math.min(4, parseInt(o.goal, 10) || parseInt(o.n, 10) || 1)); // older saves used one number for both
     if (!Array.isArray(o.times) || !o.times.length) c.times = typeof o.h === 'number' ? [o.h * 60 + (o.m || 0)] : base.times.slice(); // older saves stored one h/m
     const pad = evenMins(c.n); while (c.times.length < c.n) c.times.push(pad[c.times.length]);
+    if (g.id === 'bed' && !o.times && r.recall && typeof r.recall.h === 'number') c.times = [r.recall.h * 60 + (r.recall.m || 0)]; // evening recall moved into Bedtime
+    if (g.id === 'bed' && o.on === undefined && r.recall && r.recall.on === false) c.on = false;
     if (g.simple) { c.ex = g.pool.slice(); c.goal = c.n; c.timing = 'even'; c.choose = true; } // routine meditation: you only choose how many reminders, then pick a meditation when one rings
     if (c.random === undefined) c.random = (parseInt(o.goal, 10) || 1) === 1 && c.ex.length > 1; // older saves: goal 1 with several ticked meant "one of them"
     c.random = !!c.random; c.goal = goalFor(g, c);
@@ -58,7 +60,7 @@ function streak() {
 }
 // Remembers what today's plan was, so the day can be reviewed later even if settings change.
 function snapPlan() {
-  const k = dayKey(); const p = { cats: {}, recall: !!S.rem.recall.on };
+  const k = dayKey(); const p = { cats: {}, recall: false };
   REMIND_GROUPS.forEach((g) => { if (S.rem.cat[g.id].on) p.cats[g.id] = S.rem.cat[g.id].goal; });
   if (!S.days) S.days = {};
   if (JSON.stringify(S.days[k]) !== JSON.stringify(p)) { S.days[k] = p; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
@@ -110,8 +112,6 @@ function minutesFor(id, n, mode, date) {
 function occurrences(date) {
   const out = [];
   const isToday = dayKey(date.getTime()) === dayKey();
-  const rc = S.rem.recall;
-  if (rc.on) out.push({ id: 'recall', cat: 'obs', at: at(date, rc.h, rc.m), label: 'Evening recall', title: 'Observation: Evening recall', body: 'Recall your first activity this morning in as much detail as you can, then log it.', route: '#recall' });
   for (const g of REMIND_GROUPS) {
     const c = S.rem.cat[g.id];
     if (!c.on || !schedEx(g.id).length || (isToday && catDone(g.id))) continue;
@@ -242,9 +242,10 @@ function fastCard() {
     <div class="meta" style="margin-top:6px">When you feel the pull: "Is this mine? Do I choose to give my energy to this?"</div>`);
 }
 function morningCards() {
-  const yk = dayKey(Date.now() - 86400000); let out = '';
-  if (tallyOf('bed-sats', yk) && !S.loops[yk]) out += card(`<div class="title" style="font-size:20px">Last night's loop</div><div class="meta">Rate it: was it fantasy, story, or memory?</div><div class="chips">${['fantasy', 'story', 'memory'].map((x) => `<button class="chip" data-act="loop:${x}:${yk}">${x[0].toUpperCase() + x.slice(1)}</button>`).join('')}</div>`);
-  if (tallyOf('bed-revision', yk) && !S.loops[yk + 'r']) out += card(`<div class="title" style="font-size:20px">Yesterday, revised</div><div class="meta">One event from yesterday went differently in my world. Note any echoes today.</div><div class="row" style="margin-top:8px"><a class="btn ghost mini" href="#note">Quick note</a><button class="btn mini" data-act="loopr:${yk}">Got it</button></div>`);
+  const yk = dayKey(Date.now() - 86400000); let out = ''; const on = S.rem.cat.bed.on ? S.rem.cat.bed.ex : [];
+  if (on.includes('bed-sats') && tallyOf('bed-sats', yk) && !S.loops[yk]) out += card(`<div class="title" style="font-size:20px">Last night's loop</div><div class="meta">Rate it: was it fantasy, story, or memory?</div><div class="chips">${['fantasy', 'story', 'memory'].map((x) => `<button class="chip" data-act="loop:${x}:${yk}">${x[0].toUpperCase() + x.slice(1)}</button>`).join('')}</div>`);
+  if (on.includes('bed-revision') && tallyOf('bed-revision', yk) && !S.loops[yk + 'r']) out += card(`<div class="title" style="font-size:20px">Yesterday, revised</div><div class="meta">One event from yesterday went differently in my world. Note any echoes today.</div><div class="row" style="margin-top:8px"><a class="btn ghost mini" href="#note">Quick note</a><button class="btn mini" data-act="loopr:${yk}">Got it</button></div>`);
+  if (on.includes('bed-belief') && tallyOf('bed-belief', yk) && !S.loops[yk + 'b']) out += card(`<div class="title" style="font-size:20px">Last night's belief</div><div class="meta">You handed a belief back and chose a new one. Notice today whether the old one tries to return. Do not fight it, just notice.</div><div class="row" style="margin-top:8px"><a class="btn ghost mini" href="#note">Quick note</a><button class="btn mini" data-act="loopb:${yk}">Got it</button></div>`);
   return out;
 }
 
@@ -256,7 +257,6 @@ function Scale() {
     <p class="dim">You can only climb one to three rungs at a time. Trying to jump to joy from the bottom just proves you are failing. Any upward step is success. Your emotion is guidance, not a verdict: it reads out the gap between you and what you want.</p>
     <p class="dim">Where are you right now, 1 to 22?</p>
     ${SCALE.map((r) => `<div class="bul scrung" data-act="scstart:${r.n}"><b class="pd">${r.n}</b><span>${esc(r.name)}</span></div>`).join('')}
-    ${card('<div class="warn sm">If you feel unsafe or are thinking about ending your life, please stop here and reach out now. In the US call or text 988.</div>', 'warnb')}
     ${hist ? `<h2>Recent climbs</h2>${card(hist)}` : ''}`;
   const r = SCALE[sc.rung - 1]; const up = sc.rung > 1 ? SCALE[sc.rung - 2] : null;
   if (sc.done || !up) {
@@ -301,12 +301,13 @@ function Wheel() {
 }
 
 let openCat = null;
+const TAGS = { 'obs-recall': 'Observation' }; // purely a label
+const tag = (id) => (TAGS[id] ? ` <span class="tag">${TAGS[id]}</span>` : '');
 const miniBtns = (id) => `<a class="btn ghost mini" href="#ex/${id}">Rules</a><button class="btn mini" data-act="done:${id}">✓ Done</button>`;
-const exRow = (id) => `<div class="exrow"><a href="#ex/${id}" class="exname">${esc(exById[id].title)}</a><div class="minis">${miniBtns(id)}</div></div>`;
+const exRow = (id) => `<div class="exrow"><a href="#ex/${id}" class="exname">${esc(exById[id].title)}${tag(id)}</a><div class="minis">${miniBtns(id)}</div></div>`;
 function Today() {
   snapPlan();
   const now = new Date();
-  const recalled = S.recalls.some((r) => dayKey(r.ts) === dayKey());
   const nudge = NUDGES[dayNum() % NUDGES.length];
   const n = streak();
   const next = {}; occurrences(now).forEach((o) => { if (o.cat && o.id !== 'recall' && o.at > now && !next[o.cat]) next[o.cat] = o.at; });
@@ -322,11 +323,10 @@ function Today() {
     else body = c.ex.filter((id) => !tallyOf(id)).map(exRow).join('');
     return card(`<div class="hd"><div><div class="title">${g.label}</div><div class="meta">${meta}${homeNote}</div></div>${side}</div>${body}`);
   }).join('');
-  const recallCard = S.rem.recall.on && !recalled
-    ? card(`<div class="dim sm">Tonight · ${fmtTime(S.rem.recall.h, S.rem.recall.m)}</div><a href="#recall" style="color:inherit;text-decoration:none"><b>Evening recall</b></a><div class="dim sm">Recall your first morning activity and log it</div>`) : '';
+  const recallCard = '';
   const doneIds = [...new Set(REMIND_GROUPS.flatMap((g) => [...g.pool, ...g.leave]))].filter((id) => tallyOf(id));
-  const doneCard = doneIds.length || recalled
-    ? card(`<div class="dim sm">Done today</div>` + doneIds.map((id) => `<div class="row" style="margin-top:6px;justify-content:space-between"><span>✓ ${esc(exById[id].title)}${tallyOf(id) > 1 ? ` × ${tallyOf(id)}` : ''}</span><button class="chip" data-act="undo:${id}">Undo</button></div>`).join('') + (recalled ? '<div style="margin-top:6px">✓ Evening recall</div>' : '')) : '';
+  const doneCard = doneIds.length
+    ? card(`<div class="dim sm">Done today</div>` + doneIds.map((id) => `<div class="row" style="margin-top:6px;justify-content:space-between"><span>✓ ${esc(exById[id].title)}${tallyOf(id) > 1 ? ` × ${tallyOf(id)}` : ''}</span><button class="chip" data-act="undo:${id}">Undo</button></div>`).join('')) : '';
   const all = on.length && !pending.length && !recallCard;
   const cheer = all ? card(`<div class="cheer"><div class="pop">🎉</div><b style="font-size:18px">Everything done today!</b><div class="dim sm" style="margin-top:4px">${n ? `${n}-day streak. ` : ''}You showed up for yourself. Rest easy.</div></div>`, 'accent') : '';
   return `<div class="dim">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
@@ -374,13 +374,14 @@ function Choose(gid) {
 function Practice() {
   const ms = MILESTONES.map((m) => check(!!S.milestones[m.id], esc(m.label), `ms:${m.id}`)).join('');
   const groups = Object.entries(CATS).map(([cat, label]) => `<h2>${label}</h2>` + EXERCISES.filter((e) => e.cat === cat).map((e) =>
-    link(`#ex/${e.id}`, `<b>${isLocked(e) ? '🔒 ' : ''}${esc(e.title)}</b><div class="dim sm">${e.mins ? e.mins + ' min · ' : ''}${esc(e.freq)}</div>`, isLocked(e) ? 'locked' : '')
-  ).join('') + (cat === 'chakra' ? link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>') : '') + (cat === 'emotion' ? link('#scale', '<b>Climbing the Scale</b><div class="dim sm">Tell it what you feel. It walks you up, one rung at a time</div>') + link('#wheel', '<b>Focus Wheel</b><div class="dim sm">Build 12 believable statements toward what you want</div>') : '') + (cat === 'laws' ? card('<div class="dim sm">The rule: hold ONE pure thought with no contradiction. 17 seconds starts it, 34 builds it, 68 is the target, where it holds itself. Appreciation works best. This also counts as a Concentration exercise.</div>') : '')).join('');
+    link(`#ex/${e.id}`, `<b>${isLocked(e) ? '🔒 ' : ''}${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`, isLocked(e) ? 'locked' : '')
+  ).join('') + (cat === 'chakra' ? link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>') : '') + (cat === 'emotion' ? link('#scale', '<b>Climbing the Scale</b><div class="dim sm">Tell it what you feel. It walks you up, one rung at a time</div>') + link('#wheel', '<b>Focus Wheel</b><div class="dim sm">Build 12 believable statements toward what you want</div>') : '')).join('');
   return `<h1>Practice</h1>
   <h2>Psychic-centers path</h2>
   ${card(`<div class="dim sm">Sequence matters: Heart → Pituitary → Pineal → Throat → Attunement. Tick each when it applies.</div>${ms}`)}
   ${groups}
   <h2>Reference</h2>
+  ${link('#laws', '<b>Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>')}
   ${link('#cycles', '<b>Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>')}
   ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
 }
@@ -389,7 +390,7 @@ function Exercise(id) {
   const ex = exById[id]; if (!ex) return back() + '<p>Not found.</p>';
   const miss = (ex.needs || []).filter((n) => !S.milestones[n]).map((n) => MILESTONES.find((m) => m.id === n).label);
   return `${back()}<h1>${esc(ex.title)}</h1><div class="dim">${esc(ex.summary)}</div>
-  <div class="dim sm" style="margin:8px 0">${ex.mins ? ex.mins + ' min · ' : ''}${esc(ex.freq)}</div>
+  <div class="dim sm" style="margin:8px 0">${esc(ex.freq)}</div>
   ${miss.length ? card(`<div class="warn sm">The guide says to start this only after:</div>${miss.map((m) => `<div class="warn sm">• ${esc(m)}</div>`).join('')}<div class="dim sm">Jumping ahead does no harm, but no good either.</div>`, 'warnb') : ''}
   ${ex.caution ? card(`<div class="warn sm">${esc(ex.caution)}</div>`, 'warnb') : ''}
   <a class="btn" href="#guide/${id}">Start guided</a>
@@ -415,6 +416,13 @@ function About() {
     <li>Every teacher, student, and practitioner who passed these on</li>
   </ul>
   <p class="dim sm">This app supports a practice. It is not medical care, and it does not replace a counselor or doctor.</p>`;
+}
+function Laws() {
+  return `${back('#practice')}<h1>Universal laws of manifestation</h1>
+  ${card('<div class="title" style="font-size:20px">One pure thought</div><div class="step" style="font-size:17px;margin-top:6px">Hold a single thought with no contradiction. That is the whole rule.</div>')}
+  ${card('<div class="step" style="font-size:17px"><b class="pd">17 seconds</b> of a pure thought starts the change.<br><b class="pd">34 seconds</b> multiplies it.<br><b class="pd">68 seconds</b> is the target: the vibration becomes self-sustaining.</div>')}
+  ${card('<div class="step" style="font-size:17px">Appreciation works best. When a contradicting thought shows up, do not follow it. Come back to the pure one. The practice is the coming back.</div>')}
+  <a class="btn" href="#guide/law-hold">Try the 17-second thought</a>`;
 }
 function Cycles() {
   return `${back()}<h1>Life cycles</h1><p class="dim">${esc(CYCLES.note)}</p>` + CYCLES.periods.map((p) => card(`<b>${esc(p.name)}</b><div class="dim sm">${esc(p.intro)}</div>
@@ -485,9 +493,9 @@ function Settings() {
   const fmtMin = (v) => fmtTime(Math.floor(v / 60), v % 60);
   const groups = REMIND_GROUPS.map((g) => {
     const c = R.cat[g.id];
-    const nightly = g.id === 'obs' ? `${check(R.recall.on, '<b>Evening Recall</b> — nightly, at its own time', 'recallon', 'Recall your first morning activity. Separate from the reminders above.')}${R.recall.on ? `<div style="margin:0 0 6px 36px">${stepper('rc', R.recall.h * 60 + R.recall.m, fmtMin)}</div>` : ''}` : '';
+    const nightly = '';
     if (g.simple) return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, 'Each reminder opens a list of meditations to choose from.')}${c.on ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
-    const bullets = [...g.pool, ...g.leave].map((x) => `<div class="bul" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
+    const bullets = [...g.pool, ...g.leave].map((x) => `<div class="bul" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
     return card(`${check(c.on, `<b class="ttl">${g.label}</b>`, `con:${g.id}`, `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day`)}
       ${c.on ? `<div class="dim sm" style="margin-top:6px">Tick the exercises. Each ticked one is a daily goal.</div>${bullets}
       ${c.ex.length > 1 ? `<div class="bul" data-act="crand:${g.id}"><span class="bx ${c.random ? 'on' : ''}">${c.random ? '✓' : ''}</span><span><b>Just 1 as my goal, picked at random</b></span></div>` : ''}
@@ -554,7 +562,7 @@ function initStep() {
   clearInterval(G.timer); clearInterval(G.xi); G.xt = null; G.run = false; G.stepDone = false;
   const st = stepOf();
   G.left = st.secs || 0; G.elapsed = 0;
-  if (st.pick) G.left = G.pickSecs || st.pick[0];
+  G.pickSecs = null; if (st.pick) G.left = st.secs;
   if (st.breath) Object.assign(G, { rep: 1, ph: 0, left: st.breath.phases[0][1] });
 }
 const stepOf = () => { const r = G.ex.steps[G.i]; return typeof r === 'string' ? { t: r } : r; };
@@ -584,12 +592,14 @@ function toggleRun() {
   if (G.run) G.timer = setInterval(tick, 1000);
   paint();
 }
+// The note saved from a guided practice: its own form fields when it has them, else the free note.
+const guideNote = () => (G.ex.log ? G.ex.log.map((f, i) => ((G.f || [])[i] || '').trim() ? `${f.label}\n${G.f[i].trim()}` : '').filter(Boolean).join('\n\n') : G.note.trim());
 function Guide() {
   if (!G) return back('#practice') + '<p>Nothing running.</p>';
   document.body.classList.add('guided');
   const ex = G.ex;
   if (G.done) return `<h1>${esc(ex.title)} — done</h1>
-    ${card(`<div class="dim sm">How was your focus?</div>${rating('gfocus', G.focus)}<div class="dim sm" style="margin-top:12px">${ex.kind === 'review' ? 'Write the exact hour and everything you observed.' : 'Notes (optional)'}</div><textarea name="gnote" placeholder="What did you notice?">${esc(G.note)}</textarea>`)}
+    ${card(`<div class="dim sm">How was your focus?</div>${rating('gfocus', G.focus)}${ex.log ? ex.log.map((f, i) => `<div class="dim sm" style="margin-top:12px">${esc(f.label)}</div><textarea data-gf="${i}" placeholder="${esc(f.ph || '')}">${esc((G.f || [])[i] || '')}</textarea>`).join('') : `<div class="dim sm" style="margin-top:12px">${ex.kind === 'review' ? 'Write the exact hour and everything you observed.' : 'Notes (optional)'}</div><textarea name="gnote" placeholder="What did you notice?">${esc(G.note)}</textarea>`}`)}
     <button class="btn" data-act="gsave">${ex.kind === 'recall' ? 'Save and go to recall log' : 'Save to log'}</button>
     <button class="btn ghost" data-act="gskip">Skip logging</button>`;
   const st = stepOf(); const last = G.i === ex.steps.length - 1;
@@ -597,7 +607,7 @@ function Guide() {
   const label = G.run ? 'Pause' : (st.breath ? G.rep === 1 && G.ph === 0 && G.left === st.breath.phases[0][1] : G.left === st.secs && !G.elapsed) ? 'Start' : 'Resume';
   let widget = '';
   if (st.open) widget = `<div class="big" id="tm">${pad(G.elapsed)}</div><div class="center dim sm">Take as long as you need</div><button class="btn ghost" data-act="trun">${G.run ? 'Pause clock' : G.elapsed ? 'Resume clock' : 'Start clock'}</button>`;
-  else if (st.secs) widget = `${st.pick && !G.run && !G.stepDone && G.left === (G.pickSecs || st.pick[0]) ? `<div class="chips" style="justify-content:center">${st.pick.map((v) => `<button class="chip ${(G.pickSecs || st.pick[0]) === v ? 'on' : ''}" data-act="pick:${v}">${v / 60} min</button>`).join('')}</div>` : ''}<div class="big" id="tm">${pad(G.left)}</div>${G.stepDone ? '<div class="center good">Done</div>' : `<button class="btn ghost" data-act="trun">${label} timer</button>`}`;
+  else if (st.secs) widget = `${st.pick && !G.run && !G.stepDone && G.left === (G.pickSecs || st.secs) ? `<div class="center dim sm">Timer length</div><div class="center">${stepper('padj', G.pickSecs || st.secs, (v) => pad(v))}</div>` : ''}<div class="big" id="tm">${pad(G.left)}</div>${G.stepDone ? '<div class="center good">Done</div>' : `<button class="btn ghost" data-act="trun">${label} timer</button>`}`;
   else if (st.breath) widget = `<div class="center" style="font-size:22px" id="ph">${G.stepDone ? 'Complete' : st.breath.phases[G.ph][0]}</div><div class="big" id="tm">${G.stepDone ? '✓' : G.left}</div><div class="center dim" id="rp">Round ${Math.min(G.rep, st.breath.reps)} of ${st.breath.reps}</div>${G.stepDone ? '' : `<button class="btn ghost" data-act="trun">${label}</button>`}`;
   if (!st.open && !st.secs && !st.breath && !st.music) widget = G.xt
     ? `<div class="center dim sm">Timer</div><div class="big" id="xtm">${pad(G.xt.left)}</div><button class="btn ghost" data-act="xstop">${G.xt.left > 0 ? 'Stop timer' : 'Clear'}</button>`
@@ -632,6 +642,7 @@ function paint() {
     case 'about': h = About(); break;
     case 'cat': h = Choose(a); break;
     case 'scale': h = Scale(); break;
+    case 'laws': h = Laws(); break;
     case 'wheel': h = Wheel(); break;
     case 'day': h = Day(a); break;
     case 'settings': h = Settings(); break;
@@ -639,7 +650,7 @@ function paint() {
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'log', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'ex' || route === 'scale' || route === 'wheel' || route === 'chakras' || route === 'cycles' || route === 'about' || route === 'guide' ? 'practice' : 'log';
+  const tab = ['today', 'practice', 'log', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'ex' || route === 'scale' || route === 'laws' || route === 'wheel' || route === 'chakras' || route === 'cycles' || route === 'about' || route === 'guide' ? 'practice' : 'log';
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   window.scrollTo(0, 0);
@@ -650,6 +661,7 @@ window.addEventListener('hashchange', paint);
 /* ---------------- actions ---------------- */
 const msg = (t) => { const m = $('#msg'); if (m) m.textContent = t; };
 document.addEventListener('input', (e) => {
+  const gf = e.target.dataset?.gf; if (gf !== undefined && G) { (G.f = G.f || [])[+gf] = e.target.value; return; }
   const wf = e.target.dataset?.wf; if (wf !== undefined && wh) { if (wf === 'desire') wh.desire = e.target.value; else wh.spokes[+wf].t = e.target.value; return; }
   const n = e.target.name; if (!n) return;
   if (n === 'note') form.note = e.target.value;
@@ -673,7 +685,7 @@ document.addEventListener('click', async (e) => {
     case 'rate': if (a === 'gfocus') G.focus = +b; else form[a] = +b; repaintKeep(); break;
     case 'inc': case 'dec': { const d = act === 'inc' ? 1 : -1; stepTo(a, b, d, c3); break; }
     case 'savenote': S.sessions.unshift({ id: uid(), ts: Date.now(), ex: form.ex, focus: form.focus || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
-    case 'saverecall': S.recalls.unshift({ id: uid(), ts: Date.now(), details: form.details, accuracy: form.accuracy || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
+    case 'saverecall': bump('obs-recall'); S.recalls.unshift({ id: uid(), ts: Date.now(), details: form.details, accuracy: form.accuracy || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
     case 'con': S.rem.cat[a].on = !S.rem.cat[a].on; save(); repaintKeep(); break;
     case 'crand': { const c = S.rem.cat[a]; c.random = !c.random; c.goal = goalFor(group(a), c); save(); repaintKeep(); break; }
     case 'cex': { const l = S.rem.cat[a].ex; const i = l.indexOf(b); if (i >= 0 && l.length > 1) l.splice(i, 1); else if (i < 0) l.push(b); S.rem.cat[a].goal = goalFor(group(a), S.rem.cat[a]); REMIND_GROUPS.forEach((g) => g.leave.forEach((id) => { S.rem.leaveItems[id] = S.rem.cat[g.id].ex.includes(id); })); save(); repaintKeep(); break; }
@@ -712,6 +724,7 @@ document.addEventListener('click', async (e) => {
     case 'fastck': { const k = dayKey(); const t = S.fast.done[k] || (S.fast.done[k] = {}); t[a] = !t[a]; save(); repaintKeep(); if (t.a && t.b) toast('Day complete ✓'); break; }
     case 'loop': S.loops[b] = a; save(); repaintKeep(); toast('Noted'); break;
     case 'loopr': S.loops[a + 'r'] = 1; save(); repaintKeep(); break;
+    case 'loopb': S.loops[a + 'b'] = 1; save(); repaintKeep(); break;
     case 'scstart': sc = { start: +a, rung: +a, done: false }; paint(); break;
     case 'scup': sc.rung--; paint(); break;
     case 'screst': sc.done = true; paint(); break;
@@ -732,7 +745,7 @@ document.addEventListener('click', async (e) => {
     case 'gprev': G.i--; initStep(); paint(); break;
     case 'gquit': location.hash = `#ex/${G.ex.id}`; break;
     case 'gsave': case 'gskip': {
-      S.sessions.unshift({ id: uid(), ts: Date.now(), ex: G.ex.id, focus: act === 'gsave' ? G.focus || null : null, note: act === 'gsave' ? G.note.trim() : '' });
+      S.sessions.unshift({ id: uid(), ts: Date.now(), ex: G.ex.id, focus: act === 'gsave' ? G.focus || null : null, note: act === 'gsave' ? guideNote() : '' });
       bump(G.ex.id); const kind = G.ex.kind; stopGuide();
       location.hash = kind === 'recall' ? '#recall' : '#today'; break;
     }
@@ -753,6 +766,7 @@ function stepTo(name, id, d, idx) {
     if (name === 'mindn') R.mind.n = clamp(R.mind.n + d, 1, 12);
     if (name === 'dayS') R.day.s = clamp(R.day.s + d, 0, R.day.e - 1);
     if (name === 'dayE') R.day.e = clamp(R.day.e + d, R.day.s + 1, 23);
+    if (name === 'padj') { const st = stepOf(); G.pickSecs = Math.max(60, Math.min(st.secs + 300, (G.pickSecs || st.secs) + d * 30)); G.left = G.pickSecs; repaintKeep(); return; }
     if (name === 'leaven') R.leave.n = clamp(R.leave.n + d, 1, 6);
     if (name === 'leaveS') R.leave.s = clamp(R.leave.s + d, 0, R.leave.e - 1);
     if (name === 'leaveE') R.leave.e = clamp(R.leave.e + d, R.leave.s + 1, 24);

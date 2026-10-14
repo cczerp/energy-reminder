@@ -10,7 +10,6 @@ export const CATS = {
   meditate: 'Meditation',
   emotion: 'Emotional control',
   bedtime: 'Bedtime',
-  laws: 'Universal laws of manifestation',
   journey: 'Inner journeys',
   living: 'Living practices',
   centers: 'Psychic centers',
@@ -440,7 +439,7 @@ EXERCISES.push({
 EXERCISES.push(
   {
     id: 'med-quiet', cat: 'meditate', title: 'Quiet Listening', mins: 10,
-    freq: 'Daily if you can, 10–15 minutes',
+    freq: 'Daily if you can',
     summary: 'Be alone in quiet and go within. You are not trying to do anything, only to listen.',
     steps: [
       'Find somewhere quiet where you will not be interrupted. Silence the phone. Sit or lie comfortably and close your eyes.',
@@ -463,7 +462,7 @@ EXERCISES.push(
   },
   {
     id: 'j-stair', cat: 'journey', title: 'The Staircase Journey', mins: 30,
-    freq: 'When you have 30 quiet minutes',
+    freq: 'When you have quiet time to spare',
     summary: 'Relax deeply, go down a staircase, and let a scene appear. Then ask what you want to know. The only rule is: allow it.',
     caution: 'Do this lying down somewhere safe and never while driving. If anything upsets you, open your eyes, breathe, and stop. You are always in control.',
     steps: [
@@ -481,7 +480,7 @@ EXERCISES.push(
     freq: 'When you want memories, knowledge, or guidance', summary: 'Walk into a vast library, find the book of your life, and read what you are shown.',
     caution: 'Lie down somewhere safe. If anything upsets you, open your eyes and stop.',
     steps: [
-      'Lie down, close your eyes, breathe slowly, and relax your body from head to toe. A few minutes is enough.',
+      'Lie down, close your eyes, breathe slowly, and relax your body from head to toe.',
       'Picture a path leading to a door. Walk to it and open it.',
       'Step into a vast library. Look around: the shelves, the light, the quiet.',
       'Find the book of your life. It may call to you. Take it down and open it.',
@@ -560,7 +559,7 @@ EXERCISES.push(
     freq: 'Read now and then', summary: 'Twenty reminders to live by, drawn from the teachings above.',
     steps: [
       'DO\n1. Meditate daily and seek quiet. Go within and listen.\n2. Watch your thoughts and words. Speak what you want as present tense, "I am", not "I want".\n3. Release fear. It is the biggest block.\n4. Eat high-vibration food: vegetables, fruit, pure water.\n5. Follow your passion. It is what you came to do.\n6. Practice love, compassion, and non-judgment, especially toward yourself.\n7. Trust your intuition and your body.\n8. Surround yourself with uplifting people and media, and get out in nature often.\n9. Let go of the past and live now.\n10. Be of service. Help others wake up by being an example.',
-      "DON'T\n1. Don't soak in fear-based news or negativity.\n2. Don't speak lack. Skip \"I want\".\n3. Don't let the critical mind override what you sense.\n4. Don't judge or condemn others. Different paths, same destination.\n5. Don't dwell on drama, grudges, or the past.\n6. Don't poison the body: excess alcohol, drugs, sugar, processed food.\n7. Don't hand your choices to anyone, not gurus, governments, or doctors. Take their advice, then decide for yourself, and keep seeing your doctor.\n8. Don't resist change. Flow with it.\n9. Don't ignore your body or its messages.\n10. Don't take \"I don't belong here\" as the truth. You came here on purpose. If that feeling is heavy or you think of ending your life, reach out now: in the US call or text 988.",
+      "DON'T\n1. Don't soak in fear-based news or negativity.\n2. Don't speak lack. Skip \"I want\".\n3. Don't let the critical mind override what you sense.\n4. Don't judge or condemn others. Different paths, same destination.\n5. Don't dwell on drama, grudges, or the past.\n6. Don't poison the body: excess alcohol, drugs, sugar, processed food.\n7. Don't hand your choices to anyone, not gurus, governments, or doctors. Take their advice, then decide for yourself, and keep seeing your doctor.\n8. Don't resist change. Flow with it.\n9. Don't ignore your body or its messages.\n10. Don't take \"I don't belong here\" as the truth. You came here on purpose, and you are exactly where you chose to be.",
     ],
   },
 );
@@ -620,19 +619,17 @@ EXERCISES.push(
     ],
   },
   {
-    id: 'law-hold', cat: 'laws', title: 'The 68-Second Thought', mins: 3,
-    freq: 'Daily practice for a steady mind', summary: 'Hold one pure thought with no contradiction. 17 seconds starts it, 34 builds it, 68 makes it self-sustaining.',
+    id: 'law-hold', cat: 'concentrate', title: 'The 17-Second Thought', mins: 0,
+    freq: 'Any time', summary: '17 consistent seconds on one pure thought is where change begins.',
     steps: [
-      'Choose one thought you can appreciate, a person, a place, a feeling of thanks. Make it a thought you genuinely like to think. Pure means no "but".',
-      { t: 'Hold the thought for 17 seconds. If a contradicting thought shows up, gently return. The practice starts when you do not follow it.', secs: 17 },
-      { t: 'Keep going. Hold it for 34 seconds. Let it grow: more detail, more feeling.', secs: 34 },
-      { t: 'The target: 68 seconds. At this point the thought starts holding itself. No contradictions, just appreciation.', secs: 68 },
-      'Honest check: did you make it 68 seconds without a contradicting thought? If not, that is information, not failure. Rate your focus on the next screen and try again.',
+      'Pick one thought you genuinely like thinking: a person, a place, a feeling of thanks. Pure means no "but".',
+      { t: 'Hold it for 17 consistent seconds. If a contradicting thought shows up, gently come back. 17 steady seconds is where change begins.', secs: 17 },
+      'Did you hold it the whole time? If not, that is only information. Try again.',
     ],
   },
   {
     id: 'bed-belief', cat: 'bedtime', title: 'The Belief Audit', mins: 15,
-    freq: 'Nightly, 15 minutes of journaling', summary: 'Trace one strong reaction from today back to the belief underneath it, hand the belief back, and choose a new one.',
+    freq: 'Nightly journaling', summary: 'Trace one strong reaction from today back to the belief underneath it, hand the belief back, and choose a new one.',
     steps: [
       'Recall one moment today when you had a strong negative reaction: irritation, dread, offense, worry. One moment only.',
       { t: 'Write the reaction down raw: "I got angry when..." Use the notes box on the last screen, or a notebook.', pick: [180, 300], secs: 180 },
@@ -667,6 +664,38 @@ EXERCISES.push(
   },
 );
 
+// Neville Goddard-inspired practice, in this app's own words.
+EXERCISES.push({
+  id: 'med-iam', cat: 'meditate', title: 'The "I AM" Meditation', mins: 0,
+  freq: 'Whenever you want to reset who you are being', summary: 'Notice that "stressed, broke, shy" are states you are wearing, not the wearer. Then put on the state you choose.',
+  steps: [
+    'Sit or lie down, eyes closed, and let your breathing slow.',
+    'Notice every "I am" you carry: I am stressed, I am broke, I am shy. Each is a state being worn, not the one wearing it. Let each one go, one at a time.',
+    'Rest as the wearer, the plain awareness underneath. Just "I am", with nothing attached.',
+    'Choose the state you want, and put it on: "I am calm." "I am secure." "I am loved." Say it silently with feeling, as if it is simply true.',
+    { t: 'Stay in it. Let the feeling fill you. When doubt speaks, do not argue, just stay. Pick your length.', pick: [180, 300, 600], secs: 300 },
+    'Open your eyes. Carry the state into the next thing you do.',
+  ],
+});
+
+// A specific log form for each practice, so the notes at the end have direction.
+const LOGS = {
+  'emo-whim': [{ label: 'Whims I acted on today', ph: 'I took the longer route...' }, { label: 'In my body, just before I obeyed', ph: '' }, { label: 'In my body, just after', ph: '' }],
+  'emo-rampage': [{ label: 'What I appreciated', ph: 'This cup, this light...' }, { label: 'How I feel now compared with before', ph: '' }],
+  'emo-nice': [{ label: "The \"wouldn't it be nice if...\" ones that lifted me", ph: '' }],
+  'med-nowpoint': [{ label: 'What I noticed resting as the point', ph: '' }, { label: 'What pulled me away', ph: '' }],
+  'med-transform': [{ label: 'The intention I held in the pause', ph: '' }, { label: 'How I feel in the afterglow', ph: '' }],
+  'med-iam': [{ label: 'The "I am" states I took off', ph: 'I am stressed...' }, { label: 'The state I put on, and how it felt', ph: 'I am calm...' }],
+  'law-hold': [{ label: 'The thought I held', ph: '' }, { label: 'Did a contradicting thought show up?', ph: '' }],
+  'j-stair': [{ label: 'What I saw or felt', ph: '' }, { label: 'The answer or message I received', ph: '' }],
+  'j-library': [{ label: 'What the book showed me', ph: '' }, { label: 'My question, and the answer', ph: '' }],
+  'j-guide': [{ label: 'Who or what I met', ph: '' }, { label: 'What I asked, and what I was told', ph: '' }],
+  'bed-belief': [{ label: 'The reaction', ph: 'I got angry when...' }, { label: 'What someone would have to believe to react that way', ph: '' }, { label: 'The inherited belief, in one sentence', ph: '' }, { label: 'What I would like to believe instead', ph: '' }, { label: 'Anything else on my mind', ph: '' }],
+  'bed-revision': [{ label: 'The scene I revised', ph: '' }, { label: 'How I replayed it', ph: '' }, { label: 'How it felt', ph: '' }],
+  'bed-sats': [{ label: 'My one desire', ph: '' }, { label: 'My scene (under 10 seconds)', ph: 'My friend hugs me and says...' }, { label: 'What I added this time (a sound, a texture, a smell)', ph: '' }],
+};
+EXERCISES.forEach((e) => { if (LOGS[e.id]) e.log = LOGS[e.id]; });
+
 export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 
 // ---------- Reminders ----------
@@ -676,10 +705,10 @@ export const REMIND_GROUPS = [
   // pool = exercises a timed reminder can ask for; leave = optional exercises that only fire when you leave home; ids = everything in the category
   { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], both: ['obs-room'], ids: ['obs-room', 'obs-stairs'] },
   { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger'] },
-  { id: 'med', cat: 'meditate', label: 'Routine meditation', simple: true, pool: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
+  { id: 'med', cat: 'meditate', label: 'Routine meditation', simple: true, pool: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
   { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-color', 'med-sound', 'med-cloud'], leave: [], ids: ['med-color', 'med-sound', 'med-cloud'] },
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'] },
-  { id: 'bed', cat: 'bedtime', label: 'Bedtime', pool: ['bed-belief', 'bed-revision', 'bed-sats'], leave: [], ids: ['bed-belief', 'bed-revision', 'bed-sats'] },
+  { id: 'bed', cat: 'bedtime', label: 'Bedtime', pool: ['obs-recall', 'bed-belief', 'bed-revision', 'bed-sats'], leave: [], ids: ['obs-recall', 'bed-belief', 'bed-revision', 'bed-sats'] },
 ];
 export const CAT_LABEL = Object.fromEntries(REMIND_GROUPS.flatMap((g) => g.ids.map((id) => [id, g.label])));
 // goal = how many times you want to do it each day. n = reminders per day (they keep coming until the goal is met). timing: 'set' (times you pick) | 'even' (spread through the day) | 'random'.
@@ -692,7 +721,7 @@ export const REMIND_DEFAULTS = {
     conc: { on: true, ex: ['conc-multiply', 'conc-poem', 'conc-stranger'], goal: 1, n: 1, timing: 'even', times: [780], choose: true },
     med: { on: true, ex: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], goal: 1, n: 1, timing: 'even', times: [480], choose: true },
     medp: { on: true, ex: ['med-color', 'med-sound', 'med-cloud'], goal: 1, n: 1, timing: 'even', times: [1020], choose: true },
-    bed: { on: true, ex: ['bed-belief'], goal: 1, n: 1, timing: 'set', times: [1290], choose: true },
+    bed: { on: true, ex: ['obs-recall'], goal: 1, n: 1, timing: 'set', times: [1230], choose: true },
     emo: { on: true, ex: ['emo-matches', 'emo-tv'], goal: 1, n: 1, timing: 'random', times: [900], choose: true },
   },
   leaveItems: { 'obs-stairs': true, 'conc-stranger': true }, // fire only when you leave home
@@ -748,18 +777,28 @@ export const NUDGES = [
   "The definition is the reality.",
   "There is no \"out there\" out there. Everything you see is also a reflection of you.",
   "Excitement is the feeling of your true self. What is the most exciting thing you could do in the next five minutes?",
-  "Fear is excitement without breath. Take a breath. What happens to the feeling?",
+  "Fear is excitement without breath. Take a breath.",
   "You can't be harmed by what you don't believe in. Is there a belief hurting you today?",
-  "Every moment reflects your strongest belief. What would you like it to reflect?",
+  "Every moment reflects your strongest belief.",
   "Don't wait for permission to be who you are. What would you do today if you didn't need anyone's yes?",
   "Whatever comes to you is the opportunity. What is in front of you right now?",
   "You are infinite, pretending to be finite. You can ease up on the pretending.",
+  "Think from the wish fulfilled, not of it. Thinking of it keeps it far away. Thinking from it closes the gap.",
+  "Don't ask the universe. Assume the state of the one who already has it.",
+  "Feeling is the secret. It is not the words but a steady feeling of the wish fulfilled that sinks in.",
+  "Live in the end. Stay in the fulfilled state even when your senses argue.",
+  "Your free will is real for one thing: choosing which state to occupy. Which one are you choosing right now?",
+  "Still assuming? Remain in the end.",
+  "You can't feel lack and create abundance. Which are you feeling?",
+  "Don't check for evidence and don't talk it over. Once the state is assumed, let it work.",
+  "Brazen impudence: pray as the answered man. Bold, shameless certainty.",
+  "You are not stressed, broke, or shy. Those are states you are wearing. You are the one wearing them.",
   "Follow the whim: one small, safe, instant impulse today.",
   "Notice one thought pulling you. You are not the thought, you are where it appears.",
   "Where are you on the scale right now? Aim one rung up, no more.",
   "Any upward step counts. Anger is progress from rage.",
   'Allow it. Do not analyze or judge what comes up. Just let it be there.',
-  'Ten or fifteen minutes of quiet today. Go within and simply listen.',
+  'Make some quiet for yourself today. Go within and simply listen.',
   'Fear lowers your frequency and love raises it. Which one are you feeding?',
   'Say it as already true: "I am…", not "I want…".',
   'Catch one "I want" today and turn it into "I am".',
@@ -784,7 +823,7 @@ export const NUDGES = [
 
 // Short text for reminder notifications.
 export const PING = {
-  'med-quiet': 'Quiet time: 10–15 minutes alone in silence. Go within and simply listen.',
+  'med-quiet': 'Quiet time: be alone in silence. Go within and simply listen.',
   'med-sit': 'Sit for 5–10 minutes and meditate in whatever way you choose. Your daily baseline.',
   'obs-room': 'Walk into a different room. Close your eyes and name everything you recall — depth and accuracy, until you run out.',
   'obs-stairs': 'Next time you take any steps, count them, then recall the number.',
@@ -799,9 +838,11 @@ export const PING = {
   'emo-whim': 'Follow a whim: a small, safe impulse. Act within five seconds.',
   'emo-rampage': 'Rampage of appreciation: look around and appreciate everything in view, quickly.',
   'emo-nice': "Wouldn't it be nice if... Finish the sentence a few times.",
-  'med-nowpoint': 'Ten minutes: rest as the point of awareness behind your eyes.',
-  'med-transform': 'Eight minutes of slow 4-4-8 breath. Hold the intention during the pause.',
+  'med-nowpoint': 'Rest as the point of awareness behind your eyes.',
+  'med-transform': 'Slow 4-4-8 breath. Hold the intention during the pause.',
   'law-hold': 'Hold one pure, appreciative thought for 68 seconds with no contradiction.',
+  'obs-recall': 'Evening recall: your first activity this morning, in as much detail as you can, then log it.',
+  'med-iam': 'Take off every "I am stressed / broke / shy" and put on the "I AM" of the state you choose.',
   'bed-belief': 'Belief audit: trace one strong reaction from today to the belief under it.',
   'bed-revision': 'Rewrite the day: replay the scenes that went wrong the way you wish.',
   'bed-sats': 'Bedtime: loop your one short scene until it feels like a memory.',
