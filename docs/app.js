@@ -374,21 +374,24 @@ function Choose(gid) {
       <div class="row" style="margin-top:8px"><a class="btn ghost" href="#ex/${id}">Rules</a><a class="btn" href="#guide/${id}">Start</a><button class="btn ghost" data-act="done:${id}">✓ Done</button></div>`)).join('');
 }
 
+function Info() {
+  const ids = ['live-dos', 'energy-habits'].map((id) => exById[id]).map((e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.summary)}</div>`)).join('');
+  return `<h1>Info</h1>
+  ${link('#laws', '<b>Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>')}
+  ${ids}
+  ${link('#cycles', '<b>Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>')}
+  ${link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>')}
+  ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
+}
 const advOk = new Set(); let warnStep = 1;
 function Practice() {
   const row = (e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`);
   const ids = (list) => list.map((id) => exById[id]).filter(Boolean).map(row).join('');
   const cats = (cat, skip = []) => EXERCISES.filter((e) => e.cat === cat && !e.hidden && !skip.includes(e.id)).map(row).join('');
   const sub = (label, inner) => (inner ? `<h3>${label}</h3>${inner}` : '');
-  const knowledge = ['live-dos', 'energy-habits'];
+  const knowledge = ['live-dos', 'energy-habits']; // shown on the Info page
   const medPractice = ['med-practice', 'med-cloud', 'med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love'];
   return `<h1>Practice</h1>
-  <h2>Knowledge &amp; rules</h2>
-  ${link('#laws', '<b>Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>')}
-  ${ids(knowledge)}
-  ${link('#cycles', '<b>Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>')}
-  ${link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>')}
-  ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}
   <h2>Meditation practice</h2>
   ${ids(medPractice)}
   <h2>Meditation exercises</h2>
@@ -419,7 +422,7 @@ function Warn(id) {
 
 function Exercise(id) {
   const ex = exById[id]; if (!ex) return back() + '<p>Not found.</p>';
-  return `${back()}<h1>${esc(ex.title)}</h1><div class="dim">${esc(ex.summary)}</div>
+  return `${back(['live-dos', 'energy-habits'].includes(id) ? '#info' : '#practice')}<h1>${esc(ex.title)}</h1><div class="dim">${esc(ex.summary)}</div>
   <div class="dim sm" style="margin:8px 0">${esc(ex.freq)}</div>
   ${ex.caution ? card(`<div class="warn sm">${esc(ex.caution)}</div>`, 'warnb') : ''}
   <a class="btn" href="#guide/${id}">Start guided</a>
@@ -428,11 +431,11 @@ function Exercise(id) {
 }
 
 function Chakras() {
-  return `${back()}<h1>Chakras</h1><p class="dim">${esc(CHAKRA_INTRO)}</p>` + CHAKRAS.map((c) => card(`<b>${c.n}. ${c.name} — ${esc(c.sk)}</b>
+  return `${back('#info')}<h1>Chakras</h1><p class="dim">${esc(CHAKRA_INTRO)}</p>` + CHAKRAS.map((c) => card(`<b>${c.n}. ${c.name} — ${esc(c.sk)}</b>
   <div class="sm">Seed sound: ${esc(c.seed)}</div><div class="sm">Location: ${esc(c.loc)}</div><div class="sm">Blocked by: ${esc(c.block)}</div><div class="sm">Gland: ${esc(c.gland)}</div><div class="dim sm" style="margin-top:4px">${esc(c.note)}</div>`)).join('');
 }
 function About() {
-  return `${back('#practice')}<h1>Credits</h1>
+  return `${back('#info')}<h1>Credits</h1>
   <p>No one person created what is in this app. These practices are shared human knowledge, taught and agreed upon across many teachers, texts, and traditions over a very long time. This app is only a way to remember to use them.</p>
   <p>With gratitude to:</p>
   <ul>
@@ -447,14 +450,14 @@ function About() {
   <p class="dim sm">This app supports a practice. It is not medical care, and it does not replace a counselor or doctor.</p>`;
 }
 function Laws() {
-  return `${back('#practice')}<h1>Universal laws of manifestation</h1>
+  return `${back('#info')}<h1>Universal laws of manifestation</h1>
   ${card('<div class="title" style="font-size:20px">One pure thought</div><div class="step" style="font-size:17px;margin-top:6px">Hold a single thought with no contradiction. That is the whole rule.</div>')}
   ${card('<div class="step" style="font-size:17px"><b class="pd">17 seconds</b> of a pure thought starts the change.<br><b class="pd">34 seconds</b> multiplies it.<br><b class="pd">68 seconds</b> is the target: the vibration becomes self-sustaining.</div>')}
   ${card('<div class="step" style="font-size:17px">Appreciation works best. When a contradicting thought shows up, do not follow it. Come back to the pure one. The practice is the coming back.</div>')}
   <a class="btn" href="#guide/law-hold">Try the 17-second thought</a>`;
 }
 function Cycles() {
-  return `${back()}<h1>Life cycles</h1><p class="dim">${esc(CYCLES.note)}</p>` + CYCLES.periods.map((p) => card(`<b>${esc(p.name)}</b><div class="dim sm">${esc(p.intro)}</div>
+  return `${back('#info')}<h1>Life cycles</h1><p class="dim">${esc(CYCLES.note)}</p>` + CYCLES.periods.map((p) => card(`<b>${esc(p.name)}</b><div class="dim sm">${esc(p.intro)}</div>
   ${p.good.length ? `<div class="good sm" style="margin-top:8px"><b>Good for</b></div>` + p.good.map((g) => `<div class="sm">• ${esc(g)}</div>`).join('') : ''}
   ${p.bad.length ? `<div class="bad sm" style="margin-top:8px"><b>Not good for</b></div>` + p.bad.map((g) => `<div class="sm">• ${esc(g)}</div>`).join('') : ''}`)).join('');
 }
@@ -545,7 +548,7 @@ function Settings() {
     ${native.isNative ? `<button class="btn ghost" data-act="sethome">${R.home ? 'Update' : 'Set'} home to my current location</button>
     ${R.home ? `<div class="dim sm">Distance to count as "left"</div>${stepper('homer', R.home.r, (v) => v + ' m')}` : ''}
     <div class="dim sm" style="margin-top:6px">Uses your phone\'s built-in home-area alert, so it barely touches the battery and shows no ongoing notification. Needs location set to "Allow all the time".</div>` : ''}`) : '';
-  return `<h1>Settings</h1>
+  return `<div class="hd" style="flex-wrap:nowrap"><h1>Settings</h1><a class="sqbtn" href="#log" aria-label="Log">Log</a></div>
   <h2>Notifications</h2>
   ${permState === 'granted' ? '<div class="good sm">Notifications are on.</div>' : `<button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked — enable notifications for this app in your phone settings.</div>' : ''}`}
   ${native.isNative ? '' : '<div class="dim sm" style="margin:6px 0">This web version notifies while the app is open. The Android app rings on schedule even when closed.</div>'}
@@ -663,6 +666,7 @@ function paint() {
   switch (route) {
     case 'today': h = Today(); break;
     case 'practice': h = Practice(); break;
+    case 'info': h = Info(); break;
     case 'ex': h = exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
     case 'guide': if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
     case 'log': h = Log(); break;
@@ -681,7 +685,7 @@ function paint() {
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'log', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'ex' || route === 'scale' || route === 'laws' || route === 'wheel' || route === 'chakras' || route === 'cycles' || route === 'about' || route === 'guide' ? 'practice' : 'log';
+  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'laws' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   window.scrollTo(0, 0);

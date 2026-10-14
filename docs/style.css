@@ -64,3 +64,4 @@ button, input, textarea, select { font-family: inherit; }
 input[type=text] { font-size: 16px; }
 .tag { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); border: 1px solid var(--line); border-radius: 8px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
 h3 { font-size: 18px; color: var(--pd); margin: 14px 0 6px; } .bul.dis { opacity: .38; pointer-events: none; }
+.sqbtn { flex: none; width: 48px; height: 48px; display: grid; place-items: center; border: 2px solid var(--accent); border-radius: 12px; color: var(--accent); font-size: 14px; font-weight: 700; text-decoration: none; }
