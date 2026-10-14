@@ -1,14 +1,16 @@
-import { CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING } from './content.js';
+import { CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING, SCALE, SCALE_UP } from './content.js';
 import * as native from './native.js';
 import { BUILD } from './build.js';
 
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
+// Daily goal of a group: one per ticked exercise, or just 1 when "pick one at random" is on. Routine meditation counts its reminders.
+const goalFor = (g, c) => (g.simple ? c.n : c.random ? 1 : Math.max(1, c.ex.length));
 const mergeRem = (r = {}) => {
   const d = clone(REMIND_DEFAULTS); const day = { ...d.day, ...r.day };
   const evenMins = (n) => Array.from({ length: n }, (_, k) => Math.round((day.s * 60 + ((day.e - day.s) * 60 * (k + 0.5)) / n) / 15) * 15);
@@ -16,15 +18,22 @@ const mergeRem = (r = {}) => {
   for (const g of REMIND_GROUPS) {
     const o = (r.cat || {})[g.id] || {}; const base = d.cat[g.id]; const c = { ...base, ...o };
     c.timing = c.timing === 'time' ? 'set' : ['set', 'even', 'random'].includes(c.timing) ? c.timing : base.timing;
-    c.ex = (c.ex || []).filter((x) => g.pool.includes(x)); if (!c.ex.length) c.ex = base.ex.slice();
+    c.ex = (c.ex || []).filter((x) => g.pool.includes(x) || g.leave.includes(x)); if (!c.ex.length) c.ex = base.ex.slice();
+    g.leave.forEach((id) => { const was = (r.leaveItems || {})[id]; if (was && !c.ex.includes(id)) c.ex.push(id); if (was === false && !o.ex) c.ex = c.ex.filter((x) => x !== id); }); // older saves kept leave-home on/off separately
     c.n = Math.max(1, Math.min(4, parseInt(c.n, 10) || 1));
     c.goal = Math.max(1, Math.min(4, parseInt(o.goal, 10) || parseInt(o.n, 10) || 1)); // older saves used one number for both
     if (!Array.isArray(o.times) || !o.times.length) c.times = typeof o.h === 'number' ? [o.h * 60 + (o.m || 0)] : base.times.slice(); // older saves stored one h/m
     const pad = evenMins(c.n); while (c.times.length < c.n) c.times.push(pad[c.times.length]);
+    if (g.id === 'bed' && !o.times && r.recall && typeof r.recall.h === 'number') c.times = [r.recall.h * 60 + (r.recall.m || 0)]; // evening recall moved into Bedtime
+    if (g.id === 'bed' && o.on === undefined && r.recall && r.recall.on === false) c.on = false;
+    if (g.simple) { c.ex = g.pool.slice(); c.goal = c.n; c.timing = 'even'; c.choose = true; } // routine meditation: you only choose how many reminders, then pick a meditation when one rings
+    if (c.random === undefined) c.random = (parseInt(o.goal, 10) || 1) === 1 && c.ex.length > 1; // older saves: goal 1 with several ticked meant "one of them"
+    c.random = !!c.random; c.goal = goalFor(g, c);
     c.times = c.times.slice(0, c.n); c.choose = c.choose !== false; delete c.h; delete c.m;
     cat[g.id] = c;
   }
-  return { ...d, ...r, cat, day, mind: { ...d.mind, ...r.mind }, leave: { ...d.leave, ...r.leave }, recall: { ...d.recall, ...r.recall }, leaveItems: { ...d.leaveItems, ...r.leaveItems } };
+  const leaveItems = {}; REMIND_GROUPS.forEach((g) => g.leave.forEach((id) => { leaveItems[id] = cat[g.id].ex.includes(id); })); // leave-home exercises are simply ticked in their group
+  return { ...d, ...r, cat, day, mind: { ...d.mind, ...r.mind }, leave: { ...d.leave, ...r.leave }, recall: { ...d.recall, ...r.recall }, leaveItems };
 };
 S.rem = mergeRem(S.rem);
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} changed(); };
@@ -51,7 +60,7 @@ function streak() {
 }
 // Remembers what today's plan was, so the day can be reviewed later even if settings change.
 function snapPlan() {
-  const k = dayKey(); const p = { cats: {}, recall: !!S.rem.recall.on };
+  const k = dayKey(); const p = { cats: {}, recall: false };
   REMIND_GROUPS.forEach((g) => { if (S.rem.cat[g.id].on) p.cats[g.id] = S.rem.cat[g.id].goal; });
   if (!S.days) S.days = {};
   if (JSON.stringify(S.days[k]) !== JSON.stringify(p)) { S.days[k] = p; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
@@ -76,12 +85,19 @@ function rng(seed) {
 }
 const group = (id) => REMIND_GROUPS.find((g) => g.id === id);
 // completions today in a category's timed exercises (leave-home items keep their own tally)
-const catCount = (gid, day = dayKey()) => group(gid).pool.reduce((a, id) => a + tallyOf(id, day), 0);
+const catCount = (gid, day = dayKey()) => {
+  const g = group(gid), c = S.rem.cat[gid], all = [...g.pool, ...g.leave];
+  if (g.simple) return all.reduce((n, id) => n + tallyOf(id, day), 0);
+  if (c.random) return all.some((id) => tallyOf(id, day)) ? 1 : 0;
+  return c.ex.filter((id) => tallyOf(id, day) > 0).length;
+};
 const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].goal;
 const canLeave = () => native.isNative && !!S.rem.home;
-const choosing = (gid) => S.rem.cat[gid].choose && S.rem.cat[gid].ex.length > 1;
+const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id)); // exercises that ring at scheduled times (not leave-home ones)
+const choosing = (gid) => !S.rem.cat[gid].random && schedEx(gid).length > 1; // several to do: the reminder opens the list
+const todayPick = (gid) => (schedEx(gid).length ? planned(gid) : S.rem.cat[gid].ex[0]);
 // the exercise a reminder names when it is not asking you to choose (rotates through the ones you picked)
-function planned(gid, date = new Date(), k = 0) { const list = S.rem.cat[gid].ex; return list[(dayNum(date) + k + REMIND_GROUPS.findIndex((g) => g.id === gid)) % list.length]; }
+function planned(gid, date = new Date(), k = 0) { const list = schedEx(gid); return list[(dayNum(date) + k + REMIND_GROUPS.findIndex((g) => g.id === gid)) % list.length]; }
 // minutes after midnight for n reminders on one day
 function minutesFor(id, n, mode, date) {
   const { s, e } = S.rem.day; const lo = s * 60, hi = e * 60, span = hi - lo;
@@ -96,16 +112,14 @@ function minutesFor(id, n, mode, date) {
 function occurrences(date) {
   const out = [];
   const isToday = dayKey(date.getTime()) === dayKey();
-  const rc = S.rem.recall;
-  if (rc.on) out.push({ id: 'recall', cat: 'obs', at: at(date, rc.h, rc.m), label: 'Evening recall', title: 'Observation: Evening recall', body: 'Recall your first activity this morning in as much detail as you can, then log it.', route: '#recall' });
   for (const g of REMIND_GROUPS) {
     const c = S.rem.cat[g.id];
-    if (!c.on || (isToday && catDone(g.id))) continue;
+    if (!c.on || !schedEx(g.id).length || (isToday && catDone(g.id))) continue;
     const mins = c.timing === 'set' ? c.times.slice(0, c.n) : minutesFor(g.id, c.n, c.timing, date);
     mins.forEach((m, k) => {
       const base = { id: `${g.id}${k}`, cat: g.id, at: at(date, Math.floor(m / 60), m % 60), label: g.label };
       if (choosing(g.id)) {
-        out.push({ ...base, title: `${g.label}: pick one`, body: c.ex.map((x) => exById[x].title).join(' · '), route: `#cat/${g.id}` });
+        out.push({ ...base, title: `${g.label}: pick one`, body: schedEx(g.id).map((x) => exById[x].title).join(' · '), route: `#cat/${g.id}` });
       } else {
         const id = planned(g.id, date, k); const ex = exById[id];
         out.push({ ...base, title: `${g.label}: ${ex.title}`, body: PING[id] || ex.summary, route: `#ex/${id}`, exId: id });
@@ -134,7 +148,7 @@ async function syncNative() {
       occurrences(d).filter((o) => o.at > now).forEach((o, k) => list.push({ id: (dayNum(d) % 1000) * 1000 + k, title: o.title, body: o.body, at: o.at, route: o.route, exId: o.exId }));
     }
     await native.scheduleAll(list);
-    const items = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on).flatMap((g) => g.leave.filter((id) => S.rem.leaveItems[id]).map((id) =>
+    const items = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on).flatMap((g) => [...g.leave, ...(g.both || [])].filter((id) => S.rem.cat[g.id].ex.includes(id)).map((id) =>
       ({ id, title: `${g.label}: ${exById[id].title}`, body: PING[id] || exById[id].summary, route: `#ex/${id}`, doneDay: tallyOf(id) > 0 ? dayKey() : '' })));
     await native.setFence(canLeave() ? S.rem.home : null, items, S.rem.leave);
   } catch (e) { console.error('sync failed', e); }
@@ -210,16 +224,90 @@ const rating = (name, val) => `<div class="rating">${[1, 2, 3, 4, 5].map((n) => 
 const back = (href = '#practice') => `<a class="back" href="${href}">‹ Back</a>`;
 
 /* ---------------- screens ---------------- */
+
+/* ---------------- frequency fast ---------------- */
+const FAST_RULES = ['Fast from news, fear-based feeds, doom-scrolling, gossip, and complaint conversations. Spoken fear feeds the same thought-forms as watched fear.', 'When you feel the pull (the hand reaching for the phone, the mouth starting "did you hear about..."), pause and ask: "Is this mine? Do I choose to give my energy to this?"', 'Put the freed-up time into anything creative, even trivially. The fast is only complete when the energy has somewhere to go. An empty fast gets refilled by the same fear.'];
+const fastDay = () => (S.fast.start ? Math.floor((new Date(dayKey() + 'T00:00') - new Date(S.fast.start + 'T00:00')) / 86400000) + 1 : 0);
+const fastRunning = () => { const d = fastDay(); return d >= 1 && d <= S.fast.days; };
+const fastRulesBox = () => `<div class="rulesbox"><div class="rtitle">The rules</div><ol>${FAST_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol></div>`;
+function fastCard() {
+  const f = S.fast; const d = fastDay();
+  if (!f.start) return '';
+  if (d > f.days) return card(`<div class="cheer"><div class="pop">🌿</div><div class="title">Frequency Fast complete</div><div class="meta">${f.days} day${f.days === 1 ? '' : 's'}. Notice what filled the space.</div><button class="btn" style="margin-top:10px" data-act="fastend">Done</button></div>`, 'accent');
+  if (d < 1) return '';
+  const t = f.done[dayKey()] || {};
+  const row = (k, label) => `<div class="bul" data-act="fastck:${k}"><span class="bx ${t[k] ? 'on' : ''}">${t[k] ? '✓' : ''}</span><span>${label}</span></div>`;
+  return card(`<div class="title">Frequency Fast</div><div class="meta">Day ${d} of ${f.days}${t.a && t.b ? ' · today is complete ✓' : ''}</div>
+    ${row('a', 'Stayed off news, fear-feeds, doom-scrolling, gossip and complaining')}${row('b', 'Put the freed-up time into something creative')}
+    <div class="meta" style="margin-top:6px">When you feel the pull: "Is this mine? Do I choose to give my energy to this?"</div>`);
+}
+function morningCards() {
+  const yk = dayKey(Date.now() - 86400000); let out = ''; const on = S.rem.cat.bed.on ? S.rem.cat.bed.ex : [];
+  if (on.includes('bed-sats') && tallyOf('bed-sats', yk) && !S.loops[yk]) out += card(`<div class="title" style="font-size:20px">Last night's loop</div><div class="meta">Rate it: was it fantasy, story, or memory?</div><div class="chips">${['fantasy', 'story', 'memory'].map((x) => `<button class="chip" data-act="loop:${x}:${yk}">${x[0].toUpperCase() + x.slice(1)}</button>`).join('')}</div>`);
+  if (on.includes('bed-revision') && tallyOf('bed-revision', yk) && !S.loops[yk + 'r']) out += card(`<div class="title" style="font-size:20px">Yesterday, revised</div><div class="meta">One event from yesterday went differently in my world. Note any echoes today.</div><div class="row" style="margin-top:8px"><a class="btn ghost mini" href="#note">Quick note</a><button class="btn mini" data-act="loopr:${yk}">Got it</button></div>`);
+  if (on.includes('bed-belief') && tallyOf('bed-belief', yk) && !S.loops[yk + 'b']) out += card(`<div class="title" style="font-size:20px">Last night's belief</div><div class="meta">You handed a belief back and chose a new one. Notice today whether the old one tries to return. Do not fight it, just notice.</div><div class="row" style="margin-top:8px"><a class="btn ghost mini" href="#note">Quick note</a><button class="btn mini" data-act="loopb:${yk}">Got it</button></div>`);
+  return out;
+}
+
+/* ---------------- emotional scale ---------------- */
+let sc = null;
+function Scale() {
+  const hist = S.scale.slice(0, 5).map((r) => `<div class="meta">${when(r.ts)} · ${r.start} → ${r.end}${r.start - r.end > 0 ? ` (up ${r.start - r.end})` : ''}</div>`).join('');
+  if (!sc) return `${back('#practice')}<h1>Climbing the Scale</h1>
+    <p class="dim">You can only climb one to three rungs at a time. Trying to jump to joy from the bottom just proves you are failing. Any upward step is success. Your emotion is guidance, not a verdict: it reads out the gap between you and what you want.</p>
+    <p class="dim">Where are you right now, 1 to 22?</p>
+    ${SCALE.map((r) => `<div class="bul scrung" data-act="scstart:${r.n}"><b class="pd">${r.n}</b><span>${esc(r.name)}</span></div>`).join('')}
+    ${hist ? `<h2>Recent climbs</h2>${card(hist)}` : ''}`;
+  const r = SCALE[sc.rung - 1]; const up = sc.rung > 1 ? SCALE[sc.rung - 2] : null;
+  if (sc.done || !up) {
+    const moved = sc.start - sc.rung;
+    return `<h1>Rest here</h1>${card(`<div class="title" style="font-size:22px">${sc.rung}. ${esc(r.name)}</div><div class="meta">${moved > 0 ? `You climbed ${moved} rung${moved === 1 ? '' : 's'}. That is a win.` : 'You noticed where you are. That is the first step.'}</div>`)}
+    <p>Note the number where you stopped: <b>${sc.rung}</b>. That is tomorrow's starting point, not today's failure.</p>
+    <p class="dim">You cannot fall. You can only climb again, and the ladder is always right under you.</p>
+    <button class="btn" data-act="scend">Save and finish</button>`;
+  }
+  return `<div class="dim sm">Started at ${sc.start}${sc.start > sc.rung ? ` · now at ${sc.rung}` : ''}</div>
+    ${card(`<div class="meta">You are here</div><div class="title" style="font-size:22px">${sc.rung}. ${esc(r.name)}</div><div class="step" style="font-size:18px;margin-top:8px">${sc.rung === sc.start ? `I notice I am in ${esc(r.name.split(' · ')[0].toLowerCase())}. This feeling is not who I am. It is a signal: it is telling me something I want is here, and I am looking at its absence.` : 'Stay with it for a breath.'}</div>`)}
+    <h2>Toward ${up.n}. ${esc(up.name)}</h2>
+    ${card(`<div class="step" style="font-size:19px">${esc(SCALE_UP[sc.rung])}</div>`)}
+    <button class="btn" data-act="scup">It eases a little. Climb to ${up.n}</button>
+    <button class="btn ghost" data-act="screst">That is far enough. Rest here</button>
+    <button class="btn ghost" data-act="scquit" style="border-color:var(--line);color:var(--dim)">Quit</button>`;
+}
+
+/* ---------------- focus wheel ---------------- */
+const SPOKE_HINTS = ["I don't have to solve this today", 'I can take this one step at a time', 'Other people have been through this', 'I have handled hard things before', 'It has worked out before', 'There is more than one way through', 'Some of this is already better than before', 'I am learning something here', 'Good things can come from this', 'I am getting clearer about what I want', 'I can feel a little relief already', 'It is getting easier to believe this'];
+let wh = null;
+const newWheel = () => ({ id: uid(), desire: '', spokes: Array.from({ length: 12 }, () => ({ t: '', ok: false })) });
+function Wheel() {
+  if (!wh) wh = newWheel();
+  const full = wh.spokes.every((x) => x.ok && x.t.trim());
+  const cx = 160, cy = 160;
+  const nodes = wh.spokes.map((x, i) => { const a = (i / 12) * 2 * Math.PI - Math.PI / 2; const px = cx + 112 * Math.cos(a), py = cy + 112 * Math.sin(a);
+    return `<line x1="${cx}" y1="${cy}" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" stroke="${x.ok ? '#8294ff' : '#4b4175'}" stroke-width="3"/><circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="19" fill="${x.ok ? '#8294ff' : '#2a2148'}" stroke="${x.t.trim() ? '#8294ff' : '#4b4175'}" stroke-width="2"/><text x="${px.toFixed(1)}" y="${(py + 5).toFixed(1)}" text-anchor="middle" font-size="14" font-weight="700" fill="${x.ok ? '#1e1833' : '#c9c2e4'}">${i + 1}</text>`; }).join('');
+  const d = wh.desire.trim(); const words = d.split(/\s+/).filter(Boolean); const l1 = words.slice(0, 3).join(' '), l2 = words.slice(3, 6).join(' ') + (words.length > 6 ? '…' : '');
+  const svg = `<svg viewBox="0 0 320 320" style="width:100%;max-width:340px;display:block;margin:0 auto"><g class="${full ? 'spin' : ''}" style="transform-origin:160px 160px">${nodes}</g><circle cx="${cx}" cy="${cy}" r="50" fill="#352b5a" stroke="#8294ff" stroke-width="3"/><text x="${cx}" y="${cy - 2}" text-anchor="middle" font-size="12" font-weight="700" fill="#efeaf8">${esc(l1 || 'Your desire')}</text><text x="${cx}" y="${cy + 14}" text-anchor="middle" font-size="12" fill="#efeaf8">${esc(l2)}</text></svg>`;
+  const done = wh.spokes.filter((x) => x.ok).length;
+  return `${back('#practice')}<h1>Focus Wheel</h1>
+    <p class="dim">Put what you want in the center. Then fill the 12 spokes with statements you genuinely believe, starting soft and moving closer. A spoke only lights up when it truly feels true. The wheel spins when all 12 do.</p>
+    ${card(`<div class="meta">${done} of 12 spokes true</div>${svg}${full ? '<div class="center good" style="margin-top:8px"><b>The wheel is spinning.</b> Every spoke feels true.</div>' : ''}`)}
+    <div class="dim sm">Center: what I want, or the belief I want to shift</div>
+    <input type="text" data-wf="desire" value="${esc(wh.desire)}" placeholder="e.g. I feel secure about money">
+    ${wh.spokes.map((x, i) => `<div class="dim sm" style="margin-top:8px">Spoke ${i + 1}</div><input type="text" data-wf="${i}" value="${esc(x.t)}" placeholder="${esc(SPOKE_HINTS[i])}">
+      <div class="bul" data-act="wok:${i}"><span class="bx ${x.ok ? 'on' : ''}">${x.ok ? '✓' : ''}</span><span>This feels true to me</span></div>`).join('')}
+    <button class="btn" style="margin-top:14px" data-act="wsave">Save this wheel</button>
+    <button class="btn ghost" data-act="wnew">Start a new wheel</button>
+    ${S.wheels.length ? `<h2>Saved wheels</h2>${S.wheels.map((w) => card(`<div class="row"><b data-act="wload:${w.id}" style="cursor:pointer">${esc(w.desire || 'Untitled')}</b><span class="meta" style="text-align:right">${w.spokes.filter((x) => x.ok).length}/12 · <span data-act="wdel:${w.id}" style="cursor:pointer;color:var(--bad)">delete</span></span></div>`)).join('')}` : ''}`;
+}
+
 let openCat = null;
-const exRow = (id) => {
-  const t = tallyOf(id);
-  return `<div class="row" style="align-items:flex-start;margin-top:8px"><div style="flex:3"><a href="#ex/${id}" style="color:inherit;text-decoration:none"><b>${t ? '✓ ' : ''}${esc(exById[id].title)}</b></a><div class="dim sm">${t} today</div></div>
-    <div style="flex:2;display:flex;gap:6px"><a class="chip" href="#ex/${id}" style="text-decoration:none;text-align:center;flex:1">Rules</a><button class="chip on" data-act="done:${id}" style="flex:1">✓ Done</button></div></div>`;
-};
+const TAGS = { 'obs-recall': 'Observation' }; // purely a label
+const tag = (id) => (TAGS[id] ? ` <span class="tag">${TAGS[id]}</span>` : '');
+const miniBtns = (id) => `<a class="btn ghost mini" href="#ex/${id}">Rules</a><button class="btn mini" data-act="done:${id}">✓ Done</button>`;
+const exRow = (id) => `<div class="exrow"><a href="#ex/${id}" class="exname">${esc(exById[id].title)}${tag(id)}</a><div class="minis">${miniBtns(id)}</div></div>`;
 function Today() {
   snapPlan();
   const now = new Date();
-  const recalled = S.recalls.some((r) => dayKey(r.ts) === dayKey());
   const nudge = NUDGES[dayNum() % NUDGES.length];
   const n = streak();
   const next = {}; occurrences(now).forEach((o) => { if (o.cat && o.id !== 'recall' && o.at > now && !next[o.cat]) next[o.cat] = o.at; });
@@ -227,24 +315,18 @@ function Today() {
   const pending = on.filter((g) => !catDone(g.id));
   const rows = pending.map((g) => {
     const c = S.rem.cat[g.id]; const cnt = catCount(g.id);
-    const status = `${cnt} of ${c.goal} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
-    let body;
-    if (choosing(g.id)) body = '<div class="dim sm" style="margin-top:6px">Pick one:</div>' + c.ex.map(exRow).join('');
-    else {
-      const id = planned(g.id);
-      body = exRow(id) + (c.ex.length > 1 || g.pool.length > 1 ? `<button class="chip" data-act="other:${g.id}" style="margin-top:8px">I did a different one</button>` : '');
-      if (openCat === g.id) body += `<div class="chips">${g.pool.map((x) => `<button class="chip" data-act="done:${x}">${esc(exById[x].title)}</button>`).join('')}</div>`;
-    }
-    const leave = g.leave.filter((id) => S.rem.leaveItems[id] && !tallyOf(id)).map((id) =>
-      `<div class="dim sm" style="margin-top:12px">When you leave home${native.isNative && !S.rem.home ? ' · <a href="#settings" style="color:var(--accent)">set your home in Settings</a>' : ''}</div>${exRow(id)}`).join('');
-    const goalRow = `<div class="row" style="margin-top:10px;justify-content:space-between"><span class="dim sm" style="flex:2">Daily goal</span><span style="flex:3;text-align:right">${stepper(`cg:${g.id}`, c.goal)}</span></div>`;
-    return card(`<div class="dim sm">${g.label} · ${status}</div>${body}${goalRow}${leave}`);
+    const meta = `${cnt} of ${c.goal} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
+    const homeNote = native.isNative && !S.rem.home && [...g.leave, ...(g.both || [])].some((id) => c.ex.includes(id)) ? ' · <a href="#settings" style="color:var(--accent)">set your home in Settings</a>' : '';
+    let side = '', body = '';
+    if (g.simple) body = '<a class="btn" href="#cat/' + g.id + '" style="margin-top:10px">Choose a meditation</a>';
+    else if (c.random) side = `<div class="minis">${miniBtns(todayPick(g.id))}</div>`;
+    else body = c.ex.filter((id) => !tallyOf(id)).map(exRow).join('');
+    return card(`<div class="hd"><div><div class="title">${g.label}</div><div class="meta">${meta}${homeNote}</div></div>${side}</div>${body}`);
   }).join('');
-  const recallCard = S.rem.recall.on && !recalled
-    ? card(`<div class="dim sm">Tonight · ${fmtTime(S.rem.recall.h, S.rem.recall.m)}</div><a href="#recall" style="color:inherit;text-decoration:none"><b>Evening recall</b></a><div class="dim sm">Recall your first morning activity and log it</div>`) : '';
+  const recallCard = '';
   const doneIds = [...new Set(REMIND_GROUPS.flatMap((g) => [...g.pool, ...g.leave]))].filter((id) => tallyOf(id));
-  const doneCard = doneIds.length || recalled
-    ? card(`<div class="dim sm">Done today</div>` + doneIds.map((id) => `<div class="row" style="margin-top:6px;justify-content:space-between"><span>✓ ${esc(exById[id].title)}${tallyOf(id) > 1 ? ` × ${tallyOf(id)}` : ''}</span><button class="chip" data-act="undo:${id}">Undo</button></div>`).join('') + (recalled ? '<div style="margin-top:6px">✓ Evening recall</div>' : '')) : '';
+  const doneCard = doneIds.length
+    ? card(`<div class="dim sm">Done today</div>` + doneIds.map((id) => `<div class="row" style="margin-top:6px;justify-content:space-between"><span>✓ ${esc(exById[id].title)}${tallyOf(id) > 1 ? ` × ${tallyOf(id)}` : ''}</span><button class="chip" data-act="undo:${id}">Undo</button></div>`).join('')) : '';
   const all = on.length && !pending.length && !recallCard;
   const cheer = all ? card(`<div class="cheer"><div class="pop">🎉</div><b style="font-size:18px">Everything done today!</b><div class="dim sm" style="margin-top:4px">${n ? `${n}-day streak. ` : ''}You showed up for yourself. Rest easy.</div></div>`, 'accent') : '';
   return `<div class="dim">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
@@ -252,8 +334,9 @@ function Today() {
   <div class="row"><a class="btn" href="#guide/funk-reset">I'm in a funk</a>${S.rem.playlist ? '<button class="btn ghost" data-act="music">♪ Play my songs</button>' : ''}</div>
   ${card(`<div class="dim sm">Mindful moment</div><div style="font-size:17px;margin-top:4px">${esc(nudge)}</div>`, 'accent')}
   ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">MindCue needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → MindCue → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
-  ${native.isNative && !S.rem.home && Object.values(S.rem.leaveItems).some(Boolean) ? card(`<b>Set your home</b><div class="dim sm" style="margin:4px 0 8px">Stair Count and Stranger's Face remind you as you leave the house. Stand at home and tap the button. When your phone asks about location, choose <b>While using the app</b>, then open your phone's Settings → Apps → MindCue → Permissions → Location and pick <b>Allow all the time</b>.</div><button class="btn" data-act="sethome">Set my home here</button><div id="msg" class="warn sm"></div>`, 'accent') : ''}
+  ${native.isNative && !S.rem.home && on.some((g) => [...g.leave, ...(g.both || [])].some((id) => S.rem.cat[g.id].ex.includes(id))) ? card(`<b>Set your home</b><div class="dim sm" style="margin:4px 0 8px">Stair Count and Stranger's Face remind you as you leave the house. Stand at home and tap the button. When your phone asks about location, choose <b>While using the app</b>, then open your phone's Settings → Apps → MindCue → Permissions → Location and pick <b>Allow all the time</b>.</div><button class="btn" data-act="sethome">Set my home here</button><div id="msg" class="warn sm"></div>`, 'accent') : ''}
   ${cheer}
+  ${morningCards()}${fastCard()}
   ${rows || recallCard ? `<h2>Today's goals</h2>${rows}${recallCard}` : on.length ? '' : '<h2>Today\'s goals</h2><div class="dim">No reminders on. Turn some on in Settings.</div>'}
   ${doneCard}
   <div class="row" style="margin-top:8px"><a class="btn ghost" href="#note">Quick note</a></div>
@@ -284,20 +367,21 @@ function Choose(gid) {
   const g = group(gid); if (!g) return back('#today') + '<p>Not found.</p>';
   const c = S.rem.cat[gid];
   return `${back('#today')}<h1>${g.label}</h1><div class="dim">${catCount(gid)} of ${c.goal} today. Pick one:</div>` +
-    c.ex.map((id) => card(`<a href="#ex/${id}" style="color:inherit;text-decoration:none"><b>${esc(exById[id].title)}</b></a><div class="dim sm">${esc(exById[id].summary)}</div>
+    schedEx(gid).map((id) => card(`<a href="#ex/${id}" style="color:inherit;text-decoration:none"><b>${esc(exById[id].title)}</b></a><div class="dim sm">${esc(exById[id].summary)}</div>
       <div class="row" style="margin-top:8px"><a class="btn ghost" href="#ex/${id}">Rules</a><a class="btn" href="#guide/${id}">Start</a><button class="btn ghost" data-act="done:${id}">✓ Done</button></div>`)).join('');
 }
 
 function Practice() {
   const ms = MILESTONES.map((m) => check(!!S.milestones[m.id], esc(m.label), `ms:${m.id}`)).join('');
-  const groups = Object.entries(CATS).map(([cat, label]) => `<h2>${label}</h2>` + EXERCISES.filter((e) => e.cat === cat).map((e) =>
-    link(`#ex/${e.id}`, `<b>${isLocked(e) ? '🔒 ' : ''}${esc(e.title)}</b><div class="dim sm">${e.mins ? e.mins + ' min · ' : ''}${esc(e.freq)}</div>`, isLocked(e) ? 'locked' : '')
-  ).join('') + (cat === 'chakra' ? link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>') : '')).join('');
+  const groups = Object.entries(CATS).map(([cat, label]) => `<h2>${label}</h2>` + EXERCISES.filter((e) => e.cat === cat && !e.hidden).map((e) =>
+    link(`#ex/${e.id}`, `<b>${isLocked(e) ? '🔒 ' : ''}${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`, isLocked(e) ? 'locked' : '')
+  ).join('') + (cat === 'chakra' ? link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>') : '') + (cat === 'emotion' ? link('#scale', '<b>Climbing the Scale</b><div class="dim sm">Tell it what you feel. It walks you up, one rung at a time</div>') + link('#wheel', '<b>Focus Wheel</b><div class="dim sm">Build 12 believable statements toward what you want</div>') : '')).join('');
   return `<h1>Practice</h1>
   <h2>Psychic-centers path</h2>
   ${card(`<div class="dim sm">Sequence matters: Heart → Pituitary → Pineal → Throat → Attunement. Tick each when it applies.</div>${ms}`)}
   ${groups}
   <h2>Reference</h2>
+  ${link('#laws', '<b>Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>')}
   ${link('#cycles', '<b>Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>')}
   ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
 }
@@ -306,7 +390,7 @@ function Exercise(id) {
   const ex = exById[id]; if (!ex) return back() + '<p>Not found.</p>';
   const miss = (ex.needs || []).filter((n) => !S.milestones[n]).map((n) => MILESTONES.find((m) => m.id === n).label);
   return `${back()}<h1>${esc(ex.title)}</h1><div class="dim">${esc(ex.summary)}</div>
-  <div class="dim sm" style="margin:8px 0">${ex.mins ? ex.mins + ' min · ' : ''}${esc(ex.freq)}</div>
+  <div class="dim sm" style="margin:8px 0">${esc(ex.freq)}</div>
   ${miss.length ? card(`<div class="warn sm">The guide says to start this only after:</div>${miss.map((m) => `<div class="warn sm">• ${esc(m)}</div>`).join('')}<div class="dim sm">Jumping ahead does no harm, but no good either.</div>`, 'warnb') : ''}
   ${ex.caution ? card(`<div class="warn sm">${esc(ex.caution)}</div>`, 'warnb') : ''}
   <a class="btn" href="#guide/${id}">Start guided</a>
@@ -325,11 +409,20 @@ function About() {
   <ul>
     <li><b>Joe Dispenza</b> — chakra attention and coherence work</li>
     <li><b>Guru Pathik</b>, in <i>Avatar: The Last Airbender</i> — the chakra lesson</li>
+    <li><b>Dolores Cannon</b> — the quiet-listening, inner-journey, energy, and everyday-living practices, written here in our own words from teachings associated with her work</li>
+    <li><b>Barbara Marciniak</b>, <b>Neville Goddard</b>, <b>Bashar</b>, and <b>Esther and Abraham Hicks</b> — the whim, now-point, belief-audit, fast, breath, bedtime-loop, emotional-scale and manifestation practices, and the sayings inspired by them, in our own words</li>
     <li><b>Wisdom of the Mystic Masters</b> — the mental training, meditation, healing, projection, and cycles teachings</li>
     <li>The yogic, tantric, and Rosicrucian traditions all of the above draw on</li>
     <li>Every teacher, student, and practitioner who passed these on</li>
   </ul>
   <p class="dim sm">This app supports a practice. It is not medical care, and it does not replace a counselor or doctor.</p>`;
+}
+function Laws() {
+  return `${back('#practice')}<h1>Universal laws of manifestation</h1>
+  ${card('<div class="title" style="font-size:20px">One pure thought</div><div class="step" style="font-size:17px;margin-top:6px">Hold a single thought with no contradiction. That is the whole rule.</div>')}
+  ${card('<div class="step" style="font-size:17px"><b class="pd">17 seconds</b> of a pure thought starts the change.<br><b class="pd">34 seconds</b> multiplies it.<br><b class="pd">68 seconds</b> is the target: the vibration becomes self-sustaining.</div>')}
+  ${card('<div class="step" style="font-size:17px">Appreciation works best. When a contradicting thought shows up, do not follow it. Come back to the pure one. The practice is the coming back.</div>')}
+  <a class="btn" href="#guide/law-hold">Try the 17-second thought</a>`;
 }
 function Cycles() {
   return `${back()}<h1>Life cycles</h1><p class="dim">${esc(CYCLES.note)}</p>` + CYCLES.periods.map((p) => card(`<b>${esc(p.name)}</b><div class="dim sm">${esc(p.intro)}</div>
@@ -386,17 +479,26 @@ function RecallForm() {
 /* ----- settings ----- */
 let permState = native.isNative ? 'default' : 'Notification' in window ? Notification.permission : 'unsupported';
 native.permState().then((p) => { if (native.isNative) { permState = p; } });
+function fastSettings() {
+  const f = S.fast; const d = fastDay(); const running = fastRunning();
+  return card(`${check(f.on, '<b class="ttl">Frequency Fast</b>', 'fon', running ? `Running: day ${d} of ${f.days}` : 'A short challenge. Off until you start it.')}
+    ${f.on ? `${fastRulesBox()}
+    <div class="dim sm" style="margin-top:10px">How long</div>
+    <div class="chips">${[1, 3, 5, 7].map((n) => `<button class="chip ${f.days === n ? 'on' : ''}" ${running ? 'disabled' : ''} data-act="fdays:${n}">${n} day${n === 1 ? '' : 's'}</button>`).join('')}</div>
+    <div class="dim sm">Each day has two goals, shown in a bubble on Today while it runs.</div>
+    ${running ? '<button class="btn ghost" data-act="fstop">Stop the fast</button>' : '<button class="btn" data-act="fstart">Start today</button>'}` : ''}`);
+}
 function Settings() {
   const R = S.rem;
   const fmtMin = (v) => fmtTime(Math.floor(v / 60), v % 60);
   const groups = REMIND_GROUPS.map((g) => {
     const c = R.cat[g.id];
-    const leaveRows = g.leave.map((id) => check(!!R.leaveItems[id], `<b>${esc(exById[id].title)}</b> — remind me when I leave home`, `lv:${id}`, id === 'obs-stairs' ? 'Only rings as you head out. Count the steps you take.' : 'Only rings as you head out.')).join('');
-    const nightly = g.id === 'obs' ? `${check(R.recall.on, '<b>Evening Recall</b> — nightly, at its own time', 'recallon', 'Recall your first morning activity. Separate from the reminders above.')}${R.recall.on ? `<div style="margin:0 0 6px 36px">${stepper('rc', R.recall.h * 60 + R.recall.m, fmtMin)}</div>` : ''}` : '';
-    return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day`)}
-      ${c.on ? `<div class="dim sm" style="margin-top:6px">Exercises</div>
-      <div class="chips">${g.pool.map((x) => `<button class="chip ${c.ex.includes(x) ? 'on' : ''}" data-act="cex:${g.id}:${x}">${esc(exById[x].title)}</button>`).join('')}</div>
-      <div class="dim sm">Daily goal — how many times you want to do it</div>${stepper(`cg:${g.id}`, c.goal)}
+    const nightly = '';
+    if (g.simple) return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, 'Each reminder opens a list of meditations to choose from.')}${c.on ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
+    const bullets = [...g.pool, ...g.leave].map((x) => `<div class="bul" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
+    return card(`${check(c.on, `<b class="ttl">${g.label}</b>`, `con:${g.id}`, `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day`)}
+      ${c.on ? `<div class="dim sm" style="margin-top:6px">Tick the exercises. Each ticked one is a daily goal.</div>${bullets}
+      ${c.ex.length > 1 ? `<div class="bul" data-act="crand:${g.id}"><span class="bx ${c.random ? 'on' : ''}">${c.random ? '✓' : ''}</span><span><b>Just 1 as my goal, picked at random</b></span></div>` : ''}
       <div class="dim sm" style="margin-top:8px">Reminders per day — they keep coming until the goal is met</div>${stepper(`cn:${g.id}`, c.n)}
       <div class="dim sm" style="margin-top:8px">Remind me</div>
       <div class="chips">
@@ -405,15 +507,12 @@ function Settings() {
         <button class="chip ${c.timing === 'random' ? 'on' : ''}" data-act="ctime:${g.id}:random">At random times</button></div>
       <div class="dim sm">${c.timing === 'set' ? 'You pick each time.' : c.timing === 'even' ? `Evenly across ${fmtTime(R.day.s)}–${fmtTime(R.day.e)}.` : `Random times between ${fmtTime(R.day.s)} and ${fmtTime(R.day.e)}.`}</div>
       ${c.timing === 'set' ? c.times.map((t, k) => `<div class="dim sm" style="margin-top:6px">Reminder ${k + 1}</div>${stepper(`ct:${g.id}:${k}`, t, fmtMin)}`).join('') : ''}
-      ${c.ex.length > 1 ? `<div class="dim sm" style="margin-top:10px">When a reminder rings</div><div class="chips">
-        <button class="chip ${c.choose ? 'on' : ''}" data-act="cch:${g.id}:1">Let me choose</button>
-        <button class="chip ${!c.choose ? 'on' : ''}" data-act="cch:${g.id}:0">Pick one for me</button></div>` : ''}
-      ${leaveRows || nightly ? `<div class="dim sm" style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px">Also in ${g.label}</div>${nightly}${leaveRows}` : ''}` : ''}`);
+      ${nightly ? `<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:6px">${nightly}</div>` : ''}` : ''}`);
   }).join('');
-  const anyLeave = REMIND_GROUPS.some((g) => R.cat[g.id].on && g.leave.some((id) => R.leaveItems[id]));
+  const anyLeave = REMIND_GROUPS.some((g) => R.cat[g.id].on && [...g.leave, ...(g.both || [])].some((id) => R.cat[g.id].ex.includes(id)));
   const home = anyLeave ? card(`<b>Leaving home</b>
     <div class="dim sm">${!native.isNative ? 'Works in the Android app only. Until then these stay quiet.' : R.home ? `Home is set. Reminders fire when you move ${R.home.r} m away.` : 'Set your home first — until then these stay quiet.'}</div>
-    <div class="dim sm" style="margin-top:6px">Reminders while you're away from home (spread out until you're back)</div>${stepper('leaven', R.leave.n)}
+    <div class="dim sm" style="margin-top:6px">How many reminders when you leave home (spread out until you're back; one is picked at random if you've ticked several)</div>${stepper('leaven', R.leave.n)}
     <div class="dim sm" style="margin-top:6px">Leave-home reminders allowed from</div>${stepper('leaveS', R.leave.s, (v) => fmtTime(v))}
     <div class="dim sm" style="margin-top:6px">Until</div>${stepper('leaveE', R.leave.e, (v) => fmtTime(v))}
     ${native.isNative ? `<button class="btn ghost" data-act="sethome">${R.home ? 'Update' : 'Set'} home to my current location</button>
@@ -428,6 +527,7 @@ function Settings() {
   ${card(`<div class="dim sm">From</div>${stepper('dayS', R.day.s, (v) => fmtTime(v))}<div class="dim sm" style="margin-top:6px">Until</div>${stepper('dayE', R.day.e, (v) => fmtTime(v))}`)}
   <h2>Daily goals</h2>
   ${groups}
+  ${fastSettings()}
   ${home}
   <h2>Funk playlist</h2>
   <div class="dim sm">Paste a Spotify (or any music) link. The funk button and "Play my songs" will open it. Downloaded playlists play without internet.</div>
@@ -451,7 +551,7 @@ let G = null;
 const pad = (n) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`;
 const vib = (p) => navigator.vibrate?.(p);
 async function wake() { try { G.lock = await navigator.wakeLock?.request('screen'); } catch (e) {} }
-function stopGuide() { if (G) { clearInterval(G.timer); G.lock?.release?.().catch(() => {}); } G = null; document.body.classList.remove('guided'); }
+function stopGuide() { if (G) { clearInterval(G.timer); clearInterval(G.xi); G.lock?.release?.().catch(() => {}); } G = null; document.body.classList.remove('guided'); }
 
 function startGuide(id) {
   stopGuide();
@@ -459,10 +559,10 @@ function startGuide(id) {
   initStep(); wake();
 }
 function initStep() {
-  clearInterval(G.timer); G.run = false; G.stepDone = false;
+  clearInterval(G.timer); clearInterval(G.xi); G.xt = null; G.run = false; G.stepDone = false;
   const st = stepOf();
   G.left = st.secs || 0; G.elapsed = 0;
-  if (st.pick) G.left = G.pickSecs || st.pick[0];
+  G.pickSecs = null; if (st.pick) G.left = st.secs;
   if (st.breath) Object.assign(G, { rep: 1, ph: 0, left: st.breath.phases[0][1] });
 }
 const stepOf = () => { const r = G.ex.steps[G.i]; return typeof r === 'string' ? { t: r } : r; };
@@ -472,6 +572,7 @@ function tick() {
   if (st.open) { G.elapsed++; $('#tm').textContent = pad(G.elapsed); return; }
   if (st.secs) {
     G.left--; $('#tm').textContent = pad(G.left);
+    if (st.buzz && G.left > 0 && ((G.pickSecs || st.secs) - G.left) % st.buzz === 0) vib([0, 250, 120, 250]); // keeps track of time with eyes closed
     if (G.left <= 0) { vib([0, 300, 150, 300]); G.run = false; G.stepDone = true; clearInterval(G.timer); paint(); }
     return;
   }
@@ -492,12 +593,14 @@ function toggleRun() {
   if (G.run) G.timer = setInterval(tick, 1000);
   paint();
 }
+// The note saved from a guided practice: its own form fields when it has them, else the free note.
+const guideNote = () => (G.ex.log ? G.ex.log.map((f, i) => ((G.f || [])[i] || '').trim() ? `${f.label}\n${G.f[i].trim()}` : '').filter(Boolean).join('\n\n') : G.note.trim());
 function Guide() {
   if (!G) return back('#practice') + '<p>Nothing running.</p>';
   document.body.classList.add('guided');
   const ex = G.ex;
   if (G.done) return `<h1>${esc(ex.title)} — done</h1>
-    ${card(`<div class="dim sm">How was your focus?</div>${rating('gfocus', G.focus)}<div class="dim sm" style="margin-top:12px">${ex.kind === 'review' ? 'Write the exact hour and everything you observed.' : 'Notes (optional)'}</div><textarea name="gnote" placeholder="What did you notice?">${esc(G.note)}</textarea>`)}
+    ${card(`<div class="dim sm">How was your focus?</div>${rating('gfocus', G.focus)}${ex.log ? ex.log.map((f, i) => `<div class="dim sm" style="margin-top:12px">${esc(f.label)}</div><textarea data-gf="${i}" placeholder="${esc(f.ph || '')}">${esc((G.f || [])[i] || '')}</textarea>`).join('') : `<div class="dim sm" style="margin-top:12px">${ex.kind === 'review' ? 'Write the exact hour and everything you observed.' : 'Notes (optional)'}</div><textarea name="gnote" placeholder="What did you notice?">${esc(G.note)}</textarea>`}`)}
     <button class="btn" data-act="gsave">${ex.kind === 'recall' ? 'Save and go to recall log' : 'Save to log'}</button>
     <button class="btn ghost" data-act="gskip">Skip logging</button>`;
   const st = stepOf(); const last = G.i === ex.steps.length - 1;
@@ -505,8 +608,11 @@ function Guide() {
   const label = G.run ? 'Pause' : (st.breath ? G.rep === 1 && G.ph === 0 && G.left === st.breath.phases[0][1] : G.left === st.secs && !G.elapsed) ? 'Start' : 'Resume';
   let widget = '';
   if (st.open) widget = `<div class="big" id="tm">${pad(G.elapsed)}</div><div class="center dim sm">Take as long as you need</div><button class="btn ghost" data-act="trun">${G.run ? 'Pause clock' : G.elapsed ? 'Resume clock' : 'Start clock'}</button>`;
-  else if (st.secs) widget = `${st.pick && !G.run && !G.stepDone && G.left === (G.pickSecs || st.pick[0]) ? `<div class="chips" style="justify-content:center">${st.pick.map((v) => `<button class="chip ${(G.pickSecs || st.pick[0]) === v ? 'on' : ''}" data-act="pick:${v}">${v / 60} min</button>`).join('')}</div>` : ''}<div class="big" id="tm">${pad(G.left)}</div>${G.stepDone ? '<div class="center good">Done</div>' : `<button class="btn ghost" data-act="trun">${label} timer</button>`}`;
+  else if (st.secs) widget = `${st.pick && !G.run && !G.stepDone && G.left === (G.pickSecs || st.secs) ? `<div class="center dim sm">Timer length</div><div class="center">${stepper('padj', G.pickSecs || st.secs, (v) => pad(v))}</div>` : ''}<div class="big" id="tm">${pad(G.left)}</div>${G.stepDone ? '<div class="center good">Done</div>' : `<button class="btn ghost" data-act="trun">${label} timer</button>`}`;
   else if (st.breath) widget = `<div class="center" style="font-size:22px" id="ph">${G.stepDone ? 'Complete' : st.breath.phases[G.ph][0]}</div><div class="big" id="tm">${G.stepDone ? '✓' : G.left}</div><div class="center dim" id="rp">Round ${Math.min(G.rep, st.breath.reps)} of ${st.breath.reps}</div>${G.stepDone ? '' : `<button class="btn ghost" data-act="trun">${label}</button>`}`;
+  if (!st.open && !st.secs && !st.breath && !st.music) widget = G.xt
+    ? `<div class="center dim sm">Timer</div><div class="big" id="xtm">${pad(G.xt.left)}</div><button class="btn ghost" data-act="xstop">${G.xt.left > 0 ? 'Stop timer' : 'Clear'}</button>`
+    : `<div class="center dim sm" style="margin-top:10px">Need a timer for this step?</div><div class="chips" style="justify-content:center">${[1, 5, 10].map((m) => `<button class="chip" data-act="xt:${m * 60}">⏱ ${m} min</button>`).join('')}</div>`;
   if (st.music) widget = `<button class="btn ghost" data-act="music">${S.rem.playlist ? '♪ Play my songs' : '♪ Add a playlist in Settings'}</button>`;
   return `<div class="dim sm">${esc(ex.title)} · step ${G.i + 1} of ${ex.steps.length}</div>
     ${ex.caution && G.i === 0 ? card(`<div class="warn sm">${esc(ex.caution)}</div>`, 'warnb') : ''}
@@ -522,6 +628,7 @@ function paint() {
   const [r, a] = location.hash.slice(1).split('/');
   const route = r || 'today';
   if (route !== 'guide') stopGuide();
+  if (route !== 'scale') sc = null;
   let h;
   switch (route) {
     case 'today': h = Today(); break;
@@ -535,13 +642,16 @@ function paint() {
     case 'cycles': h = Cycles(); break;
     case 'about': h = About(); break;
     case 'cat': h = Choose(a); break;
+    case 'scale': h = Scale(); break;
+    case 'laws': h = Laws(); break;
+    case 'wheel': h = Wheel(); break;
     case 'day': h = Day(a); break;
     case 'settings': h = Settings(); break;
     default: h = Today();
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'log', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'ex' || route === 'chakras' || route === 'cycles' || route === 'about' || route === 'guide' ? 'practice' : 'log';
+  const tab = ['today', 'practice', 'log', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'ex' || route === 'scale' || route === 'laws' || route === 'wheel' || route === 'chakras' || route === 'cycles' || route === 'about' || route === 'guide' ? 'practice' : 'log';
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   window.scrollTo(0, 0);
@@ -552,6 +662,8 @@ window.addEventListener('hashchange', paint);
 /* ---------------- actions ---------------- */
 const msg = (t) => { const m = $('#msg'); if (m) m.textContent = t; };
 document.addEventListener('input', (e) => {
+  const gf = e.target.dataset?.gf; if (gf !== undefined && G) { (G.f = G.f || [])[+gf] = e.target.value; return; }
+  const wf = e.target.dataset?.wf; if (wf !== undefined && wh) { if (wf === 'desire') wh.desire = e.target.value; else wh.spokes[+wf].t = e.target.value; return; }
   const n = e.target.name; if (!n) return;
   if (n === 'note') form.note = e.target.value;
   if (n === 'gnote' && G) G.note = e.target.value;
@@ -574,9 +686,10 @@ document.addEventListener('click', async (e) => {
     case 'rate': if (a === 'gfocus') G.focus = +b; else form[a] = +b; repaintKeep(); break;
     case 'inc': case 'dec': { const d = act === 'inc' ? 1 : -1; stepTo(a, b, d, c3); break; }
     case 'savenote': S.sessions.unshift({ id: uid(), ts: Date.now(), ex: form.ex, focus: form.focus || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
-    case 'saverecall': S.recalls.unshift({ id: uid(), ts: Date.now(), details: form.details, accuracy: form.accuracy || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
+    case 'saverecall': bump('obs-recall'); S.recalls.unshift({ id: uid(), ts: Date.now(), details: form.details, accuracy: form.accuracy || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
     case 'con': S.rem.cat[a].on = !S.rem.cat[a].on; save(); repaintKeep(); break;
-    case 'cex': { const l = S.rem.cat[a].ex; const i = l.indexOf(b); if (i >= 0 && l.length > 1) l.splice(i, 1); else if (i < 0) l.push(b); save(); repaintKeep(); break; }
+    case 'crand': { const c = S.rem.cat[a]; c.random = !c.random; c.goal = goalFor(group(a), c); save(); repaintKeep(); break; }
+    case 'cex': { const l = S.rem.cat[a].ex; const i = l.indexOf(b); if (i >= 0 && l.length > 1) l.splice(i, 1); else if (i < 0) l.push(b); S.rem.cat[a].goal = goalFor(group(a), S.rem.cat[a]); REMIND_GROUPS.forEach((g) => g.leave.forEach((id) => { S.rem.leaveItems[id] = S.rem.cat[g.id].ex.includes(id); })); save(); repaintKeep(); break; }
     case 'ctime': S.rem.cat[a].timing = b; save(); repaintKeep(); break;
     case 'cch': S.rem.cat[a].choose = b === '1'; save(); repaintKeep(); break;
     case 'lv': S.rem.leaveItems[a] = !S.rem.leaveItems[a]; save(); repaintKeep(); break;
@@ -604,7 +717,28 @@ document.addEventListener('click', async (e) => {
     }
     case 'ics': exportCalendar(); msg('Calendar file created — open it to add the reminders.'); break;
     case 'export': exportBackup(); break;
+    case 'fon': S.fast.on = !S.fast.on; if (!S.fast.on) S.fast.start = ''; save(); repaintKeep(); break;
+    case 'fdays': S.fast.days = +a; save(); repaintKeep(); break;
+    case 'fstart': S.fast.start = dayKey(); S.fast.done = {}; save(); repaintKeep(); toast('Frequency Fast started'); break;
+    case 'fstop': S.fast.start = ''; save(); repaintKeep(); break;
+    case 'fastend': S.fast.start = ''; save(); repaintKeep(); break;
+    case 'fastck': { const k = dayKey(); const t = S.fast.done[k] || (S.fast.done[k] = {}); t[a] = !t[a]; save(); repaintKeep(); if (t.a && t.b) toast('Day complete ✓'); break; }
+    case 'loop': S.loops[b] = a; save(); repaintKeep(); toast('Noted'); break;
+    case 'loopr': S.loops[a + 'r'] = 1; save(); repaintKeep(); break;
+    case 'loopb': S.loops[a + 'b'] = 1; save(); repaintKeep(); break;
+    case 'scstart': sc = { start: +a, rung: +a, done: false }; paint(); break;
+    case 'scup': sc.rung--; paint(); break;
+    case 'screst': sc.done = true; paint(); break;
+    case 'scquit': sc = null; paint(); break;
+    case 'scend': S.scale.unshift({ ts: Date.now(), start: sc.start, end: sc.rung }); save(); sc = null; location.hash = '#practice'; break;
+    case 'wok': wh.spokes[+a].ok = !wh.spokes[+a].ok; repaintKeep(); if (wh.spokes.every((x) => x.ok && x.t.trim())) toast('The wheel is spinning'); break;
+    case 'wsave': { const i = S.wheels.findIndex((w) => w.id === wh.id); const copy = JSON.parse(JSON.stringify(wh)); if (i >= 0) S.wheels[i] = copy; else S.wheels.unshift(copy); save(); toast('Wheel saved'); repaintKeep(); break; }
+    case 'wnew': wh = newWheel(); paint(); break;
+    case 'wload': wh = JSON.parse(JSON.stringify(S.wheels.find((w) => w.id === a))); paint(); break;
+    case 'wdel': if (confirm('Delete this wheel?')) { S.wheels = S.wheels.filter((w) => w.id !== a); if (wh && wh.id === a) wh = null; save(); repaintKeep(); } break;
     case 'trun': toggleRun(); break;
+    case 'xt': clearInterval(G.xi); G.xt = { left: +a }; G.xi = setInterval(() => { G.xt.left--; const e = $('#xtm'); if (e) e.textContent = pad(Math.max(0, G.xt.left)); if (G.xt.left <= 0) { clearInterval(G.xi); vib([0, 300, 150, 300]); paint(); } }, 1000); paint(); break;
+    case 'xstop': clearInterval(G.xi); G.xt = null; paint(); break;
     case 'pick': G.pickSecs = +a; G.left = +a; paint(); break;
     case 'undo': { const t = S.tally?.[dayKey()]; if (t && t[a] > 0) { t[a]--; if (!t[a]) delete t[a]; save(); } repaintKeep(); break; }
     case 'done': bump(a); openCat = null; toast(`✓ ${exById[a].title} — ${tallyOf(a)} today`); repaintKeep(); break;
@@ -612,7 +746,7 @@ document.addEventListener('click', async (e) => {
     case 'gprev': G.i--; initStep(); paint(); break;
     case 'gquit': location.hash = `#ex/${G.ex.id}`; break;
     case 'gsave': case 'gskip': {
-      S.sessions.unshift({ id: uid(), ts: Date.now(), ex: G.ex.id, focus: act === 'gsave' ? G.focus || null : null, note: act === 'gsave' ? G.note.trim() : '' });
+      S.sessions.unshift({ id: uid(), ts: Date.now(), ex: G.ex.id, focus: act === 'gsave' ? G.focus || null : null, note: act === 'gsave' ? guideNote() : '' });
       bump(G.ex.id); const kind = G.ex.kind; stopGuide();
       location.hash = kind === 'recall' ? '#recall' : '#today'; break;
     }
@@ -626,13 +760,14 @@ function stepTo(name, id, d, idx) {
     if (name === 'ct') R.cat[id].times[+idx] = clamp(R.cat[id].times[+idx] + d * 15, 0, 1425);
     if (name === 'cg') R.cat[id].goal = clamp(R.cat[id].goal + d, 1, 4);
     if (name === 'cn') {
-      const c = R.cat[id]; c.n = clamp(c.n + d, 1, 4);
+      const c = R.cat[id]; c.n = clamp(c.n + d, 1, 4); if (group(id).simple) c.goal = c.n;
       // changing the count re-spreads the set times evenly through your day; adjust them after
       c.times = Array.from({ length: c.n }, (_, k) => Math.round((R.day.s * 60 + ((R.day.e - R.day.s) * 60 * (k + 0.5)) / c.n) / 15) * 15);
     }
     if (name === 'mindn') R.mind.n = clamp(R.mind.n + d, 1, 12);
     if (name === 'dayS') R.day.s = clamp(R.day.s + d, 0, R.day.e - 1);
     if (name === 'dayE') R.day.e = clamp(R.day.e + d, R.day.s + 1, 23);
+    if (name === 'padj') { const st = stepOf(); G.pickSecs = Math.max(60, Math.min(st.max || st.secs + 300, (G.pickSecs || st.secs) + d * 30)); G.left = G.pickSecs; repaintKeep(); return; }
     if (name === 'leaven') R.leave.n = clamp(R.leave.n + d, 1, 6);
     if (name === 'leaveS') R.leave.s = clamp(R.leave.s + d, 0, R.leave.e - 1);
     if (name === 'leaveE') R.leave.e = clamp(R.leave.e + d, R.leave.s + 1, 24);
