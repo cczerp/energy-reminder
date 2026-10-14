@@ -1,11 +1,11 @@
-import { CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING } from './content.js';
+import { CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING, SCALE, SCALE_UP } from './content.js';
 import * as native from './native.js';
 import { BUILD } from './build.js';
 
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -224,6 +224,82 @@ const rating = (name, val) => `<div class="rating">${[1, 2, 3, 4, 5].map((n) => 
 const back = (href = '#practice') => `<a class="back" href="${href}">‹ Back</a>`;
 
 /* ---------------- screens ---------------- */
+
+/* ---------------- frequency fast ---------------- */
+const FAST_RULES = ['Fast from news, fear-based feeds, doom-scrolling, gossip, and complaint conversations. Spoken fear feeds the same thought-forms as watched fear.', 'When you feel the pull (the hand reaching for the phone, the mouth starting "did you hear about..."), pause and ask: "Is this mine? Do I choose to give my energy to this?"', 'Put the freed-up time into anything creative, even trivially. The fast is only complete when the energy has somewhere to go. An empty fast gets refilled by the same fear.'];
+const fastDay = () => (S.fast.start ? Math.floor((new Date(dayKey() + 'T00:00') - new Date(S.fast.start + 'T00:00')) / 86400000) + 1 : 0);
+const fastRunning = () => { const d = fastDay(); return d >= 1 && d <= S.fast.days; };
+const fastRulesBox = () => `<div class="rulesbox"><div class="rtitle">The rules</div><ol>${FAST_RULES.map((r) => `<li>${esc(r)}</li>`).join('')}</ol></div>`;
+function fastCard() {
+  const f = S.fast; const d = fastDay();
+  if (!f.start) return '';
+  if (d > f.days) return card(`<div class="cheer"><div class="pop">🌿</div><div class="title">Frequency Fast complete</div><div class="meta">${f.days} day${f.days === 1 ? '' : 's'}. Notice what filled the space.</div><button class="btn" style="margin-top:10px" data-act="fastend">Done</button></div>`, 'accent');
+  if (d < 1) return '';
+  const t = f.done[dayKey()] || {};
+  const row = (k, label) => `<div class="bul" data-act="fastck:${k}"><span class="bx ${t[k] ? 'on' : ''}">${t[k] ? '✓' : ''}</span><span>${label}</span></div>`;
+  return card(`<div class="title">Frequency Fast</div><div class="meta">Day ${d} of ${f.days}${t.a && t.b ? ' · today is complete ✓' : ''}</div>
+    ${row('a', 'Stayed off news, fear-feeds, doom-scrolling, gossip and complaining')}${row('b', 'Put the freed-up time into something creative')}
+    <div class="meta" style="margin-top:6px">When you feel the pull: "Is this mine? Do I choose to give my energy to this?"</div>`);
+}
+function morningCards() {
+  const yk = dayKey(Date.now() - 86400000); let out = '';
+  if (tallyOf('bed-sats', yk) && !S.loops[yk]) out += card(`<div class="title" style="font-size:20px">Last night's loop</div><div class="meta">Rate it: was it fantasy, story, or memory?</div><div class="chips">${['fantasy', 'story', 'memory'].map((x) => `<button class="chip" data-act="loop:${x}:${yk}">${x[0].toUpperCase() + x.slice(1)}</button>`).join('')}</div>`);
+  if (tallyOf('bed-revision', yk) && !S.loops[yk + 'r']) out += card(`<div class="title" style="font-size:20px">Yesterday, revised</div><div class="meta">One event from yesterday went differently in my world. Note any echoes today.</div><div class="row" style="margin-top:8px"><a class="btn ghost mini" href="#note">Quick note</a><button class="btn mini" data-act="loopr:${yk}">Got it</button></div>`);
+  return out;
+}
+
+/* ---------------- emotional scale ---------------- */
+let sc = null;
+function Scale() {
+  const hist = S.scale.slice(0, 5).map((r) => `<div class="meta">${when(r.ts)} · ${r.start} → ${r.end}${r.start - r.end > 0 ? ` (up ${r.start - r.end})` : ''}</div>`).join('');
+  if (!sc) return `${back('#practice')}<h1>Climbing the Scale</h1>
+    <p class="dim">You can only climb one to three rungs at a time. Trying to jump to joy from the bottom just proves you are failing. Any upward step is success. Your emotion is guidance, not a verdict: it reads out the gap between you and what you want.</p>
+    <p class="dim">Where are you right now, 1 to 22?</p>
+    ${SCALE.map((r) => `<div class="bul scrung" data-act="scstart:${r.n}"><b class="pd">${r.n}</b><span>${esc(r.name)}</span></div>`).join('')}
+    ${card('<div class="warn sm">If you feel unsafe or are thinking about ending your life, please stop here and reach out now. In the US call or text 988.</div>', 'warnb')}
+    ${hist ? `<h2>Recent climbs</h2>${card(hist)}` : ''}`;
+  const r = SCALE[sc.rung - 1]; const up = sc.rung > 1 ? SCALE[sc.rung - 2] : null;
+  if (sc.done || !up) {
+    const moved = sc.start - sc.rung;
+    return `<h1>Rest here</h1>${card(`<div class="title" style="font-size:22px">${sc.rung}. ${esc(r.name)}</div><div class="meta">${moved > 0 ? `You climbed ${moved} rung${moved === 1 ? '' : 's'}. That is a win.` : 'You noticed where you are. That is the first step.'}</div>`)}
+    <p>Note the number where you stopped: <b>${sc.rung}</b>. That is tomorrow's starting point, not today's failure.</p>
+    <p class="dim">You cannot fall. You can only climb again, and the ladder is always right under you.</p>
+    <button class="btn" data-act="scend">Save and finish</button>`;
+  }
+  return `<div class="dim sm">Started at ${sc.start}${sc.start > sc.rung ? ` · now at ${sc.rung}` : ''}</div>
+    ${card(`<div class="meta">You are here</div><div class="title" style="font-size:22px">${sc.rung}. ${esc(r.name)}</div><div class="step" style="font-size:18px;margin-top:8px">${sc.rung === sc.start ? `I notice I am in ${esc(r.name.split(' · ')[0].toLowerCase())}. This feeling is not who I am. It is a signal: it is telling me something I want is here, and I am looking at its absence.` : 'Stay with it for a breath.'}</div>`)}
+    <h2>Toward ${up.n}. ${esc(up.name)}</h2>
+    ${card(`<div class="step" style="font-size:19px">${esc(SCALE_UP[sc.rung])}</div>`)}
+    <button class="btn" data-act="scup">It eases a little. Climb to ${up.n}</button>
+    <button class="btn ghost" data-act="screst">That is far enough. Rest here</button>
+    <button class="btn ghost" data-act="scquit" style="border-color:var(--line);color:var(--dim)">Quit</button>`;
+}
+
+/* ---------------- focus wheel ---------------- */
+const SPOKE_HINTS = ["I don't have to solve this today", 'I can take this one step at a time', 'Other people have been through this', 'I have handled hard things before', 'It has worked out before', 'There is more than one way through', 'Some of this is already better than before', 'I am learning something here', 'Good things can come from this', 'I am getting clearer about what I want', 'I can feel a little relief already', 'It is getting easier to believe this'];
+let wh = null;
+const newWheel = () => ({ id: uid(), desire: '', spokes: Array.from({ length: 12 }, () => ({ t: '', ok: false })) });
+function Wheel() {
+  if (!wh) wh = newWheel();
+  const full = wh.spokes.every((x) => x.ok && x.t.trim());
+  const cx = 160, cy = 160;
+  const nodes = wh.spokes.map((x, i) => { const a = (i / 12) * 2 * Math.PI - Math.PI / 2; const px = cx + 112 * Math.cos(a), py = cy + 112 * Math.sin(a);
+    return `<line x1="${cx}" y1="${cy}" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" stroke="${x.ok ? '#8294ff' : '#4b4175'}" stroke-width="3"/><circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="19" fill="${x.ok ? '#8294ff' : '#2a2148'}" stroke="${x.t.trim() ? '#8294ff' : '#4b4175'}" stroke-width="2"/><text x="${px.toFixed(1)}" y="${(py + 5).toFixed(1)}" text-anchor="middle" font-size="14" font-weight="700" fill="${x.ok ? '#1e1833' : '#c9c2e4'}">${i + 1}</text>`; }).join('');
+  const d = wh.desire.trim(); const words = d.split(/\s+/).filter(Boolean); const l1 = words.slice(0, 3).join(' '), l2 = words.slice(3, 6).join(' ') + (words.length > 6 ? '…' : '');
+  const svg = `<svg viewBox="0 0 320 320" style="width:100%;max-width:340px;display:block;margin:0 auto"><g class="${full ? 'spin' : ''}" style="transform-origin:160px 160px">${nodes}</g><circle cx="${cx}" cy="${cy}" r="50" fill="#352b5a" stroke="#8294ff" stroke-width="3"/><text x="${cx}" y="${cy - 2}" text-anchor="middle" font-size="12" font-weight="700" fill="#efeaf8">${esc(l1 || 'Your desire')}</text><text x="${cx}" y="${cy + 14}" text-anchor="middle" font-size="12" fill="#efeaf8">${esc(l2)}</text></svg>`;
+  const done = wh.spokes.filter((x) => x.ok).length;
+  return `${back('#practice')}<h1>Focus Wheel</h1>
+    <p class="dim">Put what you want in the center. Then fill the 12 spokes with statements you genuinely believe, starting soft and moving closer. A spoke only lights up when it truly feels true. The wheel spins when all 12 do.</p>
+    ${card(`<div class="meta">${done} of 12 spokes true</div>${svg}${full ? '<div class="center good" style="margin-top:8px"><b>The wheel is spinning.</b> Every spoke feels true.</div>' : ''}`)}
+    <div class="dim sm">Center: what I want, or the belief I want to shift</div>
+    <input type="text" data-wf="desire" value="${esc(wh.desire)}" placeholder="e.g. I feel secure about money">
+    ${wh.spokes.map((x, i) => `<div class="dim sm" style="margin-top:8px">Spoke ${i + 1}</div><input type="text" data-wf="${i}" value="${esc(x.t)}" placeholder="${esc(SPOKE_HINTS[i])}">
+      <div class="bul" data-act="wok:${i}"><span class="bx ${x.ok ? 'on' : ''}">${x.ok ? '✓' : ''}</span><span>This feels true to me</span></div>`).join('')}
+    <button class="btn" style="margin-top:14px" data-act="wsave">Save this wheel</button>
+    <button class="btn ghost" data-act="wnew">Start a new wheel</button>
+    ${S.wheels.length ? `<h2>Saved wheels</h2>${S.wheels.map((w) => card(`<div class="row"><b data-act="wload:${w.id}" style="cursor:pointer">${esc(w.desire || 'Untitled')}</b><span class="meta" style="text-align:right">${w.spokes.filter((x) => x.ok).length}/12 · <span data-act="wdel:${w.id}" style="cursor:pointer;color:var(--bad)">delete</span></span></div>`)).join('')}` : ''}`;
+}
+
 let openCat = null;
 const miniBtns = (id) => `<a class="btn ghost mini" href="#ex/${id}">Rules</a><button class="btn mini" data-act="done:${id}">✓ Done</button>`;
 const exRow = (id) => `<div class="exrow"><a href="#ex/${id}" class="exname">${esc(exById[id].title)}</a><div class="minis">${miniBtns(id)}</div></div>`;
@@ -260,6 +336,7 @@ function Today() {
   ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">MindCue needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → MindCue → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
   ${native.isNative && !S.rem.home && on.some((g) => [...g.leave, ...(g.both || [])].some((id) => S.rem.cat[g.id].ex.includes(id))) ? card(`<b>Set your home</b><div class="dim sm" style="margin:4px 0 8px">Stair Count and Stranger's Face remind you as you leave the house. Stand at home and tap the button. When your phone asks about location, choose <b>While using the app</b>, then open your phone's Settings → Apps → MindCue → Permissions → Location and pick <b>Allow all the time</b>.</div><button class="btn" data-act="sethome">Set my home here</button><div id="msg" class="warn sm"></div>`, 'accent') : ''}
   ${cheer}
+  ${morningCards()}${fastCard()}
   ${rows || recallCard ? `<h2>Today's goals</h2>${rows}${recallCard}` : on.length ? '' : '<h2>Today\'s goals</h2><div class="dim">No reminders on. Turn some on in Settings.</div>'}
   ${doneCard}
   <div class="row" style="margin-top:8px"><a class="btn ghost" href="#note">Quick note</a></div>
@@ -298,7 +375,7 @@ function Practice() {
   const ms = MILESTONES.map((m) => check(!!S.milestones[m.id], esc(m.label), `ms:${m.id}`)).join('');
   const groups = Object.entries(CATS).map(([cat, label]) => `<h2>${label}</h2>` + EXERCISES.filter((e) => e.cat === cat).map((e) =>
     link(`#ex/${e.id}`, `<b>${isLocked(e) ? '🔒 ' : ''}${esc(e.title)}</b><div class="dim sm">${e.mins ? e.mins + ' min · ' : ''}${esc(e.freq)}</div>`, isLocked(e) ? 'locked' : '')
-  ).join('') + (cat === 'chakra' ? link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>') : '')).join('');
+  ).join('') + (cat === 'chakra' ? link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>') : '') + (cat === 'emotion' ? link('#scale', '<b>Climbing the Scale</b><div class="dim sm">Tell it what you feel. It walks you up, one rung at a time</div>') + link('#wheel', '<b>Focus Wheel</b><div class="dim sm">Build 12 believable statements toward what you want</div>') : '') + (cat === 'laws' ? card('<div class="dim sm">The rule: hold ONE pure thought with no contradiction. 17 seconds starts it, 34 builds it, 68 is the target, where it holds itself. Appreciation works best. This also counts as a Concentration exercise.</div>') : '')).join('');
   return `<h1>Practice</h1>
   <h2>Psychic-centers path</h2>
   ${card(`<div class="dim sm">Sequence matters: Heart → Pituitary → Pineal → Throat → Attunement. Tick each when it applies.</div>${ms}`)}
@@ -332,6 +409,7 @@ function About() {
     <li><b>Joe Dispenza</b> — chakra attention and coherence work</li>
     <li><b>Guru Pathik</b>, in <i>Avatar: The Last Airbender</i> — the chakra lesson</li>
     <li><b>Dolores Cannon</b> — the quiet-listening, inner-journey, energy, and everyday-living practices, written here in our own words from teachings associated with her work</li>
+    <li><b>Barbara Marciniak</b>, <b>Neville Goddard</b>, <b>Bashar</b>, and <b>Esther and Abraham Hicks</b> — the whim, now-point, belief-audit, fast, breath, bedtime-loop, emotional-scale and manifestation practices, and the sayings inspired by them, in our own words</li>
     <li><b>Wisdom of the Mystic Masters</b> — the mental training, meditation, healing, projection, and cycles teachings</li>
     <li>The yogic, tantric, and Rosicrucian traditions all of the above draw on</li>
     <li>Every teacher, student, and practitioner who passed these on</li>
@@ -393,6 +471,15 @@ function RecallForm() {
 /* ----- settings ----- */
 let permState = native.isNative ? 'default' : 'Notification' in window ? Notification.permission : 'unsupported';
 native.permState().then((p) => { if (native.isNative) { permState = p; } });
+function fastSettings() {
+  const f = S.fast; const d = fastDay(); const running = fastRunning();
+  return card(`${check(f.on, '<b class="ttl">Frequency Fast</b>', 'fon', running ? `Running: day ${d} of ${f.days}` : 'A short challenge. Off until you start it.')}
+    ${f.on ? `${fastRulesBox()}
+    <div class="dim sm" style="margin-top:10px">How long</div>
+    <div class="chips">${[1, 3, 5, 7].map((n) => `<button class="chip ${f.days === n ? 'on' : ''}" ${running ? 'disabled' : ''} data-act="fdays:${n}">${n} day${n === 1 ? '' : 's'}</button>`).join('')}</div>
+    <div class="dim sm">Each day has two goals, shown in a bubble on Today while it runs.</div>
+    ${running ? '<button class="btn ghost" data-act="fstop">Stop the fast</button>' : '<button class="btn" data-act="fstart">Start today</button>'}` : ''}`);
+}
 function Settings() {
   const R = S.rem;
   const fmtMin = (v) => fmtTime(Math.floor(v / 60), v % 60);
@@ -432,6 +519,7 @@ function Settings() {
   ${card(`<div class="dim sm">From</div>${stepper('dayS', R.day.s, (v) => fmtTime(v))}<div class="dim sm" style="margin-top:6px">Until</div>${stepper('dayE', R.day.e, (v) => fmtTime(v))}`)}
   <h2>Daily goals</h2>
   ${groups}
+  ${fastSettings()}
   ${home}
   <h2>Funk playlist</h2>
   <div class="dim sm">Paste a Spotify (or any music) link. The funk button and "Play my songs" will open it. Downloaded playlists play without internet.</div>
@@ -529,6 +617,7 @@ function paint() {
   const [r, a] = location.hash.slice(1).split('/');
   const route = r || 'today';
   if (route !== 'guide') stopGuide();
+  if (route !== 'scale') sc = null;
   let h;
   switch (route) {
     case 'today': h = Today(); break;
@@ -542,13 +631,15 @@ function paint() {
     case 'cycles': h = Cycles(); break;
     case 'about': h = About(); break;
     case 'cat': h = Choose(a); break;
+    case 'scale': h = Scale(); break;
+    case 'wheel': h = Wheel(); break;
     case 'day': h = Day(a); break;
     case 'settings': h = Settings(); break;
     default: h = Today();
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'log', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'ex' || route === 'chakras' || route === 'cycles' || route === 'about' || route === 'guide' ? 'practice' : 'log';
+  const tab = ['today', 'practice', 'log', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'ex' || route === 'scale' || route === 'wheel' || route === 'chakras' || route === 'cycles' || route === 'about' || route === 'guide' ? 'practice' : 'log';
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   window.scrollTo(0, 0);
@@ -559,6 +650,7 @@ window.addEventListener('hashchange', paint);
 /* ---------------- actions ---------------- */
 const msg = (t) => { const m = $('#msg'); if (m) m.textContent = t; };
 document.addEventListener('input', (e) => {
+  const wf = e.target.dataset?.wf; if (wf !== undefined && wh) { if (wf === 'desire') wh.desire = e.target.value; else wh.spokes[+wf].t = e.target.value; return; }
   const n = e.target.name; if (!n) return;
   if (n === 'note') form.note = e.target.value;
   if (n === 'gnote' && G) G.note = e.target.value;
@@ -612,6 +704,24 @@ document.addEventListener('click', async (e) => {
     }
     case 'ics': exportCalendar(); msg('Calendar file created — open it to add the reminders.'); break;
     case 'export': exportBackup(); break;
+    case 'fon': S.fast.on = !S.fast.on; if (!S.fast.on) S.fast.start = ''; save(); repaintKeep(); break;
+    case 'fdays': S.fast.days = +a; save(); repaintKeep(); break;
+    case 'fstart': S.fast.start = dayKey(); S.fast.done = {}; save(); repaintKeep(); toast('Frequency Fast started'); break;
+    case 'fstop': S.fast.start = ''; save(); repaintKeep(); break;
+    case 'fastend': S.fast.start = ''; save(); repaintKeep(); break;
+    case 'fastck': { const k = dayKey(); const t = S.fast.done[k] || (S.fast.done[k] = {}); t[a] = !t[a]; save(); repaintKeep(); if (t.a && t.b) toast('Day complete ✓'); break; }
+    case 'loop': S.loops[b] = a; save(); repaintKeep(); toast('Noted'); break;
+    case 'loopr': S.loops[a + 'r'] = 1; save(); repaintKeep(); break;
+    case 'scstart': sc = { start: +a, rung: +a, done: false }; paint(); break;
+    case 'scup': sc.rung--; paint(); break;
+    case 'screst': sc.done = true; paint(); break;
+    case 'scquit': sc = null; paint(); break;
+    case 'scend': S.scale.unshift({ ts: Date.now(), start: sc.start, end: sc.rung }); save(); sc = null; location.hash = '#practice'; break;
+    case 'wok': wh.spokes[+a].ok = !wh.spokes[+a].ok; repaintKeep(); if (wh.spokes.every((x) => x.ok && x.t.trim())) toast('The wheel is spinning'); break;
+    case 'wsave': { const i = S.wheels.findIndex((w) => w.id === wh.id); const copy = JSON.parse(JSON.stringify(wh)); if (i >= 0) S.wheels[i] = copy; else S.wheels.unshift(copy); save(); toast('Wheel saved'); repaintKeep(); break; }
+    case 'wnew': wh = newWheel(); paint(); break;
+    case 'wload': wh = JSON.parse(JSON.stringify(S.wheels.find((w) => w.id === a))); paint(); break;
+    case 'wdel': if (confirm('Delete this wheel?')) { S.wheels = S.wheels.filter((w) => w.id !== a); if (wh && wh.id === a) wh = null; save(); repaintKeep(); } break;
     case 'trun': toggleRun(); break;
     case 'xt': clearInterval(G.xi); G.xt = { left: +a }; G.xi = setInterval(() => { G.xt.left--; const e = $('#xtm'); if (e) e.textContent = pad(Math.max(0, G.xt.left)); if (G.xt.left <= 0) { clearInterval(G.xi); vib([0, 300, 150, 300]); paint(); } }, 1000); paint(); break;
     case 'xstop': clearInterval(G.xi); G.xt = null; paint(); break;

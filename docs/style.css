@@ -56,3 +56,9 @@ button, input, textarea, select { font-family: inherit; }
 .bx.on { background: var(--pd); border-color: var(--pd); }
 .hd { flex-wrap: wrap; } .hd > div:first-child { flex: 1 1 170px; min-width: 0; }
 .btn.mini { min-height: 34px; padding: 6px 12px; font-size: 14px; }
+.rulesbox { border: 2px solid var(--pd); border-radius: 12px; padding: 12px 14px; margin-top: 8px; background: rgba(130,148,255,.1); }
+.rulesbox .rtitle { font-weight: 800; color: var(--pd); font-size: 18px; margin-bottom: 4px; }
+.rulesbox ol { margin: 0; padding-left: 22px; } .rulesbox li { margin: 6px 0; font-size: 16px; }
+.pd { color: var(--pd); min-width: 26px; } .scrung { border-bottom: 1px solid var(--line); }
+@keyframes spin { to { transform: rotate(360deg); } } .spin { animation: spin 6s linear infinite; }
+input[type=text] { font-size: 16px; }
