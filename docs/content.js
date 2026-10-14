@@ -568,10 +568,10 @@ EXERCISES.push(
 {
   const [color, sound, cloud] = ['med-color', 'med-sound', 'med-cloud'].map((id) => EXERCISES.find((e) => e.id === id));
   [color, sound].forEach((e) => { e.hidden = true; });
-  cloud.title = 'Meditation 3 — The Pink Cloud'; cloud.freq = 'Daily'; cloud.summary = 'Wrapped in a pink cloud, held steady.';
+  cloud.title = 'The Pink Cloud'; cloud.freq = 'Daily'; cloud.summary = 'Wrapped in a pink cloud, held steady.';
   cloud.steps = [BODY, { t: cloud.steps[1].t + ' Pick your length.', pick: [180], secs: 180 }, 'Dismiss it, rise, deep breath, relax.'];
   EXERCISES.push({
-    id: 'med-practice', cat: 'meditate', title: 'Meditation 1 & 2 — Color and Sound', mins: 0,
+    id: 'med-practice', cat: 'meditate', title: 'Color and Sound', mins: 0,
     freq: 'Daily', summary: 'Blue, pink, white, then violin, horn, piano, in one sitting. A gentle buzz keeps track of time.',
     steps: [
       BODY,
@@ -712,6 +712,19 @@ const LOGS = {
   'bed-sats': [{ label: 'My one desire', ph: '' }, { label: 'My scene (under 10 seconds)', ph: 'My friend hugs me and says...' }, { label: 'What I added this time (a sound, a texture, a smell)', ph: '' }],
 };
 EXERCISES.forEach((e) => { if (LOGS[e.id]) e.log = LOGS[e.id]; });
+
+// One short guided meditation per chakra, built from the chakra reference data.
+CHAKRAS.forEach((c) => EXERCISES.push({
+  id: `chk-${c.n}`, cat: 'chakra', title: `${c.n}. ${c.name} — ${c.sk.split(' (')[0]}`, mins: 0,
+  freq: 'Any time', summary: `Attention in the ${c.loc.toLowerCase()}, with its seed sound.`,
+  steps: [
+    BODY,
+    { t: `Bring your attention to your ${c.loc.toLowerCase()}. This is the ${c.name} center (${c.sk}). ${c.note}\n\nSeed sound: ${c.seed}. Intone it softly a few times, then repeat it silently.\n\nHold your attention there until it feels settled. The block to watch for here is ${c.block.toLowerCase()}. Pick your length.`, pick: [180], secs: 180 },
+    'Let it go. Rise, take a deep breath, relax.',
+  ],
+}));
+// The practices that go deeper sit behind two warnings.
+['c-pituitary', 'c-pineal', 'c-throat', 'c-attune', 'p-mental', 'p-etheric'].forEach((id) => { EXERCISES.find((e) => e.id === id).advanced = true; });
 
 export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 
