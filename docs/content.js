@@ -32,7 +32,7 @@ export const EXERCISES = [
   {
     id: 'energy-breath', cat: 'energy', title: 'Energy-Building Breath', mins: 3,
     freq: 'At least once a day; up to 4–5× is fine',
-    summary: 'Pull in a surge of energy and store it. Noticeable stimulation in 15–20 min; the lift lasts several hours.',
+    summary: 'Pull in a surge of energy and store it. Noticeable stimulation soon after; the lift lasts several hours.',
     steps: [
       'Sit erect (not tense) or stand with weight balanced on both feet.',
       { t: 'Jaw clenched firmly, both hands in fists, rest of body relaxed. Think of each breath as pulling in a surge of energy and storing it.', breath: { phases: [['Breathe in', 3], ['Hold', 5], ['Exhale slowly', 10]], reps: 10 } },
@@ -91,7 +91,7 @@ export const EXERCISES = [
 
   {
     id: 'heal-headache', cat: 'energy', title: 'Quick Headache Relief', mins: 4,
-    freq: 'When asked', summary: 'Energy in through the right hand, out through the left (3–4 min).',
+    freq: 'When asked', summary: 'Energy in through the right hand, out through the left.',
     caution: 'Wash hands before and after. Light fingertip contact only.',
     steps: [
       "Tips of the first two right-hand fingers on the patient's left temple; index + middle of the left hand lightly on the right temple.",
@@ -114,7 +114,7 @@ export const EXERCISES = [
     freq: 'Chronic conditions: repeat, at least 2 hrs apart',
     summary: "Use when you're out of balance toward the negative.",
     steps: [
-      'Straight-backed chair, quiet spot, undisturbed ~10 minutes. Feet apart, flat on the floor (not touching).',
+      'Straight-backed chair, quiet spot, undisturbed. Feet apart, flat on the floor (not touching).',
       'Hands rest loosely in lap or on knees, not touching each other. On each hand: index + middle finger + thumb touching (a small triangle).',
       { t: 'Relax. Deep breath, hold for 7, release easily. Rest briefly and repeat — 7 times total.', breath: { phases: [['Deep breath in', 3], ['Hold', 7], ['Release easily', 3], ['Rest', 5]], reps: 7 } },
       'Change position, put it out of your mind.',
@@ -125,7 +125,7 @@ export const EXERCISES = [
     freq: 'Early cold/infection: 3 treatments, an hour or two apart',
     summary: 'The version that helps early colds; usually clears hostile germs in 6–8 hrs.',
     steps: [
-      'Sit comfortably, feet touching each other, flat on the floor. Quiet spot, ~10 minutes.',
+      'Sit comfortably, feet touching each other, flat on the floor. Quiet spot.',
       'Hands touching: thumb-to-thumb, each fingertip to its matching fingertip, held at chest level. Eyes closed.',
       { t: 'Deep breath in, exhale slowly, hold the breath OUT for 5. Breathe normally 5–6 breaths. Repeat 5 times.', breath: { phases: [['Deep breath in', 3], ['Exhale slowly', 4], ['Hold breath OUT', 5], ['Breathe normally', 15]], reps: 5 } },
       'Stop, breathe normally, forget about it.',
@@ -184,11 +184,11 @@ export const EXERCISES = [
   // ---------- Meditation ----------
   {
     id: 'med-sit', cat: 'meditate', title: 'Daily Sit — your choice', mins: 5,
-    freq: 'At least once a day, 5–10 minutes',
-    summary: 'Your baseline: sit and meditate in any way you like, even if only for 5 minutes.',
+    freq: 'At least once a day',
+    summary: 'Your baseline: sit and meditate in any way you like, even if only briefly.',
     steps: [
       'Find a quiet spot. Sit in a straight-back chair, back straight, head erect, eyes closed — or sit however is comfortable for you.',
-      { t: 'Meditate in whatever way you choose: breath, a mantra, stillness, or one of the practices. Pick your length, then start.', pick: [300, 600], secs: 300 },
+      { t: 'Meditate in whatever way you choose: breath, a mantra, stillness, or one of the practices. Pick your length, then start.', pick: [300, 600], secs: 300, max: 600 },
       'Rise, deep breath, relax.',
     ],
   },
@@ -226,7 +226,7 @@ export const EXERCISES = [
   {
     id: 'med-love', cat: 'meditate', title: 'Meditation of Love', mins: 15,
     freq: 'Repeat for many days before results show',
-    summary: 'Send a pink cloud of good will to a person, group, or entity. Modest effort, no more than 15 minutes.',
+    summary: 'Send a pink cloud of good will to a person, group, or entity. Modest effort.',
     caution: "Don't desire or foresee a specific result — no planning the outcome. Leave the manifestation to the intelligence of the soul force behind the energy.",
     steps: [
       'Create a feeling of love, warmth, and good will in your breast, near your heart. Visualize it as a glowing pink aura emanating from the heart, completely surrounding your body.',
@@ -274,11 +274,11 @@ SPACES TO PUT IN ORDER (bigger jobs, good for a clean, livable home; do them in 
     ],
   },
   {
-    id: 'funk-reset', cat: 'emotion', title: 'Funk Reset (about 1 minute)', mins: 1,
+    id: 'funk-reset', cat: 'emotion', title: 'Funk Reset', mins: 1,
     freq: 'Any time you are stuck in a negative loop',
     summary: 'A quick sequence of tools to step out of a funk. Pick what works and drop the rest.',
     steps: [
-      { t: 'Slow your body first. Breathe in 4, hold 2, out 6.', breath: { phases: [['Breathe in', 4], ['Hold', 2], ['Out slowly', 6]], reps: 4 } },
+      { t: 'Slow your body first with a square breath: in 4, hold 6, out 4, hold 6. The exact counts do not matter. What matters is that the four sides stay even.', breath: { phases: [['Breathe in', 4], ['Hold', 6], ['Out slowly', 4], ['Hold', 6]], reps: 4 } },
       'Look around. Name 5 things you can see, 4 you can hear, 3 you can feel. Go slowly.',
       'Is this feeling yours, or picked up from someone or something nearby? If it is borrowed, step out of it like stepping out of a room.',
       'Redirect, do not fight it. Choose one small thing to do right now: stand up, drink water, step outside, walk into another room.',
@@ -359,7 +359,7 @@ SPACES TO PUT IN ORDER (bigger jobs, good for a clean, livable home; do them in 
   // ---------- Projection ----------
   {
     id: 'p-mental', cat: 'project', title: 'Mental Projection', mins: 15, kind: 'review',
-    freq: 'Max 15 min/session; after ~20 sessions up to 30 min',
+    freq: 'Build up gradually',
     summary: 'Your mind travels to a familiar place while awareness stays anchored. Stay a spectator, never drift into dream.',
     caution: 'Not when exhausted, right after eating, or when blood is drawn from the head. Slipping into memory/dream makes you an actor, not an observer — if it happens, try again with a different place.',
     steps: [
@@ -378,7 +378,7 @@ SPACES TO PUT IN ORDER (bigger jobs, good for a clean, livable home; do them in 
     caution: 'Good health required — not with any illness, even a head cold. No alcohol for 48 hours. Not exhausted or after eating. Cannot be used to spy or for any unworthy motive; lower emotions (jealousy, suspicion) snap you back. Set a worthwhile, non-selfish objective.',
     steps: [
       'Prepare: calm and serene. Bathe, holding the thought that fears and worries wash away. Clean garment; lie on a bed.',
-      'Support habits: live peacefully day to day; meditate at least 15 min a day, raising your vibratory level; sincere silent intention to purify your nature.',
+      'Support habits: live peacefully day to day; meditate daily, raising your vibratory level; sincere silent intention to purify your nature.',
       'Close your eyes and raise consciousness to a point at the top of your head. Awareness of bed, coverlet, sounds, odors, air currents fades; concentrate at or above the crown.',
       'Intone softly and rhythmically "OM" seven times on D natural above middle C.',
       'Repeat the intonation silently seven times. You should become aware of a resonance inside your head.',
@@ -444,7 +444,7 @@ EXERCISES.push(
     steps: [
       'Find somewhere quiet where you will not be interrupted. Silence the phone. Sit or lie comfortably and close your eyes.',
       'Let your attention turn inward. When thoughts come, do not argue with them or analyze them. Let them pass, and go back to listening.',
-      { t: 'Simply listen. Intuition, pictures, feelings, or a quiet knowing may come, or nothing at all. Both are fine. Pick your length, then start.', pick: [600, 900], secs: 600 },
+      { t: 'Simply listen. Intuition, pictures, feelings, or a quiet knowing may come, or nothing at all. Both are fine. Pick your length, then start.', pick: [600, 900], secs: 600, max: 900 },
       'Come back slowly. Take a deep breath. If anything came up, you can note it in your log.',
     ],
   },
@@ -599,7 +599,7 @@ EXERCISES.push(
     id: 'med-nowpoint', cat: 'meditate', title: 'The Now-Point Meditation', mins: 10,
     freq: 'Daily or whenever you want to anchor', summary: 'Rest as the point of awareness behind your eyes, and find that the past and future are only thoughts appearing here.',
     steps: [
-      'Sit with your eyes closed and take three slow breaths.',
+      { t: 'Sit with your eyes closed and take three slow breaths.', breath: { phases: [['Breathe in', 4], ['Out slowly', 6]], reps: 3 } },
       'Bring your attention to the very center of your head, a point of pure awareness that is the same distance from everything.',
       'From this point you are watching the world. Not through your eyes but from behind them.',
       'Now find the past. Notice it is only a thought appearing in this point. Find the future. That is also only a thought, appearing here.',
@@ -824,14 +824,14 @@ export const NUDGES = [
 // Short text for reminder notifications.
 export const PING = {
   'med-quiet': 'Quiet time: be alone in silence. Go within and simply listen.',
-  'med-sit': 'Sit for 5–10 minutes and meditate in whatever way you choose. Your daily baseline.',
+  'med-sit': 'Sit and meditate in whatever way you choose. Your daily baseline.',
   'obs-room': 'Walk into a different room. Close your eyes and name everything you recall — depth and accuracy, until you run out.',
   'obs-stairs': 'Next time you take any steps, count them, then recall the number.',
   'conc-multiply': 'Multiply two 2-digit numbers in your head. Then two 3-digit ones.',
   'conc-poem': 'Memorize 4 lines of a poem and recite them.',
   'conc-stranger': 'Next stranger you pass: study the face, look away, hold it in your mind for a minute.',
-  'med-color': 'Three minutes: blue, pink, white — one minute each.',
-  'med-sound': 'Three minutes: violin, horn or sax, piano — one minute each.',
+  'med-color': 'Blue, then pink, then white, one minute each.',
+  'med-sound': 'Violin, then horn or sax, then piano, one minute each.',
   'med-cloud': 'One minute wrapped in a pink cloud.',
   'emo-matches': 'Patience drill: pick a jumble (cards, coins, a shelf) and put it in order slowly and calmly.',
   'emo-tv': 'Attention drill: TV on, picture off. Tune out the picture.',

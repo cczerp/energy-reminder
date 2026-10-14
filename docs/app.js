@@ -766,7 +766,7 @@ function stepTo(name, id, d, idx) {
     if (name === 'mindn') R.mind.n = clamp(R.mind.n + d, 1, 12);
     if (name === 'dayS') R.day.s = clamp(R.day.s + d, 0, R.day.e - 1);
     if (name === 'dayE') R.day.e = clamp(R.day.e + d, R.day.s + 1, 23);
-    if (name === 'padj') { const st = stepOf(); G.pickSecs = Math.max(60, Math.min(st.secs + 300, (G.pickSecs || st.secs) + d * 30)); G.left = G.pickSecs; repaintKeep(); return; }
+    if (name === 'padj') { const st = stepOf(); G.pickSecs = Math.max(60, Math.min(st.max || st.secs + 300, (G.pickSecs || st.secs) + d * 30)); G.left = G.pickSecs; repaintKeep(); return; }
     if (name === 'leaven') R.leave.n = clamp(R.leave.n + d, 1, 6);
     if (name === 'leaveS') R.leave.s = clamp(R.leave.s + d, 0, R.leave.e - 1);
     if (name === 'leaveE') R.leave.e = clamp(R.leave.e + d, R.leave.s + 1, 24);
