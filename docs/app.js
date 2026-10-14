@@ -9,6 +9,8 @@ const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: []
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
+// Daily goal of a group: one per ticked exercise, or just 1 when "pick one at random" is on. Routine meditation counts its reminders.
+const goalFor = (g, c) => (g.simple ? c.n : c.random ? 1 : Math.max(1, c.ex.length));
 const mergeRem = (r = {}) => {
   const d = clone(REMIND_DEFAULTS); const day = { ...d.day, ...r.day };
   const evenMins = (n) => Array.from({ length: n }, (_, k) => Math.round((day.s * 60 + ((day.e - day.s) * 60 * (k + 0.5)) / n) / 15) * 15);
@@ -23,6 +25,8 @@ const mergeRem = (r = {}) => {
     if (!Array.isArray(o.times) || !o.times.length) c.times = typeof o.h === 'number' ? [o.h * 60 + (o.m || 0)] : base.times.slice(); // older saves stored one h/m
     const pad = evenMins(c.n); while (c.times.length < c.n) c.times.push(pad[c.times.length]);
     if (g.simple) { c.ex = g.pool.slice(); c.goal = c.n; c.timing = 'even'; c.choose = true; } // routine meditation: you only choose how many reminders, then pick a meditation when one rings
+    if (c.random === undefined) c.random = (parseInt(o.goal, 10) || 1) === 1 && c.ex.length > 1; // older saves: goal 1 with several ticked meant "one of them"
+    c.random = !!c.random; c.goal = goalFor(g, c);
     c.times = c.times.slice(0, c.n); c.choose = c.choose !== false; delete c.h; delete c.m;
     cat[g.id] = c;
   }
@@ -79,11 +83,17 @@ function rng(seed) {
 }
 const group = (id) => REMIND_GROUPS.find((g) => g.id === id);
 // completions today in a category's timed exercises (leave-home items keep their own tally)
-const catCount = (gid, day = dayKey()) => [...group(gid).pool, ...group(gid).leave].reduce((a, id) => a + tallyOf(id, day), 0);
+const catCount = (gid, day = dayKey()) => {
+  const g = group(gid), c = S.rem.cat[gid], all = [...g.pool, ...g.leave];
+  if (g.simple) return all.reduce((n, id) => n + tallyOf(id, day), 0);
+  if (c.random) return all.some((id) => tallyOf(id, day)) ? 1 : 0;
+  return c.ex.filter((id) => tallyOf(id, day) > 0).length;
+};
 const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].goal;
 const canLeave = () => native.isNative && !!S.rem.home;
 const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id)); // exercises that ring at scheduled times (not leave-home ones)
-const choosing = (gid) => S.rem.cat[gid].choose && schedEx(gid).length > 1;
+const choosing = (gid) => !S.rem.cat[gid].random && schedEx(gid).length > 1; // several to do: the reminder opens the list
+const todayPick = (gid) => (schedEx(gid).length ? planned(gid) : S.rem.cat[gid].ex[0]);
 // the exercise a reminder names when it is not asking you to choose (rotates through the ones you picked)
 function planned(gid, date = new Date(), k = 0) { const list = schedEx(gid); return list[(dayNum(date) + k + REMIND_GROUPS.findIndex((g) => g.id === gid)) % list.length]; }
 // minutes after midnight for n reminders on one day
@@ -138,7 +148,7 @@ async function syncNative() {
       occurrences(d).filter((o) => o.at > now).forEach((o, k) => list.push({ id: (dayNum(d) % 1000) * 1000 + k, title: o.title, body: o.body, at: o.at, route: o.route, exId: o.exId }));
     }
     await native.scheduleAll(list);
-    const items = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on).flatMap((g) => g.leave.filter((id) => S.rem.leaveItems[id]).map((id) =>
+    const items = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on).flatMap((g) => [...g.leave, ...(g.both || [])].filter((id) => S.rem.cat[g.id].ex.includes(id)).map((id) =>
       ({ id, title: `${g.label}: ${exById[id].title}`, body: PING[id] || exById[id].summary, route: `#ex/${id}`, doneDay: tallyOf(id) > 0 ? dayKey() : '' })));
     await native.setFence(canLeave() ? S.rem.home : null, items, S.rem.leave);
   } catch (e) { console.error('sync failed', e); }
@@ -215,11 +225,8 @@ const back = (href = '#practice') => `<a class="back" href="${href}">‹ Back</a
 
 /* ---------------- screens ---------------- */
 let openCat = null;
-const exRow = (id) => {
-  const t = tallyOf(id);
-  return `<div style="margin-top:14px"><a href="#ex/${id}" style="color:inherit;text-decoration:none"><b style="font-size:19px">${t ? '✓ ' : ''}${esc(exById[id].title)}</b></a>${t ? `<div class="dim sm">${t} today</div>` : ''}
-    <div class="row" style="margin-top:8px"><a class="btn ghost" href="#ex/${id}" style="margin:0">Rules</a><button class="btn" data-act="done:${id}" style="margin:0">✓ Done</button></div></div>`;
-};
+const miniBtns = (id) => `<a class="btn ghost mini" href="#ex/${id}">Rules</a><button class="btn mini" data-act="done:${id}">✓ Done</button>`;
+const exRow = (id) => `<div class="exrow"><a href="#ex/${id}" class="exname">${esc(exById[id].title)}</a><div class="minis">${miniBtns(id)}</div></div>`;
 function Today() {
   snapPlan();
   const now = new Date();
@@ -231,21 +238,13 @@ function Today() {
   const pending = on.filter((g) => !catDone(g.id));
   const rows = pending.map((g) => {
     const c = S.rem.cat[g.id]; const cnt = catCount(g.id);
-    const status = `${cnt} of ${c.goal} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
-    let body;
-    const sx = schedEx(g.id);
-    if (g.simple) body = '<a class="btn" href="#cat/' + g.id + '" style="margin-top:8px">Choose a meditation</a>';
-    else if (!sx.length) body = '';
-    else if (choosing(g.id)) body = '<div class="dim sm" style="margin-top:6px">Pick one:</div>' + sx.map(exRow).join('');
-    else {
-      const id = planned(g.id);
-      body = exRow(id) + (sx.length > 1 || g.pool.length > 1 ? `<button class="chip" data-act="other:${g.id}" style="margin-top:8px">I did a different one</button>` : '');
-      if (openCat === g.id) body += `<div class="chips">${g.pool.map((x) => `<button class="chip" data-act="done:${x}">${esc(exById[x].title)}</button>`).join('')}</div>`;
-    }
-    const leave = g.leave.filter((id) => S.rem.leaveItems[id] && !tallyOf(id)).map((id) =>
-      `<div class="dim sm" style="margin-top:12px">When you leave home${native.isNative && !S.rem.home ? ' · <a href="#settings" style="color:var(--accent)">set your home in Settings</a>' : ''}</div>${exRow(id)}`).join('');
-    const goalRow = g.simple ? '' : `<div class="row" style="margin-top:10px;justify-content:space-between"><span class="dim sm" style="flex:2">Daily goal</span><span style="flex:3;text-align:right">${stepper(`cg:${g.id}`, c.goal)}</span></div>`;
-    return card(`<div class="dim sm">${g.label} · ${status}</div>${body}${goalRow}${leave}`);
+    const meta = `${cnt} of ${c.goal} today${next[g.id] ? ` · next reminder ${fmtTime(next[g.id].getHours(), next[g.id].getMinutes())}` : ''}`;
+    const homeNote = native.isNative && !S.rem.home && [...g.leave, ...(g.both || [])].some((id) => c.ex.includes(id)) ? ' · <a href="#settings" style="color:var(--accent)">set your home in Settings</a>' : '';
+    let side = '', body = '';
+    if (g.simple) body = '<a class="btn" href="#cat/' + g.id + '" style="margin-top:10px">Choose a meditation</a>';
+    else if (c.random) side = `<div class="minis">${miniBtns(todayPick(g.id))}</div>`;
+    else body = c.ex.filter((id) => !tallyOf(id)).map(exRow).join('');
+    return card(`<div class="hd"><div><div class="title">${g.label}</div><div class="meta">${meta}${homeNote}</div></div>${side}</div>${body}`);
   }).join('');
   const recallCard = S.rem.recall.on && !recalled
     ? card(`<div class="dim sm">Tonight · ${fmtTime(S.rem.recall.h, S.rem.recall.m)}</div><a href="#recall" style="color:inherit;text-decoration:none"><b>Evening recall</b></a><div class="dim sm">Recall your first morning activity and log it</div>`) : '';
@@ -259,7 +258,7 @@ function Today() {
   <div class="row"><a class="btn" href="#guide/funk-reset">I'm in a funk</a>${S.rem.playlist ? '<button class="btn ghost" data-act="music">♪ Play my songs</button>' : ''}</div>
   ${card(`<div class="dim sm">Mindful moment</div><div style="font-size:17px;margin-top:4px">${esc(nudge)}</div>`, 'accent')}
   ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">MindCue needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → MindCue → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
-  ${native.isNative && !S.rem.home && Object.values(S.rem.leaveItems).some(Boolean) ? card(`<b>Set your home</b><div class="dim sm" style="margin:4px 0 8px">Stair Count and Stranger's Face remind you as you leave the house. Stand at home and tap the button. When your phone asks about location, choose <b>While using the app</b>, then open your phone's Settings → Apps → MindCue → Permissions → Location and pick <b>Allow all the time</b>.</div><button class="btn" data-act="sethome">Set my home here</button><div id="msg" class="warn sm"></div>`, 'accent') : ''}
+  ${native.isNative && !S.rem.home && on.some((g) => [...g.leave, ...(g.both || [])].some((id) => S.rem.cat[g.id].ex.includes(id))) ? card(`<b>Set your home</b><div class="dim sm" style="margin:4px 0 8px">Stair Count and Stranger's Face remind you as you leave the house. Stand at home and tap the button. When your phone asks about location, choose <b>While using the app</b>, then open your phone's Settings → Apps → MindCue → Permissions → Location and pick <b>Allow all the time</b>.</div><button class="btn" data-act="sethome">Set my home here</button><div id="msg" class="warn sm"></div>`, 'accent') : ''}
   ${cheer}
   ${rows || recallCard ? `<h2>Today's goals</h2>${rows}${recallCard}` : on.length ? '' : '<h2>Today\'s goals</h2><div class="dim">No reminders on. Turn some on in Settings.</div>'}
   ${doneCard}
@@ -401,10 +400,10 @@ function Settings() {
     const c = R.cat[g.id];
     const nightly = g.id === 'obs' ? `${check(R.recall.on, '<b>Evening Recall</b> — nightly, at its own time', 'recallon', 'Recall your first morning activity. Separate from the reminders above.')}${R.recall.on ? `<div style="margin:0 0 6px 36px">${stepper('rc', R.recall.h * 60 + R.recall.m, fmtMin)}</div>` : ''}` : '';
     if (g.simple) return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, 'Each reminder opens a list of meditations to choose from.')}${c.on ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
-    return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day`)}
-      ${c.on ? `<div class="dim sm" style="margin-top:6px">Exercises</div>
-      <div class="chips">${[...g.pool, ...g.leave].map((x) => `<button class="chip ${c.ex.includes(x) ? 'on' : ''}" data-act="cex:${g.id}:${x}">${esc(exById[x].title)}${g.leave.includes(x) ? ' · on leaving home' : ''}</button>`).join('')}</div>${g.leave.some((x) => c.ex.includes(x)) ? '<div class="dim sm">Ones marked "on leaving home" ring as you head out (set them up at the bottom of Settings) and count toward the goal.</div>' : ''}
-      <div class="dim sm">Daily goal — how many times you want to do it</div>${stepper(`cg:${g.id}`, c.goal)}
+    const bullets = [...g.pool, ...g.leave].map((x) => `<div class="bul" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
+    return card(`${check(c.on, `<b class="ttl">${g.label}</b>`, `con:${g.id}`, `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day`)}
+      ${c.on ? `<div class="dim sm" style="margin-top:6px">Tick the exercises. Each ticked one is a daily goal.</div>${bullets}
+      ${c.ex.length > 1 ? `<div class="bul" data-act="crand:${g.id}"><span class="bx ${c.random ? 'on' : ''}">${c.random ? '✓' : ''}</span><span><b>Just 1 as my goal, picked at random</b></span></div>` : ''}
       <div class="dim sm" style="margin-top:8px">Reminders per day — they keep coming until the goal is met</div>${stepper(`cn:${g.id}`, c.n)}
       <div class="dim sm" style="margin-top:8px">Remind me</div>
       <div class="chips">
@@ -413,12 +412,9 @@ function Settings() {
         <button class="chip ${c.timing === 'random' ? 'on' : ''}" data-act="ctime:${g.id}:random">At random times</button></div>
       <div class="dim sm">${c.timing === 'set' ? 'You pick each time.' : c.timing === 'even' ? `Evenly across ${fmtTime(R.day.s)}–${fmtTime(R.day.e)}.` : `Random times between ${fmtTime(R.day.s)} and ${fmtTime(R.day.e)}.`}</div>
       ${c.timing === 'set' ? c.times.map((t, k) => `<div class="dim sm" style="margin-top:6px">Reminder ${k + 1}</div>${stepper(`ct:${g.id}:${k}`, t, fmtMin)}`).join('') : ''}
-      ${schedEx(g.id).length > 1 ? `<div class="dim sm" style="margin-top:10px">When a reminder rings</div><div class="chips">
-        <button class="chip ${c.choose ? 'on' : ''}" data-act="cch:${g.id}:1">Let me choose</button>
-        <button class="chip ${!c.choose ? 'on' : ''}" data-act="cch:${g.id}:0">Pick one for me</button></div>` : ''}
       ${nightly ? `<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:6px">${nightly}</div>` : ''}` : ''}`);
   }).join('');
-  const anyLeave = REMIND_GROUPS.some((g) => R.cat[g.id].on && g.leave.some((id) => R.leaveItems[id]));
+  const anyLeave = REMIND_GROUPS.some((g) => R.cat[g.id].on && [...g.leave, ...(g.both || [])].some((id) => R.cat[g.id].ex.includes(id)));
   const home = anyLeave ? card(`<b>Leaving home</b>
     <div class="dim sm">${!native.isNative ? 'Works in the Android app only. Until then these stay quiet.' : R.home ? `Home is set. Reminders fire when you move ${R.home.r} m away.` : 'Set your home first — until then these stay quiet.'}</div>
     <div class="dim sm" style="margin-top:6px">How many reminders when you leave home (spread out until you're back; one is picked at random if you've ticked several)</div>${stepper('leaven', R.leave.n)}
@@ -587,7 +583,8 @@ document.addEventListener('click', async (e) => {
     case 'savenote': S.sessions.unshift({ id: uid(), ts: Date.now(), ex: form.ex, focus: form.focus || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
     case 'saverecall': S.recalls.unshift({ id: uid(), ts: Date.now(), details: form.details, accuracy: form.accuracy || null, note: form.note.trim() }); save(); location.hash = '#log'; break;
     case 'con': S.rem.cat[a].on = !S.rem.cat[a].on; save(); repaintKeep(); break;
-    case 'cex': { const l = S.rem.cat[a].ex; const i = l.indexOf(b); if (i >= 0 && l.length > 1) l.splice(i, 1); else if (i < 0) l.push(b); REMIND_GROUPS.forEach((g) => g.leave.forEach((id) => { S.rem.leaveItems[id] = S.rem.cat[g.id].ex.includes(id); })); save(); repaintKeep(); break; }
+    case 'crand': { const c = S.rem.cat[a]; c.random = !c.random; c.goal = goalFor(group(a), c); save(); repaintKeep(); break; }
+    case 'cex': { const l = S.rem.cat[a].ex; const i = l.indexOf(b); if (i >= 0 && l.length > 1) l.splice(i, 1); else if (i < 0) l.push(b); S.rem.cat[a].goal = goalFor(group(a), S.rem.cat[a]); REMIND_GROUPS.forEach((g) => g.leave.forEach((id) => { S.rem.leaveItems[id] = S.rem.cat[g.id].ex.includes(id); })); save(); repaintKeep(); break; }
     case 'ctime': S.rem.cat[a].timing = b; save(); repaintKeep(); break;
     case 'cch': S.rem.cat[a].choose = b === '1'; save(); repaintKeep(); break;
     case 'lv': S.rem.leaveItems[a] = !S.rem.leaveItems[a]; save(); repaintKeep(); break;

@@ -570,7 +570,7 @@ export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 // (SPOT) can also fire at random times or when you leave home.
 export const REMIND_GROUPS = [
   // pool = exercises a timed reminder can ask for; leave = optional exercises that only fire when you leave home; ids = everything in the category
-  { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], ids: ['obs-room', 'obs-stairs'] },
+  { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], both: ['obs-room'], ids: ['obs-room', 'obs-stairs'] },
   { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'conc-stranger'] },
   { id: 'med', cat: 'meditate', label: 'Routine meditation', simple: true, pool: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
   { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-color', 'med-sound', 'med-cloud'], leave: [], ids: ['med-color', 'med-sound', 'med-cloud'] },

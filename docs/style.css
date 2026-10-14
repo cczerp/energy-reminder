@@ -1,4 +1,4 @@
-:root { --bg:#1e1833; --card:#2b2347; --line:#3d3560; --text:#efeaf8; --dim:#c9c2e4; --accent:#b69cff; --peri:#8b9cf7; --good:#6fcf97; --warn:#f2c94c; --bad:#eb7a7a; }
+:root { --bg:#1e1833; --card:#352b5a; --line:#4b4175; --pd:#8294ff; --text:#efeaf8; --dim:#c9c2e4; --accent:#b69cff; --peri:#8b9cf7; --good:#6fcf97; --warn:#f2c94c; --bad:#eb7a7a; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.5 system-ui, -apple-system, Roboto, sans-serif; }
 #view { max-width: 640px; margin: 0 auto; padding: 16px 16px calc(84px + env(safe-area-inset-bottom)); padding-top: calc(16px + env(safe-area-inset-top)); }
@@ -41,3 +41,18 @@ button, input, textarea, select { font-family: inherit; }
 .stepper { gap: 6px; }
 .btn { white-space: nowrap; }
 .row .btn { padding-left: 8px; padding-right: 8px; }
+
+.title, .ttl { font-size: 24px; font-weight: 800; color: var(--pd); line-height: 1.2; }
+.ttl { font-size: 21px; }
+.meta { font-size: 14px; color: var(--dim); margin-top: 2px; }
+.hd { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.minis { display: flex; gap: 8px; flex: none; }
+.btn.mini { width: auto; margin: 0; min-height: 38px; padding: 8px 14px; font-size: 15px; border-radius: 10px; }
+.exrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0 2px; border-top: 1px solid var(--line); margin-top: 10px; }
+.exrow:first-of-type { margin-top: 8px; }
+.exname { color: var(--text); text-decoration: none; font-weight: 700; font-size: 17px; }
+.bul { display: flex; gap: 10px; align-items: center; padding: 7px 0; cursor: pointer; font-size: 16px; }
+.bx { flex: none; width: 22px; height: 22px; border: 2px solid var(--dim); border-radius: 5px; display: grid; place-items: center; color: var(--bg); font-weight: 700; font-size: 14px; }
+.bx.on { background: var(--pd); border-color: var(--pd); }
+.hd { flex-wrap: wrap; } .hd > div:first-child { flex: 1 1 170px; min-width: 0; }
+.btn.mini { min-height: 34px; padding: 6px 12px; font-size: 14px; }
