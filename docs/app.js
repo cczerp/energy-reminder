@@ -581,7 +581,10 @@ function Settings() {
 /* ----- guided runner ----- */
 let G = null;
 const pad = (n) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`;
-const vib = (p) => navigator.vibrate?.(p);
+let ac;
+function beep() { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume?.(); const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 880; g.gain.setValueAtTime(0.25, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.6); o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + 0.6); } catch (e) {} }
+const vib = (p) => (navigator.vibrate ? navigator.vibrate(p) : beep()); // iPhones cannot vibrate from a web page, so they get a soft chime
+if (native.isNative) document.addEventListener('visibilitychange', () => { if (!document.hidden) changed(); }); // refill the nearest reminders when the app opens
 async function wake() { try { G.lock = await navigator.wakeLock?.request('screen'); } catch (e) {} }
 function stopGuide() { if (G) { clearInterval(G.timer); clearInterval(G.xi); G.lock?.release?.().catch(() => {}); } G = null; document.body.classList.remove('guided'); }
 

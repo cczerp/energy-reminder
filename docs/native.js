@@ -5,6 +5,7 @@ export const isNative = !!cap?.isNativePlatform?.() && typeof cap.registerPlugin
 const LN = isNative ? cap.registerPlugin('LocalNotifications') : null;
 const BG = isNative ? cap.registerPlugin('BackgroundGeolocation') : null;
 const FENCE = isNative ? cap.registerPlugin('LeaveFence') : null;
+export const isIOS = isNative && cap.getPlatform?.() === 'ios';
 
 // Notification buttons on exercise reminders.
 LN?.registerActionTypes({ types: [{ id: 'EX', actions: [{ id: 'rules', title: 'See rules' }, { id: 'done', title: 'Completed' }] }] }).catch(() => {});
@@ -32,7 +33,8 @@ export async function scheduleAll(list) {
   if (pend.notifications.length) await LN.cancel({ notifications: pend.notifications.map((n) => ({ id: n.id })) });
   if (!list.length) return;
   await LN.schedule({
-    notifications: list.map((o) => ({ id: o.id, title: o.title, body: o.body, largeBody: o.body, schedule: { at: o.at, allowWhileIdle: true }, extra: { route: o.route, exId: o.exId }, ...(o.exId ? { actionTypeId: 'EX' } : {}) })),
+    notifications: (isIOS ? list.slice(0, 60) : list).map((o) => // iPhones keep at most 64 scheduled reminders, so only the nearest ones are scheduled; opening the app refills them
+ ({ id: o.id, title: o.title, body: o.body, largeBody: o.body, schedule: { at: o.at, allowWhileIdle: true }, extra: { route: o.route, exId: o.exId }, ...(o.exId ? { actionTypeId: 'EX' } : {}) })),
   });
 }
 
@@ -55,6 +57,7 @@ const dist = (a, b) => {
 };
 
 export async function currentPosition() {
+  if (isIOS && FENCE) return FENCE.currentPosition();
   if (BG) {
     return new Promise(async (resolve, reject) => {
       let id;
