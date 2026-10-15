@@ -80,11 +80,12 @@ jobs:
 
           Printable one-page guide with a QR code: https://github.com/${GITHUB_REPOSITORY}/blob/main/share/MindCue-install-guide.pdf
 
-          (mindful.apk is the same file under its old name, so older links still work.)
+          (mindful.apk is the same file under its old name, so older links still work. mindcue.aab is the Google Play upload file - ignore it unless you publish the app.)
 
           _Built from ${GITHUB_REF_NAME} (${GITHUB_SHA:0:7})._
           NOTES
-          gh release create latest-apk mindcue.apk mindtap.apk mindful.apk --target "$GITHUB_SHA" --latest \
+          EXTRA=""; [ -f mindcue.aab ] && EXTRA="mindcue.aab"
+          gh release create latest-apk mindcue.apk mindtap.apk mindful.apk $EXTRA --target "$GITHUB_SHA" --latest \
             --title "MindCue build ${{ github.run_number }}" --notes-file notes.md
 
   smoke:
