@@ -37,7 +37,7 @@ MindCue helps you build a daily mindfulness and meditation practice, privately.
 • A library of guided practices: meditation, observation and concentration exercises, emotional tools, bedtime practices, energy and healing, and more. Gentle timers and an optional buzz keep you on track.
 • Climb the Scale and the Focus Wheel for working with how you feel.
 • A private log: notes, evening recall, and a history of every day.
-• Works fully offline. No account. No ads. No tracking. Everything stays on your phone.
+• No account. Your notes, logs and goals stay on your phone. The free version shows a few ads on the Practice and Info lists; one purchase removes them and unlocks the advanced teachings.
 
 MindCue supports a practice. It is not medical care and does not replace a counselor or doctor.
 ```
@@ -48,11 +48,11 @@ MindCue supports a practice. It is not medical care and does not replace a couns
 Use the page already in this repository: `docs/privacy.html` (publish it on your landing page). Paste its **public web address** into **Policy → App content → Privacy policy**.
 
 ## 5. App content (Policy → App content) — answer these
-- **Ads:** No.
+- **Ads:** **Yes**, the app contains ads (AdMob). Turn on the **Advertising ID** declaration too (App content → Advertising ID → Yes, used for advertising).
 - **App access:** All functionality is available without special access (once the lock is on, the advanced teachings need the one-time unlock; say that in the notes).
 - **Target audience:** 18 and over. Not for children.
 - **Content rating:** answer the questionnaire honestly: no violence, no user-generated content shared, no gambling. It should rate for everyone.
-- **Data safety:** **Does your app collect or share any user data? No.** Then **Is all of the user data encrypted in transit? n/a**, and **Do you provide a way to delete data? Users can delete data by clearing it in-app or uninstalling.** Location is used on the device only and never sent anywhere, so it is not "collected" in Google's sense, but if the form asks about location, say it is processed on-device only.
+- **Data safety:** with ads on, answer **Yes, the app collects or shares data**, and then list what AdMob collects: **Device or other IDs** (advertising ID), and **App activity / Diagnostics** if the form shows them, each **shared with a third party (Google)** for **Advertising or marketing**; mark it as not optional for the free version. Your own notes, logs and goals are never collected. Location is used on the device only and never sent anywhere. Say data is encrypted in transit. Say users can request deletion (they can clear the app's data or uninstall). Check the AdMob policy page for the exact list, because Google updates it.
 - **Health apps declaration:** if it asks, choose the option that matches wellness / stress management, not medical.
 - **Government / financial / news:** No.
 
@@ -61,9 +61,18 @@ Use the page already in this repository: `docs/privacy.html` (publish it on your
 - **Exact alarms** (reminders at exact times): reason: "Meditation reminders at times the user chooses."
 - **Notifications:** normal.
 
+## 6½. AdMob (ads) — do this before going public
+1. Go to admob.google.com and sign in with the same Google account. Accept the terms.
+2. **Apps → Add app.** Choose Android, say the app is **not yet published** (you can link it to Play later), name it MindCue. Copy the **App ID** (it looks like `ca-app-pub-1234567890123456~1234567890`).
+3. In the app, make two ad units: **Banner** (name "Lists banner") and **Rewarded** (name "Unlock one practice"). Copy each **Ad unit ID** (`ca-app-pub-…/…`).
+4. Under **Payments**, add your payment details and tax info so you can be paid.
+5. **[me]** Send me the App ID and both ad unit IDs and I will put them in (`strings.xml` and `docs/config.js`) and switch off test mode. Until then the Play build shows only Google's **test ads**. Do **not** go public with test ads, and never tap your own live ads while testing.
+6. After the app is live on Play, in AdMob **Apps → MindCue → App settings → Link to Google Play**, so the ads are tied to your store listing.
+7. Europe and the UK: in AdMob **Privacy & messaging**, create the consent message ("GDPR") and publish it. Without it, ads may not show there.
+
 ## 7. The one-time unlock (do this before going public)
 1. **Monetize → Products → In-app products → Create product.**
-2. **Product ID:** `advanced_unlock` (cannot change later). Name: "Advanced teachings". Description: "One-time purchase that unlocks the Psychic centers, chakra meditations, inner journeys and projections."
+2. **Product ID:** `advanced_unlock` (cannot change later). Name: "Advanced teachings". Description: "One-time purchase that unlocks the Psychic centers, chakra meditations, inner journeys and projections, and removes ads."
 3. **Price:** pick your one-time price. It is a **one-time** product (not a subscription). **Activate** it.
 4. You also need a **payments profile** (Monetize → Setup) if you haven't made one. It asks for your tax and bank details. Only you can do this.
 5. **[me]** Tell me the product ID and I will connect the Unlock and Restore buttons to Google Play Billing. I can't test a real purchase from here, so we test it with a license-testing Gmail (Setup → License testing) on the internal test.
