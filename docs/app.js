@@ -726,6 +726,16 @@ function repaintKeep() { const y = window.scrollY; paint(); window.scrollTo(0, y
 window.addEventListener('hashchange', paint);
 
 /* ---------------- actions ---------------- */
+const locDisclosure = () => new Promise((ok) => {
+  if (S.locAgreed) return ok(true);
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+  d.innerHTML = '<div class="card" style="max-width:420px;max-height:90vh;overflow:auto"><b>Location use</b><div class="sm" style="margin:8px 0">MindCue collects your location <b>in the background, even when the app is closed or not in use</b>, to know when you leave your home so it can send the reminders you chose. This is the only reason location is used.</div><div class="sm" style="margin:8px 0">Your location stays on this phone. It is never uploaded, shared or used for ads.</div><div class="sm dim" style="margin:8px 0">Next your phone will ask for permission. Choose <b>Allow all the time</b> so reminders work with the app closed.</div><button class="btn" id="la-y">Agree and continue</button> <button class="btn ghost" id="la-n">No thanks</button></div>';
+  document.body.appendChild(d);
+  const end = (v) => { d.remove(); if (v) { S.locAgreed = true; save(); } ok(v); };
+  d.querySelector('#la-y').onclick = () => end(true);
+  d.querySelector('#la-n').onclick = () => end(false);
+});
 const msg = (t) => { const m = $('#msg'); if (m) m.textContent = t; };
 document.addEventListener('input', (e) => {
   const gf = e.target.dataset?.gf; if (gf !== undefined && G) { (G.f = G.f || [])[+gf] = e.target.value; return; }
@@ -766,6 +776,7 @@ document.addEventListener('click', async (e) => {
     case 'mindon': S.rem.mind.on = !S.rem.mind.on; save(); repaintKeep(); break;
     case 'recallon': S.rem.recall.on = !S.rem.recall.on; save(); repaintKeep(); break;
     case 'sethome': {
+      if (!(await locDisclosure())) { msg(''); break; }
       msg('Finding your location…');
       try { const p = await native.currentPosition(); S.rem.home = { latitude: p.latitude, longitude: p.longitude, r: S.rem.home?.r || 150 }; save(); repaintKeep(); msg('Home set.'); toast('Home set. Last step: phone Settings → Apps → MindCue → Permissions → Location → Allow all the time.'); }
       catch (err) { msg('Could not get your location. Allow location "all the time" for this app and try again.'); }
