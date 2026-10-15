@@ -34,13 +34,13 @@ export async function scheduleAll(list) {
   if (!list.length) return;
   await LN.schedule({
     notifications: (isIOS ? list.slice(0, 60) : list).map((o) => // iPhones keep at most 64 scheduled reminders, so only the nearest ones are scheduled; opening the app refills them
- ({ id: o.id, title: o.title, body: o.body, largeBody: o.body, schedule: { at: o.at, allowWhileIdle: true }, extra: { route: o.route, exId: o.exId }, ...(o.exId ? { actionTypeId: 'EX' } : {}) })),
+ ({ id: o.id, title: o.title, body: o.body, largeBody: o.body, largeIcon: 'ic_notif_large', schedule: { at: o.at, allowWhileIdle: true }, extra: { route: o.route, exId: o.exId }, ...(o.exId ? { actionTypeId: 'EX' } : {}) })),
   });
 }
 
 export async function fireNow(id, title, body, route, exId) {
   if (!LN) return;
-  await LN.schedule({ notifications: [{ id, title, body, largeBody: body, schedule: { at: new Date(Date.now() + 1500), allowWhileIdle: true }, extra: { route, exId }, ...(exId ? { actionTypeId: 'EX' } : {}) }] });
+  await LN.schedule({ notifications: [{ id, title, body, largeBody: body, largeIcon: 'ic_notif_large', schedule: { at: new Date(Date.now() + 1500), allowWhileIdle: true }, extra: { route, exId }, ...(exId ? { actionTypeId: 'EX' } : {}) }] });
 }
 
 export function onTap(fn) {
@@ -88,3 +88,7 @@ export function onRoute(fn) {
   const take = () => FENCE.takeRoute().then((r) => r?.route && fn(r.route)).catch(() => {});
   take(); document.addEventListener('visibilitychange', () => { if (!document.hidden) take(); });
 }
+
+// One-time "unlock the advanced teachings" purchase. The store billing is hooked up here when the app is published.
+export async function buyUnlock() { throw new Error('not-ready'); }
+export async function restoreUnlock() { throw new Error('not-ready'); }

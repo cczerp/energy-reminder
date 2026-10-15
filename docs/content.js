@@ -726,6 +726,9 @@ CHAKRAS.forEach((c) => EXERCISES.push({
 // The practices that go deeper sit behind two warnings.
 ['c-pituitary', 'c-pineal', 'c-throat', 'c-attune', 'p-mental', 'p-etheric'].forEach((id) => { EXERCISES.find((e) => e.id === id).advanced = true; });
 
+// The advanced teachings that a store build locks behind a one-time unlock.
+EXERCISES.forEach((e) => { if (['centers', 'chakra', 'journey', 'project'].includes(e.cat)) e.premium = true; });
+
 export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 
 // ---------- Reminders ----------

@@ -1,11 +1,12 @@
 import { CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING, SCALE, SCALE_UP } from './content.js';
 import * as native from './native.js';
 import { BUILD } from './build.js';
+import { PAYWALL } from './config.js';
 
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, unlocked: false, tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -97,7 +98,8 @@ const catCount = (gid, day = dayKey()) => {
 };
 const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].goal;
 const canLeave = () => native.isNative && !!S.rem.home;
-const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id)); // exercises that ring at scheduled times (not leave-home ones)
+const locked = (id) => PAYWALL && !S.unlocked && !!exById[id]?.premium; // advanced teachings in a store build, until unlocked
+const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id) && !locked(id)); // exercises that ring at scheduled times (not leave-home ones)
 const choosing = (gid) => !S.rem.cat[gid].random && schedEx(gid).length > 1; // several to do: the reminder opens the list
 const todayPick = (gid) => (schedEx(gid).length ? planned(gid) : S.rem.cat[gid].ex[0]);
 // the exercise a reminder names when it is not asking you to choose (rotates through the ones you picked)
@@ -338,6 +340,7 @@ function Today() {
   ${card(`<div class="dim sm">Mindful moment</div><div style="font-size:17px;margin-top:4px">${esc(nudge)}</div>`, 'accent')}
   ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">MindCue needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → MindCue → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
   ${native.isNative && !S.rem.home && on.some((g) => [...g.leave, ...(g.both || [])].some((id) => S.rem.cat[g.id].ex.includes(id))) ? card(`<b>Set your home</b><div class="dim sm" style="margin:4px 0 8px">Stair Count and Stranger's Face remind you as you leave the house. Stand at home and tap the button. When your phone asks about location, choose <b>While using the app</b>, then open your phone's Settings → Apps → MindCue → Permissions → Location and pick <b>Allow all the time</b>.</div><button class="btn" data-act="sethome">Set my home here</button><div id="msg" class="warn sm"></div>`, 'accent') : ''}
+  ${S.tourSeen ? '' : card(`<b>New here?</b><div class="dim sm" style="margin:4px 0 8px">A one-minute tour of what is on each page.</div><div class="row"><a class="btn mini" href="#tour">Take the tour</a><button class="btn ghost mini" data-act="tourhide">Not now</button></div>`, 'accent')}
   ${cheer}
   ${morningCards()}${fastCard()}
   ${rows || recallCard ? `<h2>Today's goals</h2>${rows}${recallCard}` : on.length ? '' : '<h2>Today\'s goals</h2><div class="dim">No reminders on. Turn some on in Settings.</div>'}
@@ -374,18 +377,37 @@ function Choose(gid) {
       <div class="row" style="margin-top:8px"><a class="btn ghost" href="#ex/${id}">Rules</a><a class="btn" href="#guide/${id}">Start</a><button class="btn ghost" data-act="done:${id}">✓ Done</button></div>`)).join('');
 }
 
+function Tour() {
+  const sec = (t, inner) => card(`<div class="title" style="font-size:20px">${t}</div><div style="margin-top:6px;font-size:16px;line-height:1.5">${inner}</div>`);
+  return `${back('#info')}<h1>A quick tour</h1>
+  <p class="dim">What you will find on each page.</p>
+  ${sec('Today', 'Your day at a glance, one bubble per goal. Tap <b>✓ Done</b> when you finish one (it goes into your Log with the time) or <b>Rules</b> to read it first. Finished goals disappear, and finishing them all earns a small celebration. The big <b>I\'m in a funk</b> button gives a short reset and plays your own songs.')}
+  ${sec('Practice', 'The library of guided practices: meditation practice, meditation exercises, energy and healing, esoteric meditations, and the chakra meditations. Open one to read how it works, or press <b>Start guided</b> to be walked through one step at a time, with optional timers.')}
+  ${sec('Info', 'Reading, not doing: the universal laws, the Do\'s and Don\'ts, supporting habits, life cycles, the chakra reference, and the credits.')}
+  ${sec('Settings', 'Where you set it up your way. Choose which exercises count as goals for each area, how many reminders you want and when, the leave-home reminders, the funk playlist, the mindfulness sayings, and your backup. The small <b>Log</b> button in the top right corner opens your log.')}
+  ${sec('Log', '<b>Entries</b> are your notes and recalls. <b>Days</b> is one button per day showing what you finished, what you did not, and your notes. <b>Progress</b> shows your streak and trends.')}
+  ${sec('Private by design', 'Everything stays on your phone. There is no account, no ads, and nothing is sent anywhere. It works offline.')}`;
+}
 function Info() {
   const ids = ['live-dos', 'energy-habits'].map((id) => exById[id]).map((e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.summary)}</div>`)).join('');
   return `<h1>Info</h1>
+  ${link('#tour', '<b>A quick tour</b><div class="dim sm">What is on each page</div>')}
   ${link('#laws', '<b>Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>')}
   ${ids}
   ${link('#cycles', '<b>Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>')}
   ${link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>')}
   ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
 }
+function Unlock() {
+  return `${back('#practice')}<h1>Unlock the advanced teachings</h1>
+  ${card('<div class="step" style="font-size:17px">One purchase, once, no subscription. It opens the Psychic centers, the chakra meditations, the Inner journeys (including the past-life journey), and the projections (astral).<br><br>Everything else in MindCue stays free.</div>', 'accent')}
+  <button class="btn" data-act="buyunlock">Unlock</button>
+  <button class="btn ghost" data-act="restoreunlock">Restore a purchase</button>
+  <div id="msg" class="warn sm"></div>`;
+}
 const advOk = new Set(); let warnStep = 1;
 function Practice() {
-  const row = (e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`);
+  const row = (e) => link(locked(e.id) ? '#unlock' : `#ex/${e.id}`, `<b>${locked(e.id) ? '🔒 ' : ''}${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`);
   const ids = (list) => list.map((id) => exById[id]).filter(Boolean).map(row).join('');
   const cats = (cat, skip = []) => EXERCISES.filter((e) => e.cat === cat && !e.hidden && !skip.includes(e.id)).map(row).join('');
   const sub = (label, inner) => (inner ? `<h3>${label}</h3>${inner}` : '');
@@ -509,8 +531,8 @@ function RecallForm() {
 }
 
 /* ----- settings ----- */
-let permState = native.isNative ? 'default' : 'Notification' in window ? Notification.permission : 'unsupported';
-native.permState().then((p) => { if (native.isNative) { permState = p; } });
+let permState = native.isNative ? (localStorage.getItem('mindful-perm') === 'granted' ? 'granted' : 'default') : 'Notification' in window ? Notification.permission : 'unsupported'; // remembered so the card does not flash on every open
+
 function fastSettings() {
   const f = S.fast; const d = fastDay(); const running = fastRunning();
   return card(`${check(f.on, '<b class="ttl">Frequency Fast</b>', 'fon', running ? `Running: day ${d} of ${f.days}` : 'A short challenge. Off until you start it.')}
@@ -527,7 +549,7 @@ function Settings() {
     const c = R.cat[g.id];
     const nightly = '';
     if (g.simple) return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, 'Each reminder opens a list of meditations to choose from.')}${c.on ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
-    const bullets = [...g.pool, ...g.leave].map((x) => `<div class="bul ${c.random ? 'dis' : ''}" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
+    const bullets = [...g.pool, ...g.leave].filter((x) => !locked(x)).map((x) => `<div class="bul ${c.random ? 'dis' : ''}" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
     return card(`${check(c.on, `<b class="ttl">${g.label}</b>`, `con:${g.id}`, `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day`)}
       ${c.on ? `<div class="dim sm" style="margin-top:6px">Tick the exercises. Each ticked one is a daily goal. Or pick the random option below.</div>${bullets}
       ${[...g.pool, ...g.leave].length > 1 ? `<div class="bul" data-act="crand:${g.id}"><span class="bx ${c.random ? 'on' : ''}">${c.random ? '✓' : ''}</span><span><b>Just 1 as my goal, picked at random</b><span class="dim"> — from all of them</span></span></div>` : ''}
@@ -670,8 +692,10 @@ function paint() {
     case 'today': h = Today(); break;
     case 'practice': h = Practice(); break;
     case 'info': h = Info(); break;
-    case 'ex': h = exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
-    case 'guide': if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
+    case 'tour': S.tourSeen = true; save(); h = Tour(); break;
+    case 'ex': h = locked(a) ? Unlock() : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
+    case 'unlock': h = Unlock(); break;
+    case 'guide': if (locked(a)) { h = Unlock(); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
     case 'log': h = Log(); break;
     case 'note': h = NoteForm(a); break;
     case 'recall': h = RecallForm(); break;
@@ -688,7 +712,7 @@ function paint() {
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'laws' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
+  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'tour' || route === 'laws' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || route === 'unlock' || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   window.scrollTo(0, 0);
@@ -743,7 +767,7 @@ document.addEventListener('click', async (e) => {
       break;
     }
     case 'perm': {
-      if (native.isNative) permState = (await native.ensurePerms()) ? 'granted' : 'denied';
+      if (native.isNative) { permState = (await native.ensurePerms()) ? 'granted' : 'denied'; try { localStorage.setItem('mindful-perm', permState === 'granted' ? 'granted' : ''); } catch (e) {} }
       else { permState = await Notification.requestPermission(); if (permState === 'granted') checkDue(); }
       changed(); repaintKeep(); break;
     }
@@ -775,6 +799,9 @@ document.addEventListener('click', async (e) => {
     case 'wnew': wh = newWheel(); paint(); break;
     case 'wload': wh = JSON.parse(JSON.stringify(S.wheels.find((w) => w.id === a))); paint(); break;
     case 'wdel': if (confirm('Delete this wheel?')) { S.wheels = S.wheels.filter((w) => w.id !== a); if (wh && wh.id === a) wh = null; save(); repaintKeep(); } break;
+    case 'tourhide': S.tourSeen = true; save(); repaintKeep(); break;
+    case 'buyunlock': try { await native.buyUnlock(); S.unlocked = true; save(); location.hash = '#practice'; } catch (err) { msg("Purchases aren't switched on yet."); } break;
+    case 'restoreunlock': try { await native.restoreUnlock(); S.unlocked = true; save(); location.hash = '#practice'; } catch (err) { msg("Nothing to restore yet."); } break;
     case 'warn1': warnStep = 2; paint(); break;
     case 'warn2': advOk.add(a); warnStep = 1; paint(); break;
     case 'saveplaylist': { const v = ($('#playlist')?.value || '').trim(); S.rem.playlist = v; save(); toast(v ? 'Playlist saved' : 'Playlist cleared'); repaintKeep(); break; }
@@ -843,7 +870,7 @@ native.onTap((route, action, exId) => {
   else if (route) location.hash = route;
 });
 native.onRoute((route) => { location.hash = route; });
-if (native.isNative) native.permState().then((p) => { permState = p; changed(); });
+if (native.isNative) native.permState().then((p) => { permState = p; try { localStorage.setItem('mindful-perm', p === 'granted' ? 'granted' : ''); } catch (e) {} if (['', '#today', '#settings'].includes(location.hash)) repaintKeep(); changed(); });
 paint(); checkDue();
 window.__mindfulBooted = true;
 window.__mindful = { occurrences, onLeave, state: () => S }; // handy for diagnostics and tests
