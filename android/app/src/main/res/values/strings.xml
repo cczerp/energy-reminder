@@ -4,4 +4,5 @@
     <string name="title_activity_main">MindCue</string>
     <string name="package_name">com.cczerp.mindcue</string>
     <string name="custom_url_scheme">com.cczerp.mindcue</string>
+    <string name="admob_app_id">ca-app-pub-3228808449104650~5813238417</string>
 </resources>

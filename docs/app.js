@@ -1,12 +1,12 @@
 import { CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING, SCALE, SCALE_UP } from './content.js';
 import * as native from './native.js';
 import { BUILD } from './build.js';
-import { PAYWALL } from './config.js';
+import { PAYWALL, ADS, ADMOB } from './config.js';
 
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, unlocked: false, tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, unlocked: false, tourSeen: false, adPass: null, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -98,7 +98,9 @@ const catCount = (gid, day = dayKey()) => {
 };
 const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].goal;
 const canLeave = () => native.isNative && !!S.rem.home;
-const locked = (id) => PAYWALL && !S.unlocked && !!exById[id]?.premium; // advanced teachings in a store build, until unlocked
+const adsOn = () => ADS && native.isNative && !S.unlocked; // ads only in the store build, and never after the purchase
+const passed = (id) => !!S.adPass && S.adPass.day === dayKey() && S.adPass.ids.includes(id); // opened for today by watching an ad
+const locked = (id) => PAYWALL && !S.unlocked && !!exById[id]?.premium && !passed(id); // advanced teachings in a store build, until unlocked
 const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id) && !locked(id)); // exercises that ring at scheduled times (not leave-home ones)
 const choosing = (gid) => !S.rem.cat[gid].random && schedEx(gid).length > 1; // several to do: the reminder opens the list
 const todayPick = (gid) => (schedEx(gid).length ? planned(gid) : S.rem.cat[gid].ex[0]);
@@ -386,7 +388,7 @@ function Tour() {
   ${sec('Info', 'Reading, not doing: the universal laws, the Do\'s and Don\'ts, supporting habits, life cycles, the chakra reference, and the credits.')}
   ${sec('Settings', 'Where you set it up your way. Choose which exercises count as goals for each area, how many reminders you want and when, the leave-home reminders, the funk playlist, the mindfulness sayings, and your backup. The small <b>Log</b> button in the top right corner opens your log.')}
   ${sec('Log', '<b>Entries</b> are your notes and recalls. <b>Days</b> is one button per day showing what you finished, what you did not, and your notes. <b>Progress</b> shows your streak and trends.')}
-  ${sec('Private by design', 'Everything stays on your phone. There is no account, no ads, and nothing is sent anywhere. It works offline.')}`;
+  ${sec('Private by design', 'Your notes, logs and goals stay on your phone. There is no account. The free Play Store version shows a few ads on the Practice and Info lists (a one-time purchase removes them and unlocks the advanced teachings); your own entries are never sent to anyone.')}`;
 }
 function Info() {
   const ids = ['live-dos', 'energy-habits'].map((id) => exById[id]).map((e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.summary)}</div>`)).join('');
@@ -398,16 +400,18 @@ function Info() {
   ${link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>')}
   ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
 }
-function Unlock() {
+function Unlock(id) {
+  const ex = exById[id];
   return `${back('#practice')}<h1>Unlock the advanced teachings</h1>
-  ${card('<div class="step" style="font-size:17px">One purchase, once, no subscription. It opens the Psychic centers, the chakra meditations, the Inner journeys (including the past-life journey), and the projections (astral).<br><br>Everything else in MindCue stays free.</div>', 'accent')}
-  <button class="btn" data-act="buyunlock">Unlock</button>
+  ${card('<div class="step" style="font-size:17px">One purchase, once, no subscription. It opens the Psychic centers, the chakra meditations, the Inner journeys (including the past-life journey), and the projections (astral), and it removes the ads.<br><br>Everything else in MindCue stays free.</div>', 'accent')}
+  <button class="btn" data-act="buyunlock">Unlock everything</button>
+  ${adsOn() && ex ? `<button class="btn ghost" data-act="watchad:${id}">Watch a short ad to open “${esc(ex.title)}” for today</button>` : ''}
   <button class="btn ghost" data-act="restoreunlock">Restore a purchase</button>
   <div id="msg" class="warn sm"></div>`;
 }
 const advOk = new Set(); let warnStep = 1;
 function Practice() {
-  const row = (e) => link(locked(e.id) ? '#unlock' : `#ex/${e.id}`, `<b>${locked(e.id) ? '🔒 ' : ''}${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`);
+  const row = (e) => link(locked(e.id) ? `#unlock/${e.id}` : `#ex/${e.id}`, `<b>${locked(e.id) ? '🔒 ' : ''}${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`);
   const ids = (list) => list.map((id) => exById[id]).filter(Boolean).map(row).join('');
   const cats = (cat, skip = []) => EXERCISES.filter((e) => e.cat === cat && !e.hidden && !skip.includes(e.id)).map(row).join('');
   const sub = (label, inner) => (inner ? `<h3>${label}</h3>${inner}` : '');
@@ -693,9 +697,9 @@ function paint() {
     case 'practice': h = Practice(); break;
     case 'info': h = Info(); break;
     case 'tour': S.tourSeen = true; save(); h = Tour(); break;
-    case 'ex': h = locked(a) ? Unlock() : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
-    case 'unlock': h = Unlock(); break;
-    case 'guide': if (locked(a)) { h = Unlock(); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
+    case 'ex': h = locked(a) ? Unlock(a) : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
+    case 'unlock': h = Unlock(a); break;
+    case 'guide': if (locked(a)) { h = Unlock(a); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
     case 'log': h = Log(); break;
     case 'note': h = NoteForm(a); break;
     case 'recall': h = RecallForm(); break;
@@ -715,6 +719,7 @@ function paint() {
   const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'tour' || route === 'laws' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || route === 'unlock' || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
+  if (adsOn() && ['practice', 'info'].includes(route)) { $('#view').insertAdjacentHTML('beforeend', '<div style="height:70px"></div>'); native.showBanner(ADMOB, 56); } else native.hideBanner(); // a banner only on the Practice and Info lists, never during practice
   window.scrollTo(0, 0);
 }
 function repaintKeep() { const y = window.scrollY; paint(); window.scrollTo(0, y); }
@@ -800,7 +805,8 @@ document.addEventListener('click', async (e) => {
     case 'wload': wh = JSON.parse(JSON.stringify(S.wheels.find((w) => w.id === a))); paint(); break;
     case 'wdel': if (confirm('Delete this wheel?')) { S.wheels = S.wheels.filter((w) => w.id !== a); if (wh && wh.id === a) wh = null; save(); repaintKeep(); } break;
     case 'tourhide': S.tourSeen = true; save(); repaintKeep(); break;
-    case 'buyunlock': try { await native.buyUnlock(); S.unlocked = true; save(); location.hash = '#practice'; } catch (err) { msg("Purchases aren't switched on yet."); } break;
+    case 'watchad': try { await native.rewardedAd(ADMOB); const t = S.adPass && S.adPass.day === dayKey() ? S.adPass : { day: dayKey(), ids: [] }; if (!t.ids.includes(a)) t.ids.push(a); S.adPass = t; save(); location.hash = `#ex/${a}`; } catch (err) { msg("The ad could not play right now. Check your connection and try again, or watch it to the end."); } break;
+    case 'buyunlock': try { await native.buyUnlock(); S.unlocked = true; save(); native.hideBanner(); location.hash = '#practice'; } catch (err) { msg("Purchases aren't switched on yet."); } break;
     case 'restoreunlock': try { await native.restoreUnlock(); S.unlocked = true; save(); location.hash = '#practice'; } catch (err) { msg("Nothing to restore yet."); } break;
     case 'warn1': warnStep = 2; paint(); break;
     case 'warn2': advOk.add(a); warnStep = 1; paint(); break;

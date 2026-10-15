@@ -5,6 +5,7 @@ export const isNative = !!cap?.isNativePlatform?.() && typeof cap.registerPlugin
 const LN = isNative ? cap.registerPlugin('LocalNotifications') : null;
 const BG = isNative ? cap.registerPlugin('BackgroundGeolocation') : null;
 const FENCE = isNative ? cap.registerPlugin('LeaveFence') : null;
+const AD = isNative ? cap.registerPlugin('AdMob') : null;
 export const isIOS = isNative && cap.getPlatform?.() === 'ios';
 
 // Notification buttons on exercise reminders.
@@ -92,3 +93,41 @@ export function onRoute(fn) {
 // One-time "unlock the advanced teachings" purchase. The store billing is hooked up here when the app is published.
 export async function buyUnlock() { throw new Error('not-ready'); }
 export async function restoreUnlock() { throw new Error('not-ready'); }
+
+/* ---------- ads (Play build only, and never for people who bought the unlock) ---------- */
+let adReady = null;
+export function initAds(cfg) {
+  if (!AD) return Promise.resolve(false);
+  if (!adReady) adReady = (async () => {
+    try {
+      const info = await AD.requestConsentInfo(); // the EU / UK consent form, when it is required
+      if (info.isConsentFormAvailable && info.status === 'REQUIRED') await AD.showConsentForm();
+      await AD.initialize({ initializeForTesting: !!cfg.isTesting });
+      return true;
+    } catch (e) { return false; }
+  })();
+  return adReady;
+}
+export async function showBanner(cfg, margin) {
+  if (!(await initAds(cfg))) return;
+  try { await AD.showBanner({ adId: cfg.banner, adSize: 'ADAPTIVE_BANNER', position: 'BOTTOM_CENTER', margin, isTesting: !!cfg.isTesting }); } catch (e) {}
+}
+export async function hideBanner() {
+  if (!AD || !adReady) return;
+  try { await AD.removeBanner(); } catch (e) {}
+}
+// Resolves when the person watched the ad to the end; rejects if it could not play or was closed early.
+export async function rewardedAd(cfg) {
+  if (!(await initAds(cfg))) throw new Error('ads-unavailable');
+  await AD.prepareRewardVideoAd({ adId: cfg.rewarded, isTesting: !!cfg.isTesting });
+  let earned = false;
+  const a = await AD.addListener('onRewardedVideoAdReward', () => { earned = true; });
+  try {
+    await new Promise(async (resolve, reject) => {
+      const b = await AD.addListener('onRewardedVideoAdDismissed', () => { b.remove(); resolve(); });
+      try { await AD.showRewardVideoAd(); } catch (e) { b.remove(); reject(e); }
+    });
+  } finally { a.remove(); }
+  if (!earned) throw new Error('closed-early');
+  return true;
+}
