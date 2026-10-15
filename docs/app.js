@@ -6,7 +6,7 @@ import { PAYWALL } from './config.js';
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, unlocked: false, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, unlocked: false, tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -340,6 +340,7 @@ function Today() {
   ${card(`<div class="dim sm">Mindful moment</div><div style="font-size:17px;margin-top:4px">${esc(nudge)}</div>`, 'accent')}
   ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">MindCue needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → MindCue → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
   ${native.isNative && !S.rem.home && on.some((g) => [...g.leave, ...(g.both || [])].some((id) => S.rem.cat[g.id].ex.includes(id))) ? card(`<b>Set your home</b><div class="dim sm" style="margin:4px 0 8px">Stair Count and Stranger's Face remind you as you leave the house. Stand at home and tap the button. When your phone asks about location, choose <b>While using the app</b>, then open your phone's Settings → Apps → MindCue → Permissions → Location and pick <b>Allow all the time</b>.</div><button class="btn" data-act="sethome">Set my home here</button><div id="msg" class="warn sm"></div>`, 'accent') : ''}
+  ${S.tourSeen ? '' : card(`<b>New here?</b><div class="dim sm" style="margin:4px 0 8px">A one-minute tour of what is on each page.</div><div class="row"><a class="btn mini" href="#tour">Take the tour</a><button class="btn ghost mini" data-act="tourhide">Not now</button></div>`, 'accent')}
   ${cheer}
   ${morningCards()}${fastCard()}
   ${rows || recallCard ? `<h2>Today's goals</h2>${rows}${recallCard}` : on.length ? '' : '<h2>Today\'s goals</h2><div class="dim">No reminders on. Turn some on in Settings.</div>'}
@@ -376,9 +377,21 @@ function Choose(gid) {
       <div class="row" style="margin-top:8px"><a class="btn ghost" href="#ex/${id}">Rules</a><a class="btn" href="#guide/${id}">Start</a><button class="btn ghost" data-act="done:${id}">✓ Done</button></div>`)).join('');
 }
 
+function Tour() {
+  const sec = (t, inner) => card(`<div class="title" style="font-size:20px">${t}</div><div style="margin-top:6px;font-size:16px;line-height:1.5">${inner}</div>`);
+  return `${back('#info')}<h1>A quick tour</h1>
+  <p class="dim">What you will find on each page.</p>
+  ${sec('Today', 'Your day at a glance, one bubble per goal. Tap <b>✓ Done</b> when you finish one (it goes into your Log with the time) or <b>Rules</b> to read it first. Finished goals disappear, and finishing them all earns a small celebration. The big <b>I\'m in a funk</b> button gives a short reset and plays your own songs.')}
+  ${sec('Practice', 'The library of guided practices: meditation practice, meditation exercises, energy and healing, esoteric meditations, and the chakra meditations. Open one to read how it works, or press <b>Start guided</b> to be walked through one step at a time, with optional timers.')}
+  ${sec('Info', 'Reading, not doing: the universal laws, the Do\'s and Don\'ts, supporting habits, life cycles, the chakra reference, and the credits.')}
+  ${sec('Settings', 'Where you set it up your way. Choose which exercises count as goals for each area, how many reminders you want and when, the leave-home reminders, the funk playlist, the mindfulness sayings, and your backup. The small <b>Log</b> button in the top right corner opens your log.')}
+  ${sec('Log', '<b>Entries</b> are your notes and recalls. <b>Days</b> is one button per day showing what you finished, what you did not, and your notes. <b>Progress</b> shows your streak and trends.')}
+  ${sec('Private by design', 'Everything stays on your phone. There is no account, no ads, and nothing is sent anywhere. It works offline.')}`;
+}
 function Info() {
   const ids = ['live-dos', 'energy-habits'].map((id) => exById[id]).map((e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.summary)}</div>`)).join('');
   return `<h1>Info</h1>
+  ${link('#tour', '<b>A quick tour</b><div class="dim sm">What is on each page</div>')}
   ${link('#laws', '<b>Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>')}
   ${ids}
   ${link('#cycles', '<b>Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>')}
@@ -679,6 +692,7 @@ function paint() {
     case 'today': h = Today(); break;
     case 'practice': h = Practice(); break;
     case 'info': h = Info(); break;
+    case 'tour': S.tourSeen = true; save(); h = Tour(); break;
     case 'ex': h = locked(a) ? Unlock() : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
     case 'unlock': h = Unlock(); break;
     case 'guide': if (locked(a)) { h = Unlock(); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
@@ -698,7 +712,7 @@ function paint() {
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'laws' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || route === 'unlock' || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
+  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'tour' || route === 'laws' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || route === 'unlock' || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   window.scrollTo(0, 0);
@@ -785,6 +799,7 @@ document.addEventListener('click', async (e) => {
     case 'wnew': wh = newWheel(); paint(); break;
     case 'wload': wh = JSON.parse(JSON.stringify(S.wheels.find((w) => w.id === a))); paint(); break;
     case 'wdel': if (confirm('Delete this wheel?')) { S.wheels = S.wheels.filter((w) => w.id !== a); if (wh && wh.id === a) wh = null; save(); repaintKeep(); } break;
+    case 'tourhide': S.tourSeen = true; save(); repaintKeep(); break;
     case 'buyunlock': try { await native.buyUnlock(); S.unlocked = true; save(); location.hash = '#practice'; } catch (err) { msg("Purchases aren't switched on yet."); } break;
     case 'restoreunlock': try { await native.restoreUnlock(); S.unlocked = true; save(); location.hash = '#practice'; } catch (err) { msg("Nothing to restore yet."); } break;
     case 'warn1': warnStep = 2; paint(); break;
