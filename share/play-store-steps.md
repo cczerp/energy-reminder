@@ -66,7 +66,8 @@ Use the page already in this repository: `docs/privacy.html` (publish it on your
 2. **Apps → Add app.** Choose Android, say the app is **not yet published** (you can link it to Play later), name it MindCue. Copy the **App ID** (it looks like `ca-app-pub-1234567890123456~1234567890`).
 3. In the app, make two ad units: **Banner** (name "Lists banner") and **Rewarded** (name "Unlock one practice"). Copy each **Ad unit ID** (`ca-app-pub-…/…`).
 4. Under **Payments**, add your payment details and tax info so you can be paid.
-5. **[me]** Send me the App ID and both ad unit IDs and I will put them in (`strings.xml` and `docs/config.js`) and switch off test mode. Until then the Play build shows only Google's **test ads**. Do **not** go public with test ads, and never tap your own live ads while testing.
+5. **Done:** your real App ID and the two ad unit IDs are in the app. The Play bundle build turns test mode off by itself, so real users get real ads.
+   **Protect your account:** never tap your own live ads. Before you test the Play build on your phone, add your phone as a **test device** in AdMob (Settings → Test devices), so your phone only gets test ads.
 6. After the app is live on Play, in AdMob **Apps → MindCue → App settings → Link to Google Play**, so the ads are tied to your store listing.
 7. Europe and the UK: in AdMob **Privacy & messaging**, create the consent message ("GDPR") and publish it. Without it, ads may not show there.
 

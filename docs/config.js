@@ -2,9 +2,9 @@
 export const PAYWALL = false; // locks the advanced teachings until a one-time purchase
 export const ADS = false; // shows ads to people who have not bought the unlock
 
-// Google's TEST ad unit ids. Replace them with your own AdMob ids before publishing (see share/play-store-steps.md).
+// Your real AdMob ad unit ids. (The AdMob app id is in android/app/src/main/res/values/strings.xml.)
 export const ADMOB = {
-  banner: 'ca-app-pub-3940256099942544/9214589741',
-  rewarded: 'ca-app-pub-3940256099942544/5224354917',
-  isTesting: true, // set to false once the real ids are in
+  banner: 'ca-app-pub-3228808449104650/3059916711',
+  rewarded: 'ca-app-pub-3228808449104650/3266221263',
+  isTesting: true, // keep true here: the Play bundle build switches it to false automatically, so no test ads reach real users
 };
