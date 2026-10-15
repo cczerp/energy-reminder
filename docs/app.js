@@ -1,11 +1,12 @@
 import { CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING, SCALE, SCALE_UP } from './content.js';
 import * as native from './native.js';
 import { BUILD } from './build.js';
+import { PAYWALL } from './config.js';
 
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, unlocked: false, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -97,7 +98,8 @@ const catCount = (gid, day = dayKey()) => {
 };
 const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].goal;
 const canLeave = () => native.isNative && !!S.rem.home;
-const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id)); // exercises that ring at scheduled times (not leave-home ones)
+const locked = (id) => PAYWALL && !S.unlocked && !!exById[id]?.premium; // advanced teachings in a store build, until unlocked
+const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id) && !locked(id)); // exercises that ring at scheduled times (not leave-home ones)
 const choosing = (gid) => !S.rem.cat[gid].random && schedEx(gid).length > 1; // several to do: the reminder opens the list
 const todayPick = (gid) => (schedEx(gid).length ? planned(gid) : S.rem.cat[gid].ex[0]);
 // the exercise a reminder names when it is not asking you to choose (rotates through the ones you picked)
@@ -383,9 +385,16 @@ function Info() {
   ${link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>')}
   ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
 }
+function Unlock() {
+  return `${back('#practice')}<h1>Unlock the advanced teachings</h1>
+  ${card('<div class="step" style="font-size:17px">One purchase, once, no subscription. It opens the Psychic centers, the chakra meditations, the Inner journeys (including the past-life journey), and the projections (astral).<br><br>Everything else in MindCue stays free.</div>', 'accent')}
+  <button class="btn" data-act="buyunlock">Unlock</button>
+  <button class="btn ghost" data-act="restoreunlock">Restore a purchase</button>
+  <div id="msg" class="warn sm"></div>`;
+}
 const advOk = new Set(); let warnStep = 1;
 function Practice() {
-  const row = (e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`);
+  const row = (e) => link(locked(e.id) ? '#unlock' : `#ex/${e.id}`, `<b>${locked(e.id) ? '🔒 ' : ''}${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`);
   const ids = (list) => list.map((id) => exById[id]).filter(Boolean).map(row).join('');
   const cats = (cat, skip = []) => EXERCISES.filter((e) => e.cat === cat && !e.hidden && !skip.includes(e.id)).map(row).join('');
   const sub = (label, inner) => (inner ? `<h3>${label}</h3>${inner}` : '');
@@ -527,7 +536,7 @@ function Settings() {
     const c = R.cat[g.id];
     const nightly = '';
     if (g.simple) return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, 'Each reminder opens a list of meditations to choose from.')}${c.on ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
-    const bullets = [...g.pool, ...g.leave].map((x) => `<div class="bul ${c.random ? 'dis' : ''}" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
+    const bullets = [...g.pool, ...g.leave].filter((x) => !locked(x)).map((x) => `<div class="bul ${c.random ? 'dis' : ''}" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
     return card(`${check(c.on, `<b class="ttl">${g.label}</b>`, `con:${g.id}`, `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day`)}
       ${c.on ? `<div class="dim sm" style="margin-top:6px">Tick the exercises. Each ticked one is a daily goal. Or pick the random option below.</div>${bullets}
       ${[...g.pool, ...g.leave].length > 1 ? `<div class="bul" data-act="crand:${g.id}"><span class="bx ${c.random ? 'on' : ''}">${c.random ? '✓' : ''}</span><span><b>Just 1 as my goal, picked at random</b><span class="dim"> — from all of them</span></span></div>` : ''}
@@ -670,8 +679,9 @@ function paint() {
     case 'today': h = Today(); break;
     case 'practice': h = Practice(); break;
     case 'info': h = Info(); break;
-    case 'ex': h = exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
-    case 'guide': if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
+    case 'ex': h = locked(a) ? Unlock() : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
+    case 'unlock': h = Unlock(); break;
+    case 'guide': if (locked(a)) { h = Unlock(); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
     case 'log': h = Log(); break;
     case 'note': h = NoteForm(a); break;
     case 'recall': h = RecallForm(); break;
@@ -688,7 +698,7 @@ function paint() {
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'laws' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
+  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'laws' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || route === 'unlock' || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   window.scrollTo(0, 0);
@@ -775,6 +785,8 @@ document.addEventListener('click', async (e) => {
     case 'wnew': wh = newWheel(); paint(); break;
     case 'wload': wh = JSON.parse(JSON.stringify(S.wheels.find((w) => w.id === a))); paint(); break;
     case 'wdel': if (confirm('Delete this wheel?')) { S.wheels = S.wheels.filter((w) => w.id !== a); if (wh && wh.id === a) wh = null; save(); repaintKeep(); } break;
+    case 'buyunlock': try { await native.buyUnlock(); S.unlocked = true; save(); location.hash = '#practice'; } catch (err) { msg("Purchases aren't switched on yet."); } break;
+    case 'restoreunlock': try { await native.restoreUnlock(); S.unlocked = true; save(); location.hash = '#practice'; } catch (err) { msg("Nothing to restore yet."); } break;
     case 'warn1': warnStep = 2; paint(); break;
     case 'warn2': advOk.add(a); warnStep = 1; paint(); break;
     case 'saveplaylist': { const v = ($('#playlist')?.value || '').trim(); S.rem.playlist = v; save(); toast(v ? 'Playlist saved' : 'Playlist cleared'); repaintKeep(); break; }

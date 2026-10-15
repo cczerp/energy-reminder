@@ -88,3 +88,7 @@ export function onRoute(fn) {
   const take = () => FENCE.takeRoute().then((r) => r?.route && fn(r.route)).catch(() => {});
   take(); document.addEventListener('visibilitychange', () => { if (!document.hidden) take(); });
 }
+
+// One-time "unlock the advanced teachings" purchase. The store billing is hooked up here when the app is published.
+export async function buyUnlock() { throw new Error('not-ready'); }
+export async function restoreUnlock() { throw new Error('not-ready'); }
