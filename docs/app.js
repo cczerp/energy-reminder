@@ -518,8 +518,8 @@ function RecallForm() {
 }
 
 /* ----- settings ----- */
-let permState = native.isNative ? 'default' : 'Notification' in window ? Notification.permission : 'unsupported';
-native.permState().then((p) => { if (native.isNative) { permState = p; } });
+let permState = native.isNative ? (localStorage.getItem('mindful-perm') === 'granted' ? 'granted' : 'default') : 'Notification' in window ? Notification.permission : 'unsupported'; // remembered so the card does not flash on every open
+
 function fastSettings() {
   const f = S.fast; const d = fastDay(); const running = fastRunning();
   return card(`${check(f.on, '<b class="ttl">Frequency Fast</b>', 'fon', running ? `Running: day ${d} of ${f.days}` : 'A short challenge. Off until you start it.')}
@@ -753,7 +753,7 @@ document.addEventListener('click', async (e) => {
       break;
     }
     case 'perm': {
-      if (native.isNative) permState = (await native.ensurePerms()) ? 'granted' : 'denied';
+      if (native.isNative) { permState = (await native.ensurePerms()) ? 'granted' : 'denied'; try { localStorage.setItem('mindful-perm', permState === 'granted' ? 'granted' : ''); } catch (e) {} }
       else { permState = await Notification.requestPermission(); if (permState === 'granted') checkDue(); }
       changed(); repaintKeep(); break;
     }
@@ -855,7 +855,7 @@ native.onTap((route, action, exId) => {
   else if (route) location.hash = route;
 });
 native.onRoute((route) => { location.hash = route; });
-if (native.isNative) native.permState().then((p) => { permState = p; changed(); });
+if (native.isNative) native.permState().then((p) => { permState = p; try { localStorage.setItem('mindful-perm', p === 'granted' ? 'granted' : ''); } catch (e) {} if (['', '#today', '#settings'].includes(location.hash)) repaintKeep(); changed(); });
 paint(); checkDue();
 window.__mindfulBooted = true;
 window.__mindful = { occurrences, onLeave, state: () => S }; // handy for diagnostics and tests

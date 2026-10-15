@@ -3,5 +3,13 @@
   "appName": "MindCue",
   "webDir": "docs",
   "backgroundColor": "#1e1833",
-  "android": { "allowMixedContent": false }
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_mindcue",
+      "iconColor": "#8294FF"
+    }
+  }
 }

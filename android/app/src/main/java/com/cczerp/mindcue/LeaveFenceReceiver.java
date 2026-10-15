@@ -113,7 +113,9 @@ public class LeaveFenceReceiver extends BroadcastReceiver {
                 open.putExtra("mc_route", it.optString("route", "#today"));
                 PendingIntent tap = PendingIntent.getActivity(c, 100 + cnt, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
                 nm.notify(9000 + cnt, new NotificationCompat.Builder(c, "leave")
-                    .setSmallIcon(c.getApplicationInfo().icon)
+                    .setSmallIcon(R.drawable.ic_stat_mindcue)
+                    .setColor(0xFF8294FF)
+                    .setLargeIcon(android.graphics.BitmapFactory.decodeResource(c.getResources(), R.drawable.ic_notif_large))
                     .setContentTitle(it.getString("title"))
                     .setContentText(it.optString("body"))
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(it.optString("body")))
