@@ -76,12 +76,11 @@ Use the page already in this repository: `docs/privacy.html` (publish it on your
 2. **Product ID:** `advanced_unlock` (cannot change later). Name: "Advanced teachings". Description: "One-time purchase that unlocks the Psychic centers, chakra meditations, inner journeys and projections, and removes ads."
 3. **Price:** pick your one-time price. It is a **one-time** product (not a subscription). **Activate** it.
 4. You also need a **payments profile** (Monetize → Setup) if you haven't made one. It asks for your tax and bank details. Only you can do this.
-5. **[me]** Tell me the product ID and I will connect the Unlock and Restore buttons to Google Play Billing. I can't test a real purchase from here, so we test it with a license-testing Gmail (Setup → License testing) on the internal test.
+5. The Unlock and Restore buttons are already connected to Google Play Billing using the ID `advanced_unlock`. The product only exists in Play once a build with billing has been uploaded, so upload the bundle first. To test a purchase, add a license-testing Gmail (Setup → License testing) and use the internal test.
 
 ## 8. Going public
 Production → Create release → upload the same build (or newer) → Google reviews it (can take days). Fill any red items Play lists first.
 
 ## What I still need from you
-- The one-time price, and when you create the product, its ID.
 - Your payments profile done.
 - Whether to have me make the screenshots and feature graphic.

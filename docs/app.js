@@ -400,11 +400,19 @@ function Info() {
   ${link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>')}
   ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
 }
+let unlockPrice = '';
+// Ask Google Play what this account owns, so a refund relocks and a reinstall unlocks. If Play cannot be reached, keep what we knew.
+async function syncUnlock() {
+  if (!PAYWALL || !native.isNative) return;
+  const o = await native.ownsUnlock();
+  if (o !== null && o !== S.unlocked) { S.unlocked = o; save(); repaintKeep(); }
+  if (!unlockPrice) { unlockPrice = await native.unlockPrice(); if (unlockPrice && location.hash.startsWith('#unlock')) repaintKeep(); }
+}
 function Unlock(id) {
   const ex = exById[id];
   return `${back('#practice')}<h1>Unlock the advanced teachings</h1>
   ${card('<div class="step" style="font-size:17px">One purchase, once, no subscription. It opens the Psychic centers, the chakra meditations, the Inner journeys (including the past-life journey), and the projections (astral), and it removes the ads.<br><br>Everything else in MindCue stays free.</div>', 'accent')}
-  <button class="btn" data-act="buyunlock">Unlock everything</button>
+  <button class="btn" data-act="buyunlock">Unlock everything${unlockPrice ? ` · ${esc(unlockPrice)}` : ''}</button>
   ${adsOn() && ex ? `<button class="btn ghost" data-act="watchad:${id}">Watch a short ad to open “${esc(ex.title)}” for today</button>` : ''}
   <button class="btn ghost" data-act="restoreunlock">Restore a purchase</button>
   <div id="msg" class="warn sm"></div>`;
@@ -610,7 +618,7 @@ const pad = (n) => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, '0')}`;
 let ac;
 function beep() { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume?.(); const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 880; g.gain.setValueAtTime(0.25, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.6); o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + 0.6); } catch (e) {} }
 const vib = (p) => (navigator.vibrate ? navigator.vibrate(p) : beep()); // iPhones cannot vibrate from a web page, so they get a soft chime
-if (native.isNative) document.addEventListener('visibilitychange', () => { if (!document.hidden) changed(); }); // refill the nearest reminders when the app opens
+if (native.isNative) document.addEventListener('visibilitychange', () => { if (!document.hidden) { changed(); syncUnlock(); } }); // refill the nearest reminders when the app opens
 async function wake() { try { G.lock = await navigator.wakeLock?.request('screen'); } catch (e) {} }
 function stopGuide() { if (G) { clearInterval(G.timer); clearInterval(G.xi); G.lock?.release?.().catch(() => {}); } G = null; document.body.classList.remove('guided'); }
 
@@ -817,8 +825,8 @@ document.addEventListener('click', async (e) => {
     case 'wdel': if (confirm('Delete this wheel?')) { S.wheels = S.wheels.filter((w) => w.id !== a); if (wh && wh.id === a) wh = null; save(); repaintKeep(); } break;
     case 'tourhide': S.tourSeen = true; save(); repaintKeep(); break;
     case 'watchad': try { await native.rewardedAd(ADMOB); const t = S.adPass && S.adPass.day === dayKey() ? S.adPass : { day: dayKey(), ids: [] }; if (!t.ids.includes(a)) t.ids.push(a); S.adPass = t; save(); location.hash = `#ex/${a}`; } catch (err) { msg("The ad could not play right now. Check your connection and try again, or watch it to the end."); } break;
-    case 'buyunlock': try { await native.buyUnlock(); S.unlocked = true; save(); native.hideBanner(); location.hash = '#practice'; } catch (err) { msg("Purchases aren't switched on yet."); } break;
-    case 'restoreunlock': try { await native.restoreUnlock(); S.unlocked = true; save(); location.hash = '#practice'; } catch (err) { msg("Nothing to restore yet."); } break;
+    case 'buyunlock': try { await native.buyUnlock(); S.unlocked = true; save(); native.hideBanner(); location.hash = '#practice'; } catch (err) { const m = String((err && err.message) || err || '').toLowerCase(); msg(m.includes('pending') ? 'The purchase is still pending. It unlocks when Google Play confirms it.' : m.includes('cancel') ? 'Purchase cancelled.' : "Google Play could not complete the purchase. Check your connection and try again."); } break;
+    case 'restoreunlock': try { await native.restoreUnlock(); S.unlocked = true; save(); native.hideBanner(); location.hash = '#practice'; } catch (err) { msg("No purchase found on this Google account."); } break;
     case 'warn1': warnStep = 2; paint(); break;
     case 'warn2': advOk.add(a); warnStep = 1; paint(); break;
     case 'saveplaylist': { const v = ($('#playlist')?.value || '').trim(); S.rem.playlist = v; save(); toast(v ? 'Playlist saved' : 'Playlist cleared'); repaintKeep(); break; }
@@ -888,6 +896,6 @@ native.onTap((route, action, exId) => {
 });
 native.onRoute((route) => { location.hash = route; });
 if (native.isNative) native.permState().then((p) => { permState = p; try { localStorage.setItem('mindful-perm', p === 'granted' ? 'granted' : ''); } catch (e) {} if (['', '#today', '#settings'].includes(location.hash)) repaintKeep(); changed(); });
-paint(); checkDue();
+paint(); checkDue(); syncUnlock();
 window.__mindfulBooted = true;
 window.__mindful = { occurrences, onLeave, state: () => S }; // handy for diagnostics and tests

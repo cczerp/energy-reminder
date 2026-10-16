@@ -6,6 +6,8 @@ const LN = isNative ? cap.registerPlugin('LocalNotifications') : null;
 const BG = isNative ? cap.registerPlugin('BackgroundGeolocation') : null;
 const FENCE = isNative ? cap.registerPlugin('LeaveFence') : null;
 const AD = isNative ? cap.registerPlugin('AdMob') : null;
+const NP = isNative && !isIOSEarly() ? cap.registerPlugin('NativePurchases') : null;
+function isIOSEarly() { return cap.getPlatform?.() === 'ios'; } // Google Play Billing is Android only
 export const isIOS = isNative && cap.getPlatform?.() === 'ios';
 
 // Notification buttons on exercise reminders.
@@ -90,9 +92,28 @@ export function onRoute(fn) {
   take(); document.addEventListener('visibilitychange', () => { if (!document.hidden) take(); });
 }
 
-// One-time "unlock the advanced teachings" purchase. The store billing is hooked up here when the app is published.
-export async function buyUnlock() { throw new Error('not-ready'); }
-export async function restoreUnlock() { throw new Error('not-ready'); }
+// One-time "unlock the advanced teachings" purchase through Google Play Billing (product id below, created in Play Console).
+export const UNLOCK_ID = 'advanced_unlock';
+const owned = (list) => (list || []).some((p) => p.productIdentifier === UNLOCK_ID && String(p.purchaseState) === '1');
+export async function buyUnlock() {
+  if (!NP) throw new Error('not-ready');
+  const t = await NP.purchaseProduct({ productIdentifier: UNLOCK_ID, productType: 'inapp', autoAcknowledgePurchases: true });
+  if (!t || String(t.purchaseState) === '0') throw new Error('pending'); // still waiting for Google Play to confirm
+}
+export async function restoreUnlock() {
+  if (!NP) throw new Error('not-ready');
+  try { await NP.restorePurchases(); } catch (e) {}
+  if (!(await ownsUnlock())) throw new Error('none');
+}
+// What Google Play says this account owns: true / false, or null when it could not be checked (offline), so the caller keeps what it knew.
+export async function ownsUnlock() {
+  if (!NP) return null;
+  try { return owned((await NP.getPurchases({ productType: 'inapp' })).purchases); } catch (e) { return null; }
+}
+export async function unlockPrice() {
+  if (!NP) return '';
+  try { const { products } = await NP.getProducts({ productIdentifiers: [UNLOCK_ID], productType: 'inapp' }); return (products && products[0] && products[0].priceString) || ''; } catch (e) { return ''; }
+}
 
 /* ---------- ads (Play build only, and never for people who bought the unlock) ---------- */
 let adReady = null;
