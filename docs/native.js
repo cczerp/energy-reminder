@@ -6,6 +6,7 @@ const LN = isNative ? cap.registerPlugin('LocalNotifications') : null;
 const BG = isNative ? cap.registerPlugin('BackgroundGeolocation') : null;
 const FENCE = isNative ? cap.registerPlugin('LeaveFence') : null;
 const AD = isNative ? cap.registerPlugin('AdMob') : null;
+const APP = isNative ? cap.registerPlugin('App') : null;
 const NP = isNative && !isIOSEarly() ? cap.registerPlugin('NativePurchases') : null;
 function isIOSEarly() { return cap.getPlatform?.() === 'ios'; } // Google Play Billing is Android only
 export const isIOS = isNative && cap.getPlatform?.() === 'ios';
@@ -156,3 +157,7 @@ export async function rewardedAd(cfg) {
   if (!earned) throw new Error('closed-early');
   return true;
 }
+
+/* ---------- the phone's own Back button (Android) ---------- */
+export function onBack(fn) { try { APP?.addListener('backButton', fn); } catch (e) {} }
+export function minimizeApp() { try { APP?.minimizeApp(); } catch (e) {} }

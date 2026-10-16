@@ -904,6 +904,18 @@ native.onTap((route, action, exId) => {
 });
 native.onRoute((route) => { location.hash = route; });
 if (native.isNative) native.permState().then((p) => { permState = p; try { localStorage.setItem('mindful-perm', p === 'granted' ? 'granted' : ''); } catch (e) {} if (['', '#today', '#settings'].includes(location.hash)) repaintKeep(); changed(); });
+// The phone's Back button does what the on-screen "‹ Back" does: one step back, then to Today, then it puts the app away.
+native.onBack(() => {
+  const no = document.getElementById('la-n'); if (no) { no.click(); return; } // the location disclosure
+  const route = (location.hash.slice(1) || 'today').split('/')[0];
+  if (G && route === 'guide') {
+    if (G.done) return; // finish by saving or skipping, so a stray Back does not lose the entry
+    const b = document.querySelector(G.i > 0 ? '[data-act="gprev"]' : '[data-act="gquit"]'); if (b) b.click(); return;
+  }
+  const link = document.querySelector('#view a.back'); if (link) { location.hash = link.getAttribute('href'); return; }
+  if (route !== 'today') { location.hash = '#today'; return; }
+  native.minimizeApp();
+});
 paint(); checkDue(); syncUnlock();
 window.__mindfulBooted = true;
 window.__mindful = { occurrences, onLeave, state: () => S }; // handy for diagnostics and tests
