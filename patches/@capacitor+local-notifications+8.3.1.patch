@@ -1,0 +1,55 @@
+diff --git a/node_modules/@capacitor/local-notifications/android/src/main/kotlin/com/capacitorjs/plugins/localnotifications/TimedNotificationPublisher.kt b/node_modules/@capacitor/local-notifications/android/src/main/kotlin/com/capacitorjs/plugins/localnotifications/TimedNotificationPublisher.kt
+index 52def58..2475c6c 100644
+--- a/node_modules/@capacitor/local-notifications/android/src/main/kotlin/com/capacitorjs/plugins/localnotifications/TimedNotificationPublisher.kt
++++ b/node_modules/@capacitor/local-notifications/android/src/main/kotlin/com/capacitorjs/plugins/localnotifications/TimedNotificationPublisher.kt
+@@ -18,6 +18,8 @@ import java.util.Date
+  */
+ class TimedNotificationPublisher : BroadcastReceiver() {
+ 
++    private val SUMMARY_ID = 2147000000 // fixed id of the group summary
++
+     override fun onReceive(context: Context, intent: Intent) {
+         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+ 
+@@ -39,6 +41,7 @@ class TimedNotificationPublisher : BroadcastReceiver() {
+         val notificationJson = storage.getSavedNotificationAsJSObject(id.toString())
+         LocalNotificationsPlugin.fireReceived(notificationJson)
+         notificationManager.notify(id, notification)
++        postGroupSummary(context, notificationManager, notification)
+         rescheduleNotificationIfNeeded(context, intent, id)
+         // The notification's record stays in storage after firing (matching the
+         // legacy plugin) so a triggered notification's full data — sound, extra,
+@@ -47,6 +50,33 @@ class TimedNotificationPublisher : BroadcastReceiver() {
+         // shade (NotificationDismissReceiver).
+     }
+ 
++    // MindCue patch: Android only nests notifications that share a group key when a summary notification for that group exists.
++    // Post one summary (fixed id, so it is replaced rather than repeated) every time a grouped notification arrives, so every
++    // notification after the first nests under it like Gmail's.
++    private fun postGroupSummary(context: Context, nm: NotificationManager, child: Notification) {
++        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return // channels (and so the summary builder used here) need Android 8+
++        val group = child.group ?: return
++        if (child.flags and Notification.FLAG_GROUP_SUMMARY != 0) return
++        try {
++            val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
++            val tap = launch?.let { PendingIntent.getActivity(context, SUMMARY_ID, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE) }
++            val b = Notification.Builder(context, child.channelId)
++                .setSmallIcon(child.smallIcon)
++                .setColor(child.color)
++                .setContentTitle("MindCue")
++                .setContentText("Your reminders")
++                .setGroup(group)
++                .setGroupSummary(true)
++                .setGroupAlertBehavior(Notification.GROUP_ALERT_CHILDREN)
++                .setAutoCancel(true)
++                .setOnlyAlertOnce(true)
++            if (tap != null) b.setContentIntent(tap)
++            nm.notify(SUMMARY_ID, b.build())
++        } catch (e: Exception) {
++            // the summary is cosmetic: never let it stop the reminder itself
++        }
++    }
++
+     private fun rescheduleNotificationIfNeeded(context: Context, intent: Intent, id: Int): Boolean {
+         val dateString = intent.getStringExtra(CRON_KEY) ?: return false
+ 

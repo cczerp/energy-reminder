@@ -121,6 +121,18 @@ public class LeaveFenceReceiver extends BroadcastReceiver {
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(it.optString("body")))
                     .setContentIntent(tap)
                     .setAutoCancel(true)
+                    .setGroup("mindcue") // nests with the timed reminders under one summary, like Gmail's
+                    .build());
+                nm.notify(2147000000, new NotificationCompat.Builder(c, "leave") // the group summary (fixed id: replaced, never repeated)
+                    .setSmallIcon(R.drawable.ic_stat_mindcue)
+                    .setColor(0xFF8294FF)
+                    .setContentTitle("MindCue")
+                    .setContentText("Your reminders")
+                    .setGroup("mindcue")
+                    .setGroupSummary(true)
+                    .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+                    .setContentIntent(tap)
+                    .setAutoCancel(true)
                     .build());
                 p.edit().putString("cntDay", today).putInt("cnt", cnt + 1).apply();
                 return;
