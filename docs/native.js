@@ -92,27 +92,31 @@ export function onRoute(fn) {
   take(); document.addEventListener('visibilitychange', () => { if (!document.hidden) take(); });
 }
 
-// One-time "unlock the advanced teachings" purchase through Google Play Billing (product id below, created in Play Console).
-export const UNLOCK_ID = 'advanced_unlock';
-const owned = (list) => (list || []).some((p) => p.productIdentifier === UNLOCK_ID && String(p.purchaseState) === '1');
-export async function buyUnlock() {
+// One-time purchases through Google Play Billing: one product per package plus the everything product (ids live in content.js).
+const owned = (list) => (list || []).filter((p) => String(p.purchaseState) === '1').map((p) => p.productIdentifier);
+export async function buy(productId) {
   if (!NP) throw new Error('not-ready');
-  const t = await NP.purchaseProduct({ productIdentifier: UNLOCK_ID, productType: 'inapp', autoAcknowledgePurchases: true });
+  const t = await NP.purchaseProduct({ productIdentifier: productId, productType: 'inapp', autoAcknowledgePurchases: true });
   if (!t || String(t.purchaseState) === '0') throw new Error('pending'); // still waiting for Google Play to confirm
 }
-export async function restoreUnlock() {
-  if (!NP) throw new Error('not-ready');
-  try { await NP.restorePurchases(); } catch (e) {}
-  if (!(await ownsUnlock())) throw new Error('none');
-}
-// What Google Play says this account owns: true / false, or null when it could not be checked (offline), so the caller keeps what it knew.
-export async function ownsUnlock() {
+// Every product id this account owns, or null when it could not be checked (offline), so the caller keeps what it knew.
+export async function ownedIds() {
   if (!NP) return null;
   try { return owned((await NP.getPurchases({ productType: 'inapp' })).purchases); } catch (e) { return null; }
 }
-export async function unlockPrice() {
-  if (!NP) return '';
-  try { const { products } = await NP.getProducts({ productIdentifiers: [UNLOCK_ID], productType: 'inapp' }); return (products && products[0] && products[0].priceString) || ''; } catch (e) { return ''; }
+export async function restore() {
+  if (!NP) throw new Error('not-ready');
+  try { await NP.restorePurchases(); } catch (e) {}
+  const o = await ownedIds();
+  if (!o || !o.length) throw new Error('none');
+  return o;
+}
+// { productId: '$1.00' } as Google Play prices them for this person.
+export async function prices(ids) {
+  const out = {};
+  if (!NP) return out;
+  try { const { products } = await NP.getProducts({ productIdentifiers: ids, productType: 'inapp' }); (products || []).forEach((p) => { if (p.priceString) out[p.identifier || p.productIdentifier] = p.priceString; }); } catch (e) {}
+  return out;
 }
 
 /* ---------- ads (Play build only, and never for people who bought the unlock) ---------- */

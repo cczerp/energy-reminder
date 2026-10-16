@@ -45,7 +45,8 @@ jobs:
             python3 -c "import sys;d=open(sys.argv[1],'rb').read();b=d[1];n=0 if b<128 else b&127;L=b if b<128 else int.from_bytes(d[2:2+n],'big');open(sys.argv[2],'wb').write(d[:2+n+L])" "$RUNNER_TEMP/raw.bin" "$RUNNER_TEMP/upload.jks"
             export UPLOAD_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
             # the store (Play) bundle locks the advanced teachings; the free APK built above does not
-            sed -i "s/export const PAYWALL = false;/export const PAYWALL = true;/; s/export const ADS = false;/export const ADS = true;/; s/isTesting: true,/isTesting: false,/" docs/config.js
+            sed -i "s/export const PAYWALL = false;/export const PAYWALL = true;/" docs/config.js
+            # ads stay OFF until publish time. To turn them on, also add: s/export const ADS = false;/export const ADS = true;/; s/isTesting: true,/isTesting: false,/
             npx cap sync android
             (cd android && ./gradlew bundleRelease --no-daemon)
             cp android/app/build/outputs/bundle/release/app-release.aab mindcue.aab

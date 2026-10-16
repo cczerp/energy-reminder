@@ -1,4 +1,4 @@
-import { CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING, SCALE, SCALE_UP } from './content.js';
+import { PACKAGES, EVERYTHING_ID, UNLOCK_AT, pkgFor, CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING, SCALE, SCALE_UP } from './content.js';
 import * as native from './native.js';
 import { BUILD } from './build.js';
 import { PAYWALL, ADS, ADMOB } from './config.js';
@@ -6,7 +6,7 @@ import { PAYWALL, ADS, ADMOB } from './config.js';
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, unlocked: false, tourSeen: false, adPass: null, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, owned: [], tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -98,9 +98,10 @@ const catCount = (gid, day = dayKey()) => {
 };
 const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].goal;
 const canLeave = () => native.isNative && !!S.rem.home;
-const adsOn = () => ADS && native.isNative && !S.unlocked; // ads only in the store build, and never after the purchase
-const passed = (id) => !!S.adPass && S.adPass.day === dayKey() && S.adPass.ids.includes(id); // opened for today by watching an ad
-const locked = (id) => PAYWALL && !S.unlocked && !!exById[id]?.premium && !passed(id); // advanced teachings in a store build, until unlocked
+const ownedPkgs = () => PACKAGES.filter((k) => S.owned.includes(k.pid)).length;
+const hasAll = () => S.owned.includes(EVERYTHING_ID) || ownedPkgs() >= UNLOCK_AT; // the everything purchase, or enough packages (which earns the rest)
+const adsOn = () => ADS && native.isNative && !S.owned.length; // ads only in the store build, and never after any purchase
+const locked = (key) => { const k = pkgFor(key); return PAYWALL && !!k && !hasAll() && !S.owned.includes(k.pid); }; // advanced teachings in a store build, until bought
 const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id) && !locked(id)); // exercises that ring at scheduled times (not leave-home ones)
 const choosing = (gid) => !S.rem.cat[gid].random && schedEx(gid).length > 1; // several to do: the reminder opens the list
 const todayPick = (gid) => (schedEx(gid).length ? planned(gid) : S.rem.cat[gid].ex[0]);
@@ -391,30 +392,35 @@ function Tour() {
   ${sec('Private by design', 'Your notes, logs and goals stay on your phone. There is no account. The free Play Store version shows a few ads on the Practice and Info lists (a one-time purchase removes them and unlocks the advanced teachings); your own entries are never sent to anyone.')}`;
 }
 function Info() {
-  const ids = ['live-dos', 'energy-habits'].map((id) => exById[id]).map((e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.summary)}</div>`)).join('');
+  const lk = (key) => (locked(key) ? '🔒 ' : '');
+  const to = (key, route) => (locked(key) ? `#unlock/${key}` : route);
+  const ids = ['live-dos', 'energy-habits'].map((id) => exById[id]).map((e) => link(to(e.id, `#ex/${e.id}`), `<b>${lk(e.id)}${esc(e.title)}</b><div class="dim sm">${esc(e.summary)}</div>`)).join('');
   return `<h1>Info</h1>
   ${link('#tour', '<b>A quick tour</b><div class="dim sm">What is on each page</div>')}
-  ${link('#laws', '<b>Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>')}
+  ${link(to('info:laws', '#laws'), `<b>${lk('info:laws')}Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>`)}
   ${ids}
-  ${link('#cycles', '<b>Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>')}
-  ${link('#chakras', '<b>Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>')}
+  ${link(to('info:cycles', '#cycles'), `<b>${lk('info:cycles')}Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>`)}
+  ${link(to('info:chakras', '#chakras'), `<b>${lk('info:chakras')}Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>`)}
   ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
 }
-let unlockPrice = '';
+let priceOf = {}; let unlockKey = '';
+const homeOf = (key) => (String(key).startsWith('info:') || ['live-dos', 'energy-habits'].includes(key) ? '#info' : '#practice');
 // Ask Google Play what this account owns, so a refund relocks and a reinstall unlocks. If Play cannot be reached, keep what we knew.
 async function syncUnlock() {
   if (!PAYWALL || !native.isNative) return;
-  const o = await native.ownsUnlock();
-  if (o !== null && o !== S.unlocked) { S.unlocked = o; save(); repaintKeep(); }
-  if (!unlockPrice) { unlockPrice = await native.unlockPrice(); if (unlockPrice && location.hash.startsWith('#unlock')) repaintKeep(); }
+  const o = await native.ownedIds();
+  if (o !== null) { const mine = o.filter((id) => id === EVERYTHING_ID || PACKAGES.some((k) => k.pid === id)); if (mine.slice().sort().join() !== S.owned.slice().sort().join()) { S.owned = mine; save(); repaintKeep(); } }
+  if (!Object.keys(priceOf).length) { priceOf = await native.prices([EVERYTHING_ID, ...PACKAGES.map((k) => k.pid)]); if (Object.keys(priceOf).length && location.hash.startsWith('#unlock')) repaintKeep(); }
 }
-function Unlock(id) {
-  const ex = exById[id];
-  return `${back('#practice')}<h1>Unlock the advanced teachings</h1>
-  ${card('<div class="step" style="font-size:17px">One purchase, once, no subscription. It opens the Psychic centers, the chakra meditations, the Inner journeys (including the past-life journey), and the projections (astral), and it removes the ads.<br><br>Everything else in MindCue stays free.</div>', 'accent')}
-  <button class="btn" data-act="buyunlock">Unlock everything${unlockPrice ? ` · ${esc(unlockPrice)}` : ''}</button>
-  ${adsOn() && ex ? `<button class="btn ghost" data-act="watchad:${id}">Watch a short ad to open “${esc(ex.title)}” for today</button>` : ''}
-  <button class="btn ghost" data-act="restoreunlock">Restore a purchase</button>
+function Unlock(key) {
+  unlockKey = key; const k = pkgFor(key);
+  const n = ownedPkgs();
+  return `${back(homeOf(key))}<h1>${k ? esc(k.name) : 'Advanced teachings'}</h1>
+  ${k ? card(`<div class="step" style="font-size:17px">${esc(k.desc)}</div>`, 'accent') : ''}
+  ${k ? `<button class="btn" data-act="buy:${k.pid}">Unlock “${esc(k.name)}” · ${esc(priceOf[k.pid] || '$1.00')}</button>` : ''}
+  <button class="btn ${k ? 'ghost' : ''}" data-act="buy:${EVERYTHING_ID}">Unlock everything · ${esc(priceOf[EVERYTHING_ID] || '$4.99')}</button>
+  ${card(`<div class="sm"><b>Everything</b> opens every advanced teaching, including every one added later, for one price.<br><br>Prefer to go one at a time? Each package is ${esc(priceOf[k ? k.pid : PACKAGES[0].pid] || '$1.00')}. Own any <b>${UNLOCK_AT}</b> packages and the rest unlock free. You own <b>${n}</b> so far. Starting slow costs a little more than trusting it from the start, and either way you get the whole path.</div>`)}
+  <button class="btn ghost" data-act="restoreunlock">Restore purchases</button>
   <div id="msg" class="warn sm"></div>`;
 }
 const advOk = new Set(); let warnStep = 1;
@@ -706,17 +712,17 @@ function paint() {
     case 'info': h = Info(); break;
     case 'tour': S.tourSeen = true; save(); h = Tour(); break;
     case 'ex': h = locked(a) ? Unlock(a) : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
-    case 'unlock': h = Unlock(a); break;
+    case 'unlock': h = Unlock(decodeURIComponent(a)); break;
     case 'guide': if (locked(a)) { h = Unlock(a); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
     case 'log': h = Log(); break;
     case 'note': h = NoteForm(a); break;
     case 'recall': h = RecallForm(); break;
-    case 'chakras': h = Chakras(); break;
-    case 'cycles': h = Cycles(); break;
+    case 'chakras': h = locked('info:chakras') ? Unlock('info:chakras') : Chakras(); break;
+    case 'cycles': h = locked('info:cycles') ? Unlock('info:cycles') : Cycles(); break;
     case 'about': h = About(); break;
     case 'cat': h = Choose(a); break;
     case 'scale': h = Scale(); break;
-    case 'laws': h = Laws(); break;
+    case 'laws': h = locked('info:laws') ? Unlock('info:laws') : Laws(); break;
     case 'wheel': h = Wheel(); break;
     case 'day': h = Day(a); break;
     case 'settings': h = Settings(); break;
@@ -724,7 +730,7 @@ function paint() {
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'tour' || route === 'laws' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || route === 'unlock' || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
+  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'tour' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#info') || route === 'laws' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#practice') || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   if (adsOn() && ['practice', 'info'].includes(route)) { $('#view').insertAdjacentHTML('beforeend', '<div style="height:70px"></div>'); native.showBanner(ADMOB, 56); } else native.hideBanner(); // a banner only on the Practice and Info lists, never during practice
@@ -824,9 +830,8 @@ document.addEventListener('click', async (e) => {
     case 'wload': wh = JSON.parse(JSON.stringify(S.wheels.find((w) => w.id === a))); paint(); break;
     case 'wdel': if (confirm('Delete this wheel?')) { S.wheels = S.wheels.filter((w) => w.id !== a); if (wh && wh.id === a) wh = null; save(); repaintKeep(); } break;
     case 'tourhide': S.tourSeen = true; save(); repaintKeep(); break;
-    case 'watchad': try { await native.rewardedAd(ADMOB); const t = S.adPass && S.adPass.day === dayKey() ? S.adPass : { day: dayKey(), ids: [] }; if (!t.ids.includes(a)) t.ids.push(a); S.adPass = t; save(); location.hash = `#ex/${a}`; } catch (err) { msg("The ad could not play right now. Check your connection and try again, or watch it to the end."); } break;
-    case 'buyunlock': try { await native.buyUnlock(); S.unlocked = true; save(); native.hideBanner(); location.hash = '#practice'; } catch (err) { const m = String((err && err.message) || err || '').toLowerCase(); msg(m.includes('pending') ? 'The purchase is still pending. It unlocks when Google Play confirms it.' : m.includes('cancel') ? 'Purchase cancelled.' : "Google Play could not complete the purchase. Check your connection and try again."); } break;
-    case 'restoreunlock': try { await native.restoreUnlock(); S.unlocked = true; save(); native.hideBanner(); location.hash = '#practice'; } catch (err) { msg("No purchase found on this Google account."); } break;
+    case 'buy': try { await native.buy(a); if (!S.owned.includes(a)) S.owned.push(a); save(); if (!adsOn()) native.hideBanner(); msg('Unlocked. Thank you!'); location.hash = homeOf(unlockKey); repaintKeep(); } catch (err) { const m = String((err && err.message) || err || '').toLowerCase(); msg(m.includes('pending') ? 'The purchase is still pending. It unlocks when Google Play confirms it.' : m.includes('cancel') ? 'Purchase cancelled.' : 'Google Play could not complete the purchase. Check your connection and try again.'); } break;
+    case 'restoreunlock': try { const o = await native.restore(); S.owned = o.filter((id) => id === EVERYTHING_ID || PACKAGES.some((k) => k.pid === id)); save(); native.hideBanner(); location.hash = '#practice'; repaintKeep(); } catch (err) { msg('No purchase found on this Google account.'); } break;
     case 'warn1': warnStep = 2; paint(); break;
     case 'warn2': advOk.add(a); warnStep = 1; paint(); break;
     case 'saveplaylist': { const v = ($('#playlist')?.value || '').trim(); S.rem.playlist = v; save(); toast(v ? 'Playlist saved' : 'Playlist cleared'); repaintKeep(); break; }

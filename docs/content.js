@@ -726,8 +726,27 @@ CHAKRAS.forEach((c) => EXERCISES.push({
 // The practices that go deeper sit behind two warnings.
 ['c-pituitary', 'c-pineal', 'c-throat', 'c-attune', 'p-mental', 'p-etheric'].forEach((id) => { EXERCISES.find((e) => e.id === id).advanced = true; });
 
-// The advanced teachings that a store build locks behind a one-time unlock.
-EXERCISES.forEach((e) => { if (['centers', 'chakra', 'journey', 'project'].includes(e.cat)) e.premium = true; });
+// The advanced teachings a store build sells. Each package is one $1 purchase in Google Play; EVERYTHING_ID ($4.99) opens all of them,
+// including any package added later. Owning UNLOCK_AT packages opens the rest. To add a teaching: put it in a package (or add a package,
+// then create its product in Play Console). Basic teachings are simply left out of every package and stay free.
+export const EVERYTHING_ID = 'advanced_unlock';
+export const UNLOCK_AT = 8;
+export const PACKAGES = [
+  { pid: 'pkg_chakra', name: 'Chakra treatment', desc: 'The chakra alignment walkthrough, the seven chakra meditations, and the chakra reference.', cats: ['chakra'], info: ['chakras'] },
+  { pid: 'pkg_centers', name: 'Psychic centers', desc: 'The five center meditations: heart, pituitary, pineal, throat, and the combined attunement.', cats: ['centers'] },
+  { pid: 'pkg_journeys', name: 'Inner journeys', desc: 'The staircase, the library of your life, and meeting your guide or higher self.', cats: ['journey'] },
+  { pid: 'pkg_projection', name: 'Projection', desc: 'Mental and etheric projection.', cats: ['project'] },
+  { pid: 'pkg_laws', name: 'Universal laws', desc: 'The universal laws of manifestation: how a steady thought shapes your state.', info: ['laws'] },
+  { pid: 'pkg_cycles', name: 'Life cycles', desc: 'Favorable and unfavorable activities by period.', info: ['cycles'] },
+  { pid: 'pkg_dos', name: "Do's and Don'ts", desc: "The do's and don'ts of living this practice.", ex: ['live-dos'] },
+  { pid: 'pkg_habits', name: 'Supporting habits', desc: 'The habits that keep your energy up.', ex: ['energy-habits'] },
+];
+// The package a lock key belongs to: an exercise id, or 'info:laws' style keys for the reading pages. Unlisted keys are free.
+export const pkgFor = (key) => {
+  if (String(key).startsWith('info:')) return PACKAGES.find((k) => (k.info || []).includes(key.slice(5)));
+  const e = EXERCISES.find((x) => x.id === key);
+  return e ? PACKAGES.find((k) => (k.cats || []).includes(e.cat) || (k.ex || []).includes(e.id)) : undefined;
+};
 
 export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 

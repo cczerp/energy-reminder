@@ -71,12 +71,26 @@ Use the page already in this repository: `docs/privacy.html` (publish it on your
 6. After the app is live on Play, in AdMob **Apps → MindCue → App settings → Link to Google Play**, so the ads are tied to your store listing.
 7. Europe and the UK: in AdMob **Privacy & messaging**, create the consent message ("GDPR") and publish it. Without it, ads may not show there.
 
-## 7. The one-time unlock (do this before going public)
-1. **Monetize → Products → In-app products → Create product.**
-2. **Product ID:** `advanced_unlock` (cannot change later). Name: "Advanced teachings". Description: "One-time purchase that unlocks the Psychic centers, chakra meditations, inner journeys and projections, and removes ads."
-3. **Price:** pick your one-time price. It is a **one-time** product (not a subscription). **Activate** it.
-4. You also need a **payments profile** (Monetize → Setup) if you haven't made one. It asks for your tax and bank details. Only you can do this.
-5. The Unlock and Restore buttons are already connected to Google Play Billing using the ID `advanced_unlock`. The product only exists in Play once a build with billing has been uploaded, so upload the bundle first. To test a purchase, add a license-testing Gmail (Setup → License testing) and use the internal test.
+## 7. The one-time purchases (do this before going public)
+Upload the bundle to a test track first: Play only lets you create the products once a build with billing is uploaded.
+For each product: **Monetize → Products → In-app products → Create product**. Product ID cannot change later. One-time products, then **Activate**.
+
+| Product ID | Name | Price |
+|---|---|---|
+| `advanced_unlock` | Everything (all advanced teachings, now and later) | $4.99 |
+| `pkg_chakra` | Chakra treatment | $1.00 |
+| `pkg_centers` | Psychic centers | $1.00 |
+| `pkg_journeys` | Inner journeys | $1.00 |
+| `pkg_projection` | Projection | $1.00 |
+| `pkg_laws` | Universal laws | $1.00 |
+| `pkg_cycles` | Life cycles | $1.00 |
+| `pkg_dos` | Do's and Don'ts | $1.00 |
+| `pkg_habits` | Supporting habits | $1.00 |
+
+- Owning any 8 packages unlocks the rest automatically (`UNLOCK_AT` in `docs/content.js`). Everything also covers packages added later.
+- Any purchase removes ads. Ads are off in the Play bundle for now (see the workflow note); turn them on when you publish.
+- You also need a **payments profile** (Monetize → Setup). Only you can do this.
+- Test a real purchase with a license-testing Gmail (Setup → License testing) on the internal test.
 
 ## 8. Going public
 Production → Create release → upload the same build (or newer) → Google reviews it (can take days). Fill any red items Play lists first.
