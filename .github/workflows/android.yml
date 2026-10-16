@@ -44,18 +44,29 @@ jobs:
             printf %s "${C:0:$(( ${#C} / 4 * 4 ))}" | base64 -d > "$RUNNER_TEMP/raw.bin"
             python3 -c "import sys;d=open(sys.argv[1],'rb').read();b=d[1];n=0 if b<128 else b&127;L=b if b<128 else int.from_bytes(d[2:2+n],'big');open(sys.argv[2],'wb').write(d[:2+n+L])" "$RUNNER_TEMP/raw.bin" "$RUNNER_TEMP/upload.jks"
             export UPLOAD_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
-            # the store (Play) bundle locks the advanced teachings; the free APK built above does not
-            sed -i "s/export const PAYWALL = false;/export const PAYWALL = true;/; s/export const ADS = false;/export const ADS = true;/" docs/config.js
-            # ads are in TEST mode (Google sample ads) until publish: to serve real ads also add s/isTesting: true,/isTesting: false,/ to the sed above
+            # Two Play bundles per run, both lock the advanced teachings (the free APK built above does not):
+            #  mindcue.aab      no ads: for the closed test with everyone (version code = run x 2)
+            #  mindcue-ads.aab  ads in TEST mode (Google sample ads): for the developer's own test track (run x 2 + 1)
+            # At publish time, upload the no-ads bundle again with ads on and "isTesting: false" (see docs/config.js).
+            sed -i "s/export const PAYWALL = false;/export const PAYWALL = true;/" docs/config.js
             npx cap sync android
-            (cd android && ./gradlew bundleRelease --no-daemon)
+            (cd android && VERSION_CODE=$(( ${{ github.run_number }} * 2 )) ./gradlew bundleRelease --no-daemon)
             cp android/app/build/outputs/bundle/release/app-release.aab mindcue.aab
+            sed -i "s/export const ADS = false;/export const ADS = true;/" docs/config.js
+            npx cap sync android
+            (cd android && VERSION_CODE=$(( ${{ github.run_number }} * 2 + 1 )) ./gradlew bundleRelease --no-daemon)
+            cp android/app/build/outputs/bundle/release/app-release.aab mindcue-ads.aab
+            git checkout docs/config.js
           else
             echo "No upload key secret; skipping the Play bundle."
           fi
       - uses: actions/upload-artifact@v4
         if: hashFiles('mindcue.aab') != ''
-        with: { name: mindcue-aab, path: mindcue.aab }
+        with:
+          name: mindcue-aab
+          path: |
+            mindcue.aab
+            mindcue-ads.aab
       - name: List the web files packed into the APK
         run: unzip -l mindcue.apk | grep "assets/public/"
       - uses: actions/upload-artifact@v4
@@ -81,11 +92,11 @@ jobs:
 
           Printable one-page guide with a QR code: https://github.com/${GITHUB_REPOSITORY}/blob/main/share/MindCue-install-guide.pdf
 
-          (mindful.apk is the same file under its old name, so older links still work. mindcue.aab is the Google Play upload file - ignore it unless you publish the app.)
+          (mindful.apk is the same file under its old name, so older links still work. the .aab files are Google Play upload files - ignore them unless you publish the app.)
 
           _Built from ${GITHUB_REF_NAME} (${GITHUB_SHA:0:7})._
           NOTES
-          EXTRA=""; [ -f mindcue.aab ] && EXTRA="mindcue.aab"
+          EXTRA=""; [ -f mindcue.aab ] && EXTRA="mindcue.aab mindcue-ads.aab"
           gh release create latest-apk mindcue.apk mindtap.apk mindful.apk $EXTRA --target "$GITHUB_SHA" --latest \
             --title "MindCue build ${{ github.run_number }}" --notes-file notes.md
 
