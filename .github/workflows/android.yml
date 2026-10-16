@@ -45,14 +45,15 @@ jobs:
             python3 -c "import sys;d=open(sys.argv[1],'rb').read();b=d[1];n=0 if b<128 else b&127;L=b if b<128 else int.from_bytes(d[2:2+n],'big');open(sys.argv[2],'wb').write(d[:2+n+L])" "$RUNNER_TEMP/raw.bin" "$RUNNER_TEMP/upload.jks"
             export UPLOAD_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
             # One Play bundle per run (mindcue.aab), locked and with billing. Whether it has ads is set by the file play-ads.txt:
-            #   off   no ad library at all (matches a Play listing that says no ads): for testers
+            #   beta  EVERYTHING UNLOCKED and no ad library at all: for the closed test (testers get all content free, no ads)
+            #   off   locked and billing on, but no ad library at all (matches a Play listing that says no ads)
             #   test  ads on, Google sample ads only: for your own phone
             #   live  ads on, real ads: for the version you publish
             # Version code = run x 2, so it always rises (earlier uploads used run x 2 and run x 2 + 1).
             MODE=$(tr -d ' \r\n\t' < play-ads.txt 2>/dev/null || true); [ -n "$MODE" ] || MODE=off
             echo "Play bundle ads mode: $MODE"; echo "PLAY_MODE=$MODE" >> "$GITHUB_ENV"
-            sed -i "s/export const PAYWALL = false;/export const PAYWALL = true;/" docs/config.js
-            if [ "$MODE" = off ]; then
+            if [ "$MODE" != beta ]; then sed -i "s/export const PAYWALL = false;/export const PAYWALL = true;/" docs/config.js; fi
+            if [ "$MODE" = off ] || [ "$MODE" = beta ]; then
               # the ad library is taken out completely, so the manifest has no ads permission or ad ids
               npm uninstall @capacitor-community/admob
               sed -i '/AdMob application id/d; /com\.google\.android\.gms\.ads/d; /permission\.AD_ID/d' android/app/src/main/AndroidManifest.xml
@@ -63,7 +64,7 @@ jobs:
             npx cap sync android
             (cd android && VERSION_CODE=$(( ${{ github.run_number }} * 2 )) ./gradlew bundleRelease --no-daemon)
             cp android/app/build/outputs/bundle/release/app-release.aab mindcue.aab
-            if [ "$MODE" = off ] && unzip -p mindcue.aab base/manifest/AndroidManifest.xml | strings | grep -qiE "AD_ID|gms\.ads|admob|mobileads"; then
+            if { [ "$MODE" = off ] || [ "$MODE" = beta ]; } && unzip -p mindcue.aab base/manifest/AndroidManifest.xml | strings | grep -qiE "AD_ID|gms\.ads|admob|mobileads"; then
               echo "The no-ads bundle still mentions ads in its manifest; not publishing it."; rm -f mindcue.aab; exit 1
             fi
           else
