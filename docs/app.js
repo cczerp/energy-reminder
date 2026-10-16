@@ -6,7 +6,7 @@ import { PAYWALL, ADS, ADMOB } from './config.js';
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, owned: [], tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, owned: [], adPass: null, tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -101,7 +101,8 @@ const canLeave = () => native.isNative && !!S.rem.home;
 const ownedPkgs = () => PACKAGES.filter((k) => S.owned.includes(k.pid)).length;
 const hasAll = () => S.owned.includes(EVERYTHING_ID) || ownedPkgs() >= UNLOCK_AT; // the everything purchase, or enough packages (which earns the rest)
 const adsOn = () => ADS && native.isNative && !S.owned.length; // ads only in the store build, and never after any purchase
-const locked = (key) => { const k = pkgFor(key); return PAYWALL && !!k && !hasAll() && !S.owned.includes(k.pid); }; // advanced teachings in a store build, until bought
+const passed = (id) => !!S.adPass && S.adPass.day === dayKey() && S.adPass.ids.includes(id); // a meditation opened for today by watching an ad (never the Info pages)
+const locked = (key) => { const k = pkgFor(key); return PAYWALL && !!k && !hasAll() && !S.owned.includes(k.pid) && !passed(key); }; // advanced teachings in a store build, until bought
 const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id) && !locked(id)); // exercises that ring at scheduled times (not leave-home ones)
 const choosing = (gid) => !S.rem.cat[gid].random && schedEx(gid).length > 1; // several to do: the reminder opens the list
 const todayPick = (gid) => (schedEx(gid).length ? planned(gid) : S.rem.cat[gid].ex[0]);
@@ -420,6 +421,7 @@ function Unlock(key) {
   ${k ? `<button class="btn" data-act="buy:${k.pid}">Unlock “${esc(k.name)}” · ${esc(priceOf[k.pid] || '$1.00')}</button>` : ''}
   <button class="btn ${k ? 'ghost' : ''}" data-act="buy:${EVERYTHING_ID}">Unlock everything · ${esc(priceOf[EVERYTHING_ID] || '$4.99')}</button>
   ${card(`<div class="sm"><b>Everything</b> opens every advanced teaching, including every one added later, for one price.<br><br>Prefer to go one at a time? Each package is ${esc(priceOf[k ? k.pid : PACKAGES[0].pid] || '$1.00')}. Own any <b>${UNLOCK_AT}</b> packages and the rest unlock free. You own <b>${n}</b> so far. Starting slow costs a little more than trusting it from the start, and either way you get the whole path.</div>`)}
+  ${adsOn() && k && homeOf(key) === '#practice' ? `<button class="btn ghost" data-act="watchad:${key}">Watch a short ad to open this one for today</button>` : ''}
   <button class="btn ghost" data-act="restoreunlock">Restore purchases</button>
   <div id="msg" class="warn sm"></div>`;
 }
@@ -830,6 +832,7 @@ document.addEventListener('click', async (e) => {
     case 'wload': wh = JSON.parse(JSON.stringify(S.wheels.find((w) => w.id === a))); paint(); break;
     case 'wdel': if (confirm('Delete this wheel?')) { S.wheels = S.wheels.filter((w) => w.id !== a); if (wh && wh.id === a) wh = null; save(); repaintKeep(); } break;
     case 'tourhide': S.tourSeen = true; save(); repaintKeep(); break;
+    case 'watchad': try { await native.rewardedAd(ADMOB); const t = S.adPass && S.adPass.day === dayKey() ? S.adPass : { day: dayKey(), ids: [] }; if (!t.ids.includes(a)) t.ids.push(a); S.adPass = t; save(); location.hash = `#ex/${a}`; } catch (err) { msg('The ad could not play right now. Check your connection and try again, or watch it to the end.'); } break;
     case 'buy': try { await native.buy(a); if (!S.owned.includes(a)) S.owned.push(a); save(); if (!adsOn()) native.hideBanner(); msg('Unlocked. Thank you!'); location.hash = homeOf(unlockKey); repaintKeep(); } catch (err) { const m = String((err && err.message) || err || '').toLowerCase(); msg(m.includes('pending') ? 'The purchase is still pending. It unlocks when Google Play confirms it.' : m.includes('cancel') ? 'Purchase cancelled.' : 'Google Play could not complete the purchase. Check your connection and try again.'); } break;
     case 'restoreunlock': try { const o = await native.restore(); S.owned = o.filter((id) => id === EVERYTHING_ID || PACKAGES.some((k) => k.pid === id)); save(); native.hideBanner(); location.hash = '#practice'; repaintKeep(); } catch (err) { msg('No purchase found on this Google account.'); } break;
     case 'warn1': warnStep = 2; paint(); break;
