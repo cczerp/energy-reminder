@@ -3,7 +3,7 @@ name: Build Android app
 on:
   push:
     branches: [main, 'claude/**']
-    paths: ['docs/**', 'android/**', 'package*.json', 'capacitor.config.json', '.github/workflows/android.yml']
+    paths: ['play-ads.txt', 'docs/**', 'android/**', 'package*.json', 'capacitor.config.json', '.github/workflows/android.yml']
   workflow_dispatch:
 
 permissions:
@@ -44,28 +44,28 @@ jobs:
             printf %s "${C:0:$(( ${#C} / 4 * 4 ))}" | base64 -d > "$RUNNER_TEMP/raw.bin"
             python3 -c "import sys;d=open(sys.argv[1],'rb').read();b=d[1];n=0 if b<128 else b&127;L=b if b<128 else int.from_bytes(d[2:2+n],'big');open(sys.argv[2],'wb').write(d[:2+n+L])" "$RUNNER_TEMP/raw.bin" "$RUNNER_TEMP/upload.jks"
             export UPLOAD_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
-            # Two Play bundles per run, both lock the advanced teachings (the free APK built above does not):
-            #  mindcue.aab      NO ad library at all (matches a Play listing that says no ads): for the closed test with everyone (version code = run x 2)
-            #  mindcue-ads.aab  ads in TEST mode (Google sample ads): for the developer's own test track (run x 2 + 1)
-            # At publish time, upload the no-ads bundle again with ads on and "isTesting: false" (see docs/config.js).
+            # One Play bundle per run (mindcue.aab), locked and with billing. Whether it has ads is set by the file play-ads.txt:
+            #   off   no ad library at all (matches a Play listing that says no ads): for testers
+            #   test  ads on, Google sample ads only: for your own phone
+            #   live  ads on, real ads: for the version you publish
+            # Version code = run x 2, so it always rises (earlier uploads used run x 2 and run x 2 + 1).
+            MODE=$(tr -d ' \r\n\t' < play-ads.txt 2>/dev/null || true); [ -n "$MODE" ] || MODE=off
+            echo "Play bundle ads mode: $MODE"; echo "PLAY_MODE=$MODE" >> "$GITHUB_ENV"
             sed -i "s/export const PAYWALL = false;/export const PAYWALL = true;/" docs/config.js
-            # --- no-ads bundle: the ad library is taken out completely, so its manifest has no ads permission or ad ids ---
-            npm uninstall @capacitor-community/admob
-            sed -i '/AdMob application id/d; /com\.google\.android\.gms\.ads/d; /permission\.AD_ID/d' android/app/src/main/AndroidManifest.xml
+            if [ "$MODE" = off ]; then
+              # the ad library is taken out completely, so the manifest has no ads permission or ad ids
+              npm uninstall @capacitor-community/admob
+              sed -i '/AdMob application id/d; /com\.google\.android\.gms\.ads/d; /permission\.AD_ID/d' android/app/src/main/AndroidManifest.xml
+            else
+              sed -i "s/export const ADS = false;/export const ADS = true;/" docs/config.js
+              if [ "$MODE" = live ]; then sed -i "s/isTesting: true,/isTesting: false,/" docs/config.js; fi
+            fi
             npx cap sync android
             (cd android && VERSION_CODE=$(( ${{ github.run_number }} * 2 )) ./gradlew bundleRelease --no-daemon)
             cp android/app/build/outputs/bundle/release/app-release.aab mindcue.aab
-            if unzip -p mindcue.aab base/manifest/AndroidManifest.xml | strings | grep -qiE "AD_ID|gms\.ads|admob|mobileads"; then
+            if [ "$MODE" = off ] && unzip -p mindcue.aab base/manifest/AndroidManifest.xml | strings | grep -qiE "AD_ID|gms\.ads|admob|mobileads"; then
               echo "The no-ads bundle still mentions ads in its manifest; not publishing it."; rm -f mindcue.aab; exit 1
             fi
-            # --- ads bundle (test ads): put the ad library and its manifest lines back ---
-            git checkout android package.json package-lock.json
-            npm ci
-            sed -i "s/export const ADS = false;/export const ADS = true;/" docs/config.js
-            npx cap sync android
-            (cd android && VERSION_CODE=$(( ${{ github.run_number }} * 2 + 1 )) ./gradlew bundleRelease --no-daemon)
-            cp android/app/build/outputs/bundle/release/app-release.aab mindcue-ads.aab
-            git checkout docs/config.js
           else
             echo "No upload key secret; skipping the Play bundle."
           fi
@@ -73,9 +73,7 @@ jobs:
         if: hashFiles('mindcue.aab') != ''
         with:
           name: mindcue-aab
-          path: |
-            mindcue.aab
-            mindcue-ads.aab
+          path: mindcue.aab
       - name: List the web files packed into the APK
         run: unzip -l mindcue.apk | grep "assets/public/"
       - uses: actions/upload-artifact@v4
@@ -101,11 +99,11 @@ jobs:
 
           Printable one-page guide with a QR code: https://github.com/${GITHUB_REPOSITORY}/blob/main/share/MindCue-install-guide.pdf
 
-          (mindful.apk is the same file under its old name, so older links still work. the .aab files are Google Play upload files - ignore them unless you publish the app.)
+          (mindful.apk is the same file under its old name, so older links still work. mindcue.aab is the Google Play upload file (ads: $PLAY_MODE) - ignore it unless you publish the app.)
 
           _Built from ${GITHUB_REF_NAME} (${GITHUB_SHA:0:7})._
           NOTES
-          EXTRA=""; [ -f mindcue.aab ] && EXTRA="mindcue.aab mindcue-ads.aab"
+          EXTRA=""; [ -f mindcue.aab ] && EXTRA="mindcue.aab"
           gh release create latest-apk mindcue.apk mindtap.apk mindful.apk $EXTRA --target "$GITHUB_SHA" --latest \
             --title "MindCue build ${{ github.run_number }}" --notes-file notes.md
 
