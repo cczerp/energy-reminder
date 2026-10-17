@@ -907,7 +907,7 @@ export const EVERYTHING_ID = 'advanced_unlock';
 export const UNLOCK_AT = 8;
 export const PACKAGES = [
   { pid: 'pkg_chakra', name: 'Chakra treatment', desc: 'The chakra alignment walkthrough and the seven chakra meditations. The chakra reference and its teaching stay free.', cats: ['chakra'], learn: [] },
-  { pid: 'pkg_gateway', name: 'Gateway experience', desc: 'The Army assessment of the Gateway Process: the model of consciousness and energy, the focus levels, and the tools used at them.', learn: ['gateway'] },
+  { pid: 'pkg_gateway', name: 'Gateway experience', desc: 'The Army assessment of the Gateway Process: the model of consciousness and energy, the focus levels, and the tools used at them.', learn: ['gateway'], price: '$4.99' },
   { pid: 'pkg_assessment', name: 'The Army assessment of Gateway', desc: 'The 1983 US Army assessment of the Gateway Process: its purpose, the model of consciousness and energy, and the phased path it recommends.', learn: ['assessment'] },
   { pid: 'pkg_attention', name: 'Attention', desc: 'The attention lesson and its ten practices: zoom lens, whole scene, narrow and open switch, space sense, landmark route, mental rotation, body in space, two viewpoints, obstacle path, cue then widen.', cats: ['attention'], info: ['attn'] },
   { pid: 'pkg_centers', name: 'Psychic centers', desc: 'The five center meditations: heart, pituitary, pineal, throat, and the combined attunement.', cats: ['centers'] },

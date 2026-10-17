@@ -433,9 +433,9 @@ function Unlock(key) {
   const n = ownedPkgs();
   return `${back(homeOf(key))}<h1>${k ? esc(k.name) : 'Advanced teachings'}</h1>
   ${k ? card(`<div class="step" style="font-size:17px">${esc(k.desc)}</div>`, 'accent') : ''}
-  ${k ? `<button class="btn" data-act="buy:${k.pid}">Unlock “${esc(k.name)}” · ${esc(priceOf[k.pid] || '$1.00')}</button>` : ''}
+  ${k ? `<button class="btn" data-act="buy:${k.pid}">Unlock “${esc(k.name)}” · ${esc(priceOf[k.pid] || k.price || '$1.00')}</button>` : ''}
   <button class="btn ${k ? 'ghost' : ''}" data-act="buy:${EVERYTHING_ID}">Unlock everything · ${esc(priceOf[EVERYTHING_ID] || '$4.99')}</button>
-  ${card(`<div class="sm"><b>Everything</b> opens every advanced teaching, including every one added later, for one price.<br><br>Prefer to go one at a time? Each package is ${esc(priceOf[k ? k.pid : PACKAGES[0].pid] || '$1.00')}. Own any <b>${UNLOCK_AT}</b> packages and the rest unlock free. You own <b>${n}</b> so far. Starting slow costs a little more than trusting it from the start, and either way you get the whole path.</div>`)}
+  ${card(`<div class="sm"><b>Everything</b> opens every advanced teaching, including every one added later, for one price.<br><br>Prefer to go one at a time? Each teaching is priced on its own, and its practices come with it. Own any <b>${UNLOCK_AT}</b> packages and the rest unlock free. You own <b>${n}</b> so far. Starting slow costs a little more than trusting it from the start, and either way you get the whole path.</div>`)}
   ${adsOn() && k && homeOf(key) === '#practice' ? `<button class="btn ghost" data-act="watchad:${key}">Watch a short ad to open this one for today</button>` : ''}
   <button class="btn ghost" data-act="restoreunlock">Restore purchases</button>
   <div id="msg" class="warn sm"></div>`;
