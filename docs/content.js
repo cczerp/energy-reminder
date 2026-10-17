@@ -802,7 +802,8 @@ CHAKRAS.forEach((c) => EXERCISES.push({
 export const EVERYTHING_ID = 'advanced_unlock';
 export const UNLOCK_AT = 8;
 export const PACKAGES = [
-  { pid: 'pkg_chakra', name: 'Chakra treatment', desc: 'The chakra alignment walkthrough, the seven chakra meditations, and the chakra reference.', cats: ['chakra'], info: ['chakras'] },
+  { pid: 'pkg_chakra', name: 'Chakra treatment', desc: 'The chakra alignment walkthrough and the seven chakra meditations. The chakra reference and its teaching stay free.', cats: ['chakra'], learn: [] },
+  { pid: 'pkg_attention', name: 'Attention', desc: 'The attention lesson and its six practices: single-object hold, zoom lens, whole scene, narrow and open switch, space sense, single-task moment.', cats: ['attention'], info: ['attn'] },
   { pid: 'pkg_centers', name: 'Psychic centers', desc: 'The five center meditations: heart, pituitary, pineal, throat, and the combined attunement.', cats: ['centers'] },
   { pid: 'pkg_journeys', name: 'Inner journeys', desc: 'The staircase, the library of your life, and meeting your guide or higher self.', cats: ['journey'] },
   { pid: 'pkg_projection', name: 'Projection', desc: 'Mental and etheric projection.', cats: ['project'] },
@@ -813,7 +814,7 @@ export const PACKAGES = [
 ];
 // The package a lock key belongs to: an exercise id, or 'info:laws' style keys for the reading pages. Unlisted keys are free.
 export const pkgFor = (key) => {
-  if (String(key).startsWith('cat:')) return PACKAGES.find((k) => (k.cats || []).includes(key.slice(4)));
+  if (String(key).startsWith('cat:')) return PACKAGES.find((k) => (k.learn || k.cats || []).includes(key.slice(4)));
   if (String(key).startsWith('info:')) return PACKAGES.find((k) => (k.info || []).includes(key.slice(5)));
   const e = EXERCISES.find((x) => x.id === key);
   return e ? PACKAGES.find((k) => (k.cats || []).includes(e.cat) || (k.ex || []).includes(e.id)) : undefined;
@@ -827,7 +828,8 @@ export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 export const REMIND_GROUPS = [
   // pool = exercises a timed reminder can ask for; leave = optional exercises that only fire when you leave home; ids = everything in the category
   { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], both: ['obs-room'], ids: ['obs-room', 'obs-stairs'] },
-  { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold', 'attn-hold', 'attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-single'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger', 'attn-hold', 'attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-single'] },
+  { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger'] },
+  { id: 'attn', cat: 'attention', label: 'Attention', gate: 'attn', pool: ['attn-hold', 'attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-single'], leave: [], ids: ['attn-hold', 'attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-single'] },
   { id: 'med', cat: 'meditate', label: 'Routine meditation', simple: true, pool: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
   { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-practice', 'med-cloud'], leave: [], ids: ['med-practice', 'med-color', 'med-sound', 'med-cloud'] },
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'] },
@@ -842,6 +844,7 @@ export const REMIND_DEFAULTS = {
   cat: {
     obs: { on: true, ex: ['obs-room', 'obs-stairs'], goal: 1, n: 1, timing: 'random', times: [720], choose: true },
     conc: { on: true, ex: ['conc-multiply', 'conc-poem', 'conc-stranger'], goal: 1, n: 1, timing: 'even', times: [780], choose: true },
+    attn: { on: false, ex: ['attn-hold'], goal: 1, n: 1, timing: 'even', times: [600], choose: true },
     med: { on: true, ex: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], goal: 1, n: 1, timing: 'even', times: [480], choose: true },
     medp: { on: true, ex: ['med-practice', 'med-cloud'], goal: 1, n: 1, timing: 'even', times: [1020], choose: true },
     bed: { on: true, ex: ['obs-recall'], goal: 1, n: 1, timing: 'set', times: [1230], choose: true },

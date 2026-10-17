@@ -79,6 +79,7 @@ For each product: **Monetize → Products → In-app products → Create product
 |---|---|---|
 | `advanced_unlock` | Everything (all advanced teachings, now and later) | $4.99 |
 | `pkg_chakra` | Chakra treatment | $1.00 |
+| `pkg_attention` | Attention | $1.00 |
 | `pkg_centers` | Psychic centers | $1.00 |
 | `pkg_journeys` | Inner journeys | $1.00 |
 | `pkg_projection` | Projection | $1.00 |

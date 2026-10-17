@@ -66,7 +66,7 @@ function streak() {
 // Remembers what today's plan was, so the day can be reviewed later even if settings change.
 function snapPlan() {
   const k = dayKey(); const p = { cats: {}, recall: false };
-  REMIND_GROUPS.forEach((g) => { if (S.rem.cat[g.id].on) p.cats[g.id] = S.rem.cat[g.id].goal; });
+  REMIND_GROUPS.forEach((g) => { if (S.rem.cat[g.id].on && ready(g)) p.cats[g.id] = S.rem.cat[g.id].goal; });
   if (!S.days) S.days = {};
   if (JSON.stringify(S.days[k]) !== JSON.stringify(p)) { S.days[k] = p; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 }
@@ -107,6 +107,7 @@ const passed = (id) => !!S.adPass && S.adPass.day === dayKey() && S.adPass.ids.i
 const locked = (key) => { const k = pkgFor(key); return PAYWALL && !!k && !hasAll() && !S.owned.includes(k.pid) && !passed(key); }; // advanced teachings in a store build, until bought
 const gated = (id) => { const e = exById[id]; return !!(e && e.gate && !(S.learned || {})[e.gate]); }; // attention practices wait until the lesson's switch is on
 const off = (id) => locked(id) || gated(id);
+const ready = (g) => !g.gate || !!(S.learned || {})[g.gate]; // a group with a gate stays out of Today and Settings until its Info switch is on
 const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id) && !off(id)); // exercises that ring at scheduled times (not leave-home ones)
 const choosing = (gid) => !S.rem.cat[gid].random && schedEx(gid).length > 1; // several to do: the reminder opens the list
 const todayPick = (gid) => (schedEx(gid).length ? planned(gid) : S.rem.cat[gid].ex[0]);
@@ -328,7 +329,7 @@ function Today() {
   const nudge = nudgePool()[dayNum() % nudgePool().length];
   const n = streak();
   const next = {}; occurrences(now).forEach((o) => { if (o.cat && o.id !== 'recall' && o.at > now && !next[o.cat]) next[o.cat] = o.at; });
-  const on = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on);
+  const on = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on && ready(g));
   const pending = on.filter((g) => !catDone(g.id));
   const rows = pending.map((g) => {
     const c = S.rem.cat[g.id]; const cnt = catCount(g.id);
@@ -406,7 +407,7 @@ function Info() {
   return `<h1>Info</h1>
   ${link('#tour', '<b>A quick tour</b><div class="dim sm">What is on each page</div>')}
   ${link('#why', '<b>Why these five</b><div class="dim sm">Observe, hold, settle, steady, rest: what everything here builds on</div>')}
-  ${link('#attn', '<b>Attention: narrow and wide</b><div class="dim sm">Learn the idea, then switch the practices on</div>')}
+  ${link(to('info:attn', '#attn'), `<b>${lk('info:attn')}Attention: narrow and wide</b><div class="dim sm">Learn the idea, then switch the practices on</div>`)}
   ${link(to('info:laws', '#laws'), `<b>${lk('info:laws')}Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>`)}
   ${ids}
   <h2>Teachings for the practices</h2>
@@ -456,7 +457,7 @@ function Practice() {
   <h2>Energy &amp; healing meditations</h2>
   ${cats('energy', knowledge)}
   <h2>Attention</h2>
-  ${(S.learned || {}).attn ? cats('attention') : link('#attn', '<b>Attention practices</b><div class="dim sm">Learn the idea first, then switch them on</div>')}
+  ${(S.learned || {}).attn ? cats('attention') : link('#attn', `<b>${locked('info:attn') ? '🔒 ' : ''}Attention practices</b><div class="dim sm">Learn the idea first, then switch them on</div>`)}
   <h2>Esoteric meditations</h2>
   ${ids(['j-library', 'j-stair', 'j-guide', 'p-mental', 'p-etheric'])}
   <h2>Chakra meditations</h2>
@@ -533,7 +534,7 @@ function Attn() {
   const on = !!(S.learned || {}).attn;
   return `${back('#info')}<h1>Attention: narrow and wide</h1><p class="dim">${esc(ATTN_LESSON.intro)}</p>
   ${ATTN_LESSON.parts.map((p) => card(`<b>${esc(p.h)}</b><div class="sm" style="margin-top:4px">${esc(p.t)}</div>`)).join('')}
-  ${card(`${check(on, '<b class="ttl">I have learned this. Turn on the practices</b>', 'learnattn', on ? 'On. The practices are in Practice and can be picked as Concentration goals in Settings.' : 'Off until you switch it on. Then six attention practices appear.')}
+  ${card(`${check(on, '<b class="ttl">I have learned this. Turn on the practices</b>', 'learnattn', on ? 'On. The six practices are in Practice, and an Attention block with reminders is now in Settings.' : 'Off until you switch it on. Then six attention practices appear in Practice, and an Attention block appears in Settings.')}
 `, 'accent')}
   ${on ? EXERCISES.filter((e) => e.cat === 'attention').map((e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`)).join('') : ''}`;
 }
@@ -604,7 +605,7 @@ function FastLesson() {
 function Settings() {
   const R = S.rem;
   const fmtMin = (v) => fmtTime(Math.floor(v / 60), v % 60);
-  const groups = REMIND_GROUPS.map((g) => {
+  const groups = REMIND_GROUPS.filter(ready).map((g) => {
     const c = R.cat[g.id];
     const nightly = '';
     if (g.simple) return card(`${head(c.on, `<b>${g.label}</b>`, 'Each reminder opens a list of meditations to choose from.', `con:${g.id}`, g.id)}${setOpen[g.id] ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
@@ -752,9 +753,9 @@ function paint() {
     case 'practice': h = Practice(); break;
     case 'info': h = Info(); break;
     case 'tour': S.tourSeen = true; save(); h = Tour(); break;
-    case 'ex': h = gated(a) ? Attn() : locked(a) ? Unlock(a) : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
+    case 'ex': h = locked(a) ? Unlock(a) : gated(a) ? Attn() : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
     case 'unlock': h = Unlock(decodeURIComponent(a)); break;
-    case 'guide': if (gated(a)) { h = Attn(); break; } if (locked(a)) { h = Unlock(a); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
+    case 'guide': if (locked(a)) { h = Unlock(a); break; } if (gated(a)) { h = Attn(); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
     case 'log': h = Log(); break;
     case 'note': h = NoteForm(a); break;
     case 'recall': h = RecallForm(); break;
@@ -765,7 +766,7 @@ function paint() {
     case 'scale': h = Scale(); break;
     case 'why': h = Why(); break;
     case 'learn': h = locked('cat:' + a) ? Unlock('cat:' + a) : Learn(a); break;
-    case 'attn': h = Attn(); break;
+    case 'attn': h = locked('info:attn') ? Unlock('info:attn') : Attn(); break;
     case 'fast': h = locked('info:fast') ? Unlock('info:fast') : FastLesson(); break;
     case 'laws': h = locked('info:laws') ? Unlock('info:laws') : Laws(); break;
     case 'wheel': h = Wheel(); break;
