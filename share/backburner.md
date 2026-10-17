@@ -2,6 +2,35 @@
 
 Things parked on purpose. Nothing here is lost; it just is not in the app yet. Add to the top, move to done when handled.
 
+## Sources owed for restored claims (parked 2026-10-17)
+
+The user has these sources and will pull them up later. Until then the claims stay in the teachings as written. Each needs a citation (Credits line, or a Sources block like the one on "Energy and the body's fields").
+
+| # | Claim | Where |
+|---|---|---|
+| 1 | Deliberate noticing improves memory for detail | Observation teaching |
+| 2 | Regular meditation linked to calmer stress responses and steadier attention | Meditation teaching; Why these five |
+| 3 | Naming a feeling tends to soften it | Emotional control teaching |
+| 4 | Sleep consolidates memory and resets mood | Bedtime teaching; Why these five |
+| 5 | Hypnosis research describes narrowed, absorbed focus as central to induction | Attention lesson |
+| 6 | Sleep, exercise and rest set the ceiling for how well you can direct and hold attention | Attention lesson |
+| 7 | Breath and visualization practices bring calm, focus and renewed energy | Energy & healing teaching |
+| 8 | Reframing, which counterbalance resembles, has good support for improving mood | Counterbalance teaching |
+| 9 | Focused body attention with a sound or rhythm settles the nervous system | Chakra alignment teaching |
+| 10 | Guided imagery is a well-studied relaxation tool | Inner journeys teaching |
+
+Rule from the user: ask whether they have a source for any claim that hits a safety flag; if they do not have it at hand it will not take much to obtain. No disclaimers in the teachings; spiritual material is credited as "taught from" the teachers in Credits.
+
+Also still to credit: older health claims in practice text (colds and germs, Self-Healing conditions, Headache Relief).
+
+## Source notes
+
+- Gateway tapes: NOT included, no links to copies. They are Monroe Institute commercial recordings (copyrighted); an archive.org download does not give redistribution rights. A link to the Institute's own store is fine if wanted later.
+- Unlock rule: the buy-8-to-unlock-the-rest rule was removed (2026-10-17). Packages are bought one at a time, or all but the CIA assessment via Everything. Decide later whether to bring a threshold back.
+
+- The declassified McDonnell Gateway assessment copy (CIA-RDP96-00788R001700210016-5) jumps from paragraph 34 to 37; paragraphs 35 and 36 are not in the file we were given. Get a complete copy if they matter.
+- Teachings built from it: Meditation, hypnosis and biofeedback; Sound, brainwaves and Hemi-Sync (both free, under Meditation); Kundalini, resonance and sound (under Chakra alignment, free); Color, light and the energy bar (under Energy & healing, free); out-of-body cards in Projection; and The CIA assessment of the Gateway Experience (GWE), one lesson at $4.99, sold separately and not part of Everything. The separate Gateway process lesson was removed to save the hassle (its cards were folded into the assessment lesson).
+
 ## Parked sayings / content
 
 - **Media and fear saying (parked 2026-10-17, was in the app as "Is what you are watching or reading feeding fear? Change the channel.")**

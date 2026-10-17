@@ -14,6 +14,7 @@ export const CATS = {
   living: 'Living practices',
   centers: 'Psychic centers',
   chakra: 'Chakra alignment',
+  attention: 'Attention',
   project: 'Projection',
 };
 
@@ -182,6 +183,179 @@ export const EXERCISES = [
   },
 
   // ---------- Meditation ----------
+  // Attention practices: they stay hidden until "I've learned this" is switched on in the Attention lesson (Info). Single-Object Hold and Single-Task Moment are Concentration practices and are always open.
+  {
+    id: 'attn-hold', cat: 'concentrate', title: 'Single-Object Hold', mins: 3,
+    freq: 'Daily, a little longer as it gets easier',
+    summary: 'Hold your attention on one small thing. Every return from a wander is one rep.',
+    steps: [
+      'Pick one small detail: a mark on the wall, the tip of a pen, a leaf, a candle flame. Settle your eyes on it.',
+      { t: 'Keep your attention on it. Blink normally. When the mind wanders, notice it and bring it back. That return is the training.', pick: [120, 300, 600], secs: 180, max: 600 },
+      'Look away, take a deep breath, relax.',
+    ],
+  },
+  {
+    id: 'attn-zoom', cat: 'attention', gate: 'attn', title: 'Zoom-Lens Drill', mins: 3,
+    freq: 'Daily',
+    summary: 'Lock onto one object, open out to the whole scene while still knowing it is there, then pull back in.',
+    steps: [
+      'Pick an object a few steps away and look at it. Sit or stand comfortably.',
+      { t: 'Narrow: lock on the object. Let everything else blur. Notice its edges, color and texture.', secs: 20 },
+      { t: 'Widen: keep the object in view, and let your attention open to the whole scene around it, including the edges of your vision. Hold both.', secs: 20 },
+      { t: 'Narrow again, tight on the object.', secs: 20 },
+      { t: 'Widen again. Notice how smoothly you can move between the two.', secs: 20 },
+      'Rest your gaze, take a deep breath.',
+    ],
+  },
+  {
+    id: 'attn-scene', cat: 'attention', gate: 'attn', title: 'Whole Scene, Then Detail', mins: 3,
+    freq: 'Daily, in any room or outdoors',
+    summary: 'Take the big picture, zoom into one detail, then widen again while holding both.',
+    steps: [
+      { t: 'Take in the whole scene: the layout, where things are, how far apart, what is moving. Do not pick anything out.', secs: 30 },
+      { t: 'Choose one detail and zoom into it fully.', secs: 30 },
+      { t: 'Widen again, holding the detail and the larger scene together.', secs: 30 },
+      'Close your eyes and name what you can recall of both the detail and the layout. Open your eyes and check.',
+    ],
+  },
+  {
+    id: 'attn-switch', cat: 'attention', gate: 'attn', title: 'Narrow and Open Switch', mins: 4,
+    freq: 'Daily',
+    summary: 'Alternate narrow focus on one thing with open awareness of whatever arises.',
+    steps: [
+      'Sit comfortably, eyes closed or softly open.',
+      { t: 'Narrow: follow one breath sensation, only that.', secs: 60 },
+      { t: 'Open: let attention rest on whatever arises (sounds, sensations, thoughts) without selecting anything.', secs: 60 },
+      { t: 'Narrow again: back to the single breath sensation.', secs: 60 },
+      { t: 'Open again, as wide as it goes.', secs: 60 },
+      'Take a deep breath and relax.',
+    ],
+  },
+  {
+    id: 'attn-space', cat: 'attention', gate: 'attn', title: 'Space Sense', mins: 3,
+    freq: 'Daily, short is fine',
+    summary: 'Train your sense of where things and your body are in space.',
+    steps: [
+      'Look around the room and note where three objects are, and how far they are from you.',
+      { t: 'Close your eyes. Point toward each one, one at a time, and say its distance. Then turn slowly and point again.', open: true },
+      'Open your eyes and check how close you were.',
+      { t: 'Optional: stand on one leg and feel your body in the space around you.', secs: 30 },
+    ],
+  },
+  {
+    id: 'attn-single', cat: 'concentrate', title: 'Single-Task Moment', mins: 2,
+    freq: 'Any ordinary action, once or more a day',
+    summary: 'Do one ordinary thing with your whole attention.',
+    steps: [
+      'Choose a routine action: washing a dish, walking, eating, brushing your teeth.',
+      { t: 'Do only that, with your whole attention on its sensations. When your mind drifts, bring it back.', open: true },
+    ],
+  },
+
+  {
+    id: 'attn-route', cat: 'attention', gate: 'attn', title: 'Landmark Route', mins: 5,
+    freq: 'A few times a week, on any familiar route',
+    summary: 'Walk a route you know without GPS, noting landmarks, distances and turns.',
+    steps: [
+      'Pick a short route you know well, on foot, and leave the navigation off.',
+      { t: 'As you go, name the landmarks, roughly how far apart they are, and each turn. Keep track of where you are in relation to where you started.', open: true },
+      'At the end, point toward where you began, then check against a map if you like.',
+    ],
+  },
+  {
+    id: 'attn-rotate', cat: 'attention', gate: 'attn', title: 'Mental Rotation', mins: 2,
+    freq: 'Daily or every few days',
+    summary: 'Look at an object, close your eyes, and turn it in your mind.',
+    steps: [
+      'Pick a small object with a distinct shape and a few features you can tell apart.',
+      { t: 'Study it from where you sit.', secs: 20 },
+      { t: 'Close your eyes and see it. Turn it slowly: a quarter turn, upside down, from behind.', secs: 60 },
+      'Open your eyes and compare. What did you get right, and what did you miss?',
+    ],
+  },
+  {
+    id: 'attn-body', cat: 'attention', gate: 'attn', title: 'Body in Space', mins: 3,
+    freq: 'Daily, short is fine',
+    summary: 'Slow balance and movement to feel where your body is in the space around you.',
+    steps: [
+      'Stand with room around you and something to catch if you wobble.',
+      { t: 'Stand on one leg. Feel your foot and ankle working, and where your body is in the room.', secs: 30 },
+      { t: 'Switch legs.', secs: 30 },
+      { t: 'Move slowly: raise an arm, turn, shift your weight. Feel every position without looking.', secs: 60 },
+    ],
+  },
+  {
+    id: 'attn-views', cat: 'attention', gate: 'attn', title: 'Two Viewpoints', mins: 6,
+    freq: 'Once or twice a week',
+    summary: 'Draw a scene from where you are, then work out and draw it from somewhere else.',
+    steps: [
+      'Sketch a simple scene or object from where you sit. It does not have to look good.',
+      { t: 'Sketch it again from a different viewpoint: from the side, from above or from behind. Work out what you would see.', open: true },
+      'If you can, move to the new viewpoint and check.',
+    ],
+  },
+  {
+    id: 'attn-obstacle', cat: 'attention', gate: 'attn', title: 'Obstacle Path', mins: 3,
+    freq: 'A few times a week',
+    summary: 'Move through a cluttered space while keeping track of several things at once.',
+    caution: 'Move slowly and keep your path clear of anything you could trip on.',
+    steps: [
+      'Choose a room or yard with several things in it: furniture, plants, people.',
+      { t: 'Walk slowly through it. Keep track of where each thing is, which are close, and which move. Stay relaxed.', secs: 60 },
+      'Stop and close your eyes. Recall where each one was, then open your eyes and check.',
+    ],
+  },
+  {
+    id: 'attn-cue', cat: 'attention', gate: 'attn', title: 'Cue Then Widen', mins: 2,
+    freq: 'During any ordinary action',
+    summary: 'Start on one exact cue while moving, then open to the whole environment, then back.',
+    steps: [
+      'Pick an action you are doing anyway: walking, washing up, drinking tea.',
+      { t: 'Narrow: put your whole attention on one cue, like your foot touching the ground or your hand on the cup.', secs: 30 },
+      { t: 'Widen: keep the cue, and let the rest of the room and your body come in.', secs: 30 },
+      { t: 'Narrow back to the cue.', secs: 30 },
+    ],
+  },
+  {
+    id: 'conc-grid', cat: 'concentrate', title: 'Grid Hold', mins: 3,
+    freq: 'Daily or every few days',
+    summary: 'Hold your attention on a grid of numbers without letting it drift.',
+    steps: [
+      'Print or draw a grid of random numbers or letters, 10 by 10 works.',
+      { t: 'Find 1, 2, 3 and so on in order, or hold on one cell at a time. When your attention slips off the grid, bring it back.', pick: [120, 300], secs: 120, max: 300 },
+      'Note how far you got.',
+    ],
+  },
+  {
+    id: 'conc-block', cat: 'concentrate', title: 'Focus Block', mins: 10,
+    freq: 'Daily, a little longer as it gets easier',
+    summary: 'One task, nothing else, for a set block. Build from 10 toward 25 minutes.',
+    steps: [
+      'Choose one task and put your phone in another room. Close everything else.',
+      { t: 'Work on only that task. Start with 10 minutes and lengthen toward 25 as it gets easier.', pick: [600, 900, 1500], secs: 600, max: 1500 },
+      'Take a short break. Stand, stretch, breathe.',
+    ],
+  },
+  {
+    id: 'conc-endure', cat: 'concentrate', title: 'Endurance Push', mins: 5,
+    freq: 'A few times a week',
+    summary: 'Stay with a task a little past the point where you want to switch.',
+    steps: [
+      'Pick one task you are already doing.',
+      { t: 'When the urge to switch rises, notice it and stay a little longer, one more minute, then another.', pick: [180, 300, 600], secs: 300, max: 600 },
+      'Note when the urge came and when it passed.',
+    ],
+  },
+  {
+    id: 'conc-read', cat: 'concentrate', title: 'Long Read', mins: 10,
+    freq: 'A few times a week',
+    summary: 'Read one thing in one stream, without stopping to check anything.',
+    steps: [
+      'Choose something worth reading in one go: a chapter or a long article. Phone away.',
+      { t: 'Read it without stopping. When you notice your attention drifting, go back to the line you were on.', pick: [600, 900, 1200], secs: 600, max: 1200 },
+      'Say in a sentence or two what you read.',
+    ],
+  },
   {
     id: 'med-sit', cat: 'meditate', title: 'Daily Sit — your choice', mins: 5,
     freq: 'At least once a day',
@@ -727,22 +901,22 @@ CHAKRAS.forEach((c) => EXERCISES.push({
 ['c-pituitary', 'c-pineal', 'c-throat', 'c-attune', 'p-mental', 'p-etheric'].forEach((id) => { EXERCISES.find((e) => e.id === id).advanced = true; });
 
 // The advanced teachings a store build sells. Each package is one $1 purchase in Google Play; EVERYTHING_ID ($4.99) opens all of them,
-// including any package added later. Owning UNLOCK_AT packages opens the rest. To add a teaching: put it in a package (or add a package,
+// including any package added later. To add a teaching: put it in a package (or add a package,
 // then create its product in Play Console). Basic teachings are simply left out of every package and stay free.
 export const EVERYTHING_ID = 'advanced_unlock';
-export const UNLOCK_AT = 8;
 export const PACKAGES = [
-  { pid: 'pkg_chakra', name: 'Chakra treatment', desc: 'The chakra alignment walkthrough, the seven chakra meditations, and the chakra reference.', cats: ['chakra'], info: ['chakras'] },
+  { pid: 'pkg_chakra', name: 'Chakra treatment', desc: 'The chakra alignment walkthrough and the seven chakra meditations. The chakra reference and its teaching stay free.', cats: ['chakra'], learn: [] },
+  { pid: 'pkg_assessment', name: 'The CIA assessment of the Gateway Experience (GWE)', desc: 'The 1983 US Army assessment of the Gateway Process, released through the CIA: how a session runs, the focus levels and tools, the model of consciousness and energy, and the phased path it recommends. Sold separately and not part of Everything.', learn: ['assessment'], price: '$4.99', extra: true },
+  { pid: 'pkg_attention', name: 'Attention', desc: 'The attention lesson and its ten practices: zoom lens, whole scene, narrow and open switch, space sense, landmark route, mental rotation, body in space, two viewpoints, obstacle path, cue then widen.', cats: ['attention'], info: ['attn'] },
   { pid: 'pkg_centers', name: 'Psychic centers', desc: 'The five center meditations: heart, pituitary, pineal, throat, and the combined attunement.', cats: ['centers'] },
   { pid: 'pkg_journeys', name: 'Inner journeys', desc: 'The staircase, the library of your life, and meeting your guide or higher self.', cats: ['journey'] },
   { pid: 'pkg_projection', name: 'Projection', desc: 'Mental and etheric projection.', cats: ['project'] },
   { pid: 'pkg_laws', name: 'Universal laws', desc: 'The universal laws of manifestation: how a steady thought shapes your state.', info: ['laws'] },
   { pid: 'pkg_cycles', name: 'Life cycles', desc: 'Favorable and unfavorable activities by period.', info: ['cycles'] },
-  { pid: 'pkg_dos', name: "Do's and Don'ts", desc: "The do's and don'ts of living this practice.", ex: ['live-dos'] },
-  { pid: 'pkg_habits', name: 'Supporting habits', desc: 'The habits that keep your energy up, and the Frequency Fast.', ex: ['energy-habits'], info: ['fast'] },
 ];
 // The package a lock key belongs to: an exercise id, or 'info:laws' style keys for the reading pages. Unlisted keys are free.
 export const pkgFor = (key) => {
+  if (String(key).startsWith('cat:')) return PACKAGES.find((k) => (k.learn || k.cats || []).includes(key.slice(4)));
   if (String(key).startsWith('info:')) return PACKAGES.find((k) => (k.info || []).includes(key.slice(5)));
   const e = EXERCISES.find((x) => x.id === key);
   return e ? PACKAGES.find((k) => (k.cats || []).includes(e.cat) || (k.ex || []).includes(e.id)) : undefined;
@@ -756,7 +930,8 @@ export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 export const REMIND_GROUPS = [
   // pool = exercises a timed reminder can ask for; leave = optional exercises that only fire when you leave home; ids = everything in the category
   { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], both: ['obs-room'], ids: ['obs-room', 'obs-stairs'] },
-  { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger'] },
+  { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold', 'attn-hold', 'attn-single', 'conc-grid', 'conc-block', 'conc-endure', 'conc-read'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger', 'attn-hold', 'attn-single', 'conc-grid', 'conc-block', 'conc-endure', 'conc-read'] },
+  { id: 'attn', cat: 'attention', label: 'Attention', gate: 'attn', pool: ['attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-route', 'attn-rotate', 'attn-body', 'attn-views', 'attn-obstacle', 'attn-cue'], leave: [], ids: ['attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-route', 'attn-rotate', 'attn-body', 'attn-views', 'attn-obstacle', 'attn-cue'] },
   { id: 'med', cat: 'meditate', label: 'Routine meditation', simple: true, pool: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
   { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-practice', 'med-cloud'], leave: [], ids: ['med-practice', 'med-color', 'med-sound', 'med-cloud'] },
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'] },
@@ -771,6 +946,7 @@ export const REMIND_DEFAULTS = {
   cat: {
     obs: { on: true, ex: ['obs-room', 'obs-stairs'], goal: 1, n: 1, timing: 'random', times: [720], choose: true },
     conc: { on: true, ex: ['conc-multiply', 'conc-poem', 'conc-stranger'], goal: 1, n: 1, timing: 'even', times: [780], choose: true },
+    attn: { on: false, ex: ['attn-hold'], goal: 1, n: 1, timing: 'even', times: [600], choose: true },
     med: { on: true, ex: ['med-sit', 'med-quiet', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], goal: 1, n: 1, timing: 'even', times: [480], choose: true },
     medp: { on: true, ex: ['med-practice', 'med-cloud'], goal: 1, n: 1, timing: 'even', times: [1020], choose: true },
     bed: { on: true, ex: ['obs-recall'], goal: 1, n: 1, timing: 'set', times: [1230], choose: true },
@@ -966,4 +1142,145 @@ export const SCALE_UP = {
   4: 'What would you do first, if it were already arriving?',
   3: 'This is what being alive feels like.',
   2: 'Look at what you climbed through to get here. Appreciate the one who climbed.',
+};
+
+// The Attention lesson (Info). Locked with the Attention practices.
+export const ATTN_LESSON = {
+  intro: 'A common way to picture attention is as a zoom lens. You can narrow it onto one small thing, or widen it to take in a whole scene. Both are skills, and you can learn to move between them.',
+  parts: [
+    { h: 'Narrow (convergent) focus', t: 'You contract the beam onto one object, detail or sensation. Detail and precision go up in that spot, and you take in less of the rest. Good for reading, examining, and sinking into one thing.' },
+    { h: 'Broad (wide) focus', t: 'You open the beam to take in more of the scene at once: the layout, movement, the edges of your vision. You get the big picture and notice more, with less detail at any one point. The wider it is, the less intense it is at any single spot.' },
+    { h: 'Spatial awareness', t: 'Spatial awareness is your sense of where things are, how far, and how they relate, including your own body. Wide focus supports it: you hold the whole layout and notice what changes around you. Narrow focus sharpens one spot but can shrink the rest into tunnel vision. Reading a gauge is narrow. Scanning a road is wide.' },
+    { h: 'Absorption', t: 'Narrowing attention is also the way into absorption: being so locked onto one thing that the rest drops away, like getting lost in a book. Hypnosis research describes this narrowed, absorbed focus as central to how hypnotic inductions work. A wide, open attention is a different flavor of presence: expansive, grounded in the space around you. Both are present. The skill is moving between them.' },
+    { h: 'Narrow first', t: 'The ability to widen cleanly rests on being able to narrow and hold. Without a steady zoom, widening feels scattered. Learn to lock the lens, then open it while keeping the option to snap back.' },
+    { h: 'Attention and concentration are two different jobs', t: 'Attention is the control: choosing what you notice, widening or narrowing the beam, and moving it from one thing to another. Concentration is the staying power: holding narrow attention steady on one thing, for longer, against every pull to leave. Attention is the steering and concentration is the endurance. You need both, and each is trained differently. The practices in this lesson train the control. Single-Object Hold, Grid Hold, Focus Block, Endurance Push, Long Read and the other Concentration practices train the staying power.' },
+    { h: 'How concentration helps meditation', t: 'Meditation asks you to rest on one thing, such as the breath, a color, a sound or a feeling, and stay. Concentration is what lets you stay. Each time you slip and return, the hold grows longer and the mind settles instead of wandering. Without it, a sit is a string of drifts.' },
+    { h: 'How attention helps meditation', t: 'Control lets you shape the sit: narrow onto the breath, open wide to everything that arises, move from one to the other, and notice early that you have drifted. It keeps the inner work clear, because you can aim and adjust your awareness instead of being carried by it. Training it in the ordinary world first, where there is something to check yourself against, is how you prepare to work in the mind\'s inner space.' },
+    { h: 'How you train it', t: 'Every time your mind wanders and you bring it back, that is one successful rep, not a failure. Short, daily practice counts more than long, rare sessions.' },
+    { h: 'Protect your practice', t: 'Sleep, regular exercise and enough rest set the ceiling for how well you can direct and hold attention. Protect your practice windows: put the phone in another room, turn off notifications, and do one thing at a time.' },
+    { h: 'Optional: spatial hobbies', t: 'Anything that makes you think about positions, shapes and space is extra practice for what Space Sense and Two Viewpoints work on: building with blocks or wood, origami, 3D puzzles, drawing from life, and spatial video games. None are required.' },
+  ],
+};
+
+// "Why these five" (Info, always free). Plain wording for now; the Rosicrucian wording can replace it later.
+export const WHY = {
+  intro: 'Everything in Timbre Tamer grows from five building blocks. They are not five separate skills. Each one makes the next one possible, and together they are how a mind learns to steady itself and choose how it responds.',
+  parts: [
+    { h: '1. Observation', t: 'You cannot work with what you do not notice. Observing means taking in what is actually here, accurately, without adding a story. It is the raw material for everything after it, and it pulls you out of autopilot and into the present moment.' },
+    { h: '2. Concentration', t: 'Once you can notice, you learn to hold. Concentration is keeping your attention on one thing and bringing it back when it slips. It is the muscle behind every other practice, and the reason a wandering mind can become a steady one.' },
+    { h: '3. Meditation', t: 'Meditation is concentration turned inward and sustained, until the mind settles. It is where you meet your own thoughts and feelings without being carried off by them. Regular practice is linked in research to calmer stress responses and steadier attention.' },
+    { h: '4. Emotional control', t: 'This does not mean suppressing feelings. It means noticing a feeling early, naming it, and choosing your response instead of being run by it. It rests on the first three: you have to see the feeling (observation), stay with it (concentration), and let it settle (meditation).' },
+    { h: '5. Bedtime', t: 'The day ends with review and rest. Looking back over the day calmly lets you learn from it and put it down, and good sleep is when the brain consolidates memory and resets mood. A mind that closes the day well starts the next one steadier.' },
+  ],
+  close: 'The order matters. Observe, hold, settle, steady the feelings, then rest. Every other practice in the app, the extra ones and the advanced ones, is a way of deepening one of these five. If you ever feel lost in the app, come back here and do the simplest practice from the five.',
+};
+
+// One short teaching per group of practices (Info). Plain wording for now; the Rosicrucian wording can replace any block later.
+export const CAT_TEACH = {
+  observe: { t: 'Observation', one: 'See what is actually there', p: [
+    'Observation is noticing what is really in front of you (details, positions, sounds) without adding commentary. Most of the day we run on autopilot and see our expectations instead of the scene.',
+    'Everything else rests on accurate input. New-Room Recall, Stair Count and Evening Recall train you to look carefully and then check what you took in against reality. Deliberate noticing tends to improve memory for detail and keeps you in the present moment.',
+    'Short and often works best. Missing details is not failure; it shows you what to notice next time.' ] },
+  concentrate: { t: 'Concentration', one: 'Hold one thing steady', p: [
+    'Concentration is keeping your attention on one thing and bringing it back when it slips. It is the muscle underneath every other practice.',
+    'The exercises are deliberately demanding (mental multiplication, memorizing lines, holding a stranger\'s face, the 17-second pure thought, a focus block) so that there is something firm to hold. The Attention lesson explains how concentration differs from attention.',
+    'Every time you notice a wander and return, that is one rep. The returning is the training.' ] },
+  meditate: { t: 'Meditation', one: 'Concentration turned inward', p: [
+    'Meditation is concentration turned inward and kept up until the mind settles. The forms differ (breath, a color, a sound, stillness, a feeling like love) but the move is the same: rest your attention on one thing, notice when it leaves, and come back.',
+    'Regular practice is linked in research to calmer stress responses and steadier attention, and it builds gradually. The goal is not an empty mind. A short sit every day does more than a long one now and then.',
+    'Routine meditation is your daily sit. The meditation practices are the structured ones.' ], more: ['states', 'hemisync'] },
+  emotion: { t: 'Emotional control', one: 'Notice, name, choose', p: [
+    'Emotional control does not mean pushing feelings down. It means noticing a feeling early, naming it, and choosing your response instead of being run by it. Research finds that simply putting a name to a feeling tends to soften it.',
+    'The practices here are small, repeatable ways to build that gap: slowing down, patience under a fiddly task, following a small whim, appreciating what is in view, climbing the emotional scale one rung at a time, and the Funk Reset when you are stuck.',
+    'It rests on the three before it: you have to see the feeling (observation), stay with it (concentration) and let it settle (meditation).' ] },
+  bedtime: { t: 'Bedtime', one: 'Close the day on purpose', p: [
+    'The last minutes before sleep are a good time to review the day calmly, learn from it, and put it down. Sleep itself is when the brain consolidates memory and resets mood, so how you end the day matters.',
+    'Evening Recall is observation turned backward. The Belief Audit, Revision and the Scene That Proves It use that quiet, drifting state to look at what drove your reactions and to rehearse what you want.',
+    'Do them lying down and keep them short. If you fall asleep partway, that is a good outcome.' ] },
+  energy: { t: 'Energy & healing', one: 'Breath, light and intention', p: [
+    'These practices use breath, visualized light and intention to build, store and direct energy, as taught in the traditions named in Credits.',
+    'They are written here as they were taught: draw the energy in, hold it, and send it where it is needed, with the intention doing the directing. In practice they bring calm, focus and a feeling of renewed energy, much as slow breathing and guided imagery do.',
+    'The Supporting Habits reading covers the everyday habits that keep the reserve up.' ], more: ['fields', 'gwenergy'] },
+  fields: { t: "Energy and the body's fields", one: 'What a published study and the research it draws on describe', p: [
+    'Every electric current makes a magnetic field, and the body\'s electrical activity is no exception. The paper below reports that the heart\'s magnetic field was first picked up in 1963 with a pair of large coils placed on the chest (Baule and McFee), and that sensitive magnetometers have since measured it up to about fifteen feet in front of the body. It also describes Harold Saxton Burr, an anatomist at Yale, who proposed in 1972 that living things are ordered by electromagnetic "fields of life" that he measured and mapped.',
+    'Traditional Chinese medicine and philosophy call the life energy qi. It circulates through the body and beyond it, health is a balance of neither too much nor too little, and it comes from food, air and an original portion received at conception. The paper notes that Western science has no precise definition of qi, and its authors suggest that qi may correspond to the body\'s bioelectromagnetic energy.',
+    'The paper also cites Oschman\'s description of a "living matrix" linking every tissue, in which acupuncture meridians act as low-resistance pathways for electromagnetic information. It cites Becker\'s account of a second, direct-current system alongside the nerves, in which oscillations are the brainwaves and which connects to the pineal gland and thalamus.',
+    'It describes how the earth and the sky between it and the ionosphere resonate at about 7 to 10 Hz on average (Schumann resonance), close to the range of brainwave frequencies. It reports that at night this falls toward 1 to 7 Hz, matching the delta and theta stages of sleep, and proposes that brainwaves can be influenced by outside fields during brief free-running moments.',
+    'The experiment tested whether qi projected from the hands changes the field around them. Three men with years of qi practice projected toward three small copper coils, set at right angles and wired to amplifiers. Each trial had 20 seconds of control, 20 seconds of projection and 20 seconds of control, and each man tried a different technique each time.',
+    'The authors report significant changes in power (p < 0.05) at specific frequencies during projection compared with the control periods. Power rose in some frequency ranges and fell in others. The changes usually appeared in one coil rather than all three, so they were directional, and they were a subtle pattern across many frequencies rather than a spike at one. There was no consistent pattern across the three men.',
+    'The authors conclude that people can change the electromagnetic environment around their hands at will, which they say supports a link between qi and bioelectromagnetic energy. They suggest that a qi practitioner might affect another organism by shifting its equilibrium. They call the study preliminary and exploratory, and list what they would change: using one technique across all trials, and recording muscle tone and hand movement. They also ask whether a person who has never heard of qi would produce the same changes.' ],
+    src: ['Waechter, R. L., & Sergio, L. Manipulation of the Electromagnetic Spectrum via Fields Projected from Human Hands: A Qi Energy Connection? Subtle Energies & Energy Medicine, 13(3), 233-250.', 'Cited in it: Burr, The Fields of Life (1972); Baule & McFee, American Heart Journal 66 (1963); Schumann, Zeitschrift fur Naturforschung 7a (1952); Oschman, Energy Medicine: The Scientific Basis (2000); Becker & Seldon, The Body Electric (1985); Eisenberg, Encounters with Qi (1995).'] },
+  states: { t: "Meditation, hypnosis and biofeedback", one: "Three ways of changing your state, compared", origin: true, p: [
+    "In 1983 Lt. Col. Wayne McDonnell wrote an assessment of the Monroe Institute's Gateway Process for US Army Intelligence. He begins by comparing three older techniques that change awareness, so the Gateway method can be understood by contrast.",
+    "Drawing on psychologist Ronald Stone and Itzhak Bentov's models, he describes hypnosis as getting past the left hemisphere, the verbal, reasoning side that screens what comes in. Suggestions then reach the right hemisphere, the holistic and uncritical side, and are accepted and acted on. A suggestion of numbness or well-being is passed to the matching part of the body or to the pleasure centers, and so are suggestions of better concentration or memory.",
+    "Transcendental meditation, as the assessment describes it, takes the opposite route: long, intense, single-minded concentration on drawing energy up the spine. Bentov's kundalini model of what that does is on the Chakra alignment page, under Kundalini, resonance and sound.",
+    "Biofeedback uses the left hemisphere instead of bypassing it. You picture the result you want, watch a device that shows when you succeed (a skin thermometer, for example), and then learn to recall the feeling of success and repeat it. McDonnell says it can speed beginners into deep meditative states, and that watching your own brainwave pattern helps you learn quickly to relax into focused quiet.",
+    "He presents all three as entry points. Hypnosis and biofeedback can help a person move faster into the states the Gateway method aims for." ],
+    src: ["McDonnell, W. M. (Lt. Col., MI). Analysis and Assessment of Gateway Process. US Army Intelligence and Security Command, Fort Meade, 9 June 1983 (declassified CIA copy CIA-RDP96-00788R001700210016-5).", "It cites: Bentov, Stalking the Wild Pendulum (1977); Sannella, Kundalini-Psychosis or Transcendence (1976); Monroe, Journeys Out of the Body (1971); Jager, The Lamp Turn Laser (Monroe Institute monograph); Ferguson, Human Behavior (1978); Gliedman, Science Digest (1983); Purce, The Mystic Spiral (1980); Stone, The Mother Earth News (1983); Tart, Altered States of Consciousness (1969)."] },
+  hemisync: { t: "Sound, brainwaves and Hemi-Sync", one: "How paired tones are described as bringing both halves of the brain into step", origin: true, p: [
+    "Hemi-Sync, short for hemispheric synchronization, is the Monroe Institute's term for a state in which the brainwave patterns of both hemispheres match in amplitude and frequency, as defined by trainer Melissa Jager. The assessment says it is rare and brief in ordinary awareness, and reports that a person with twenty years of Zen practice could hold it at will for over fifteen minutes.",
+    "The method relies on the frequency-following response: the brain tends to match the rhythm of a sound it hears. Brainwave frequencies are too low to hear, so the tapes play a slightly different tone in each ear. The brain hears the difference between them as a beat, so a gap of 10 cycles per second is heard as a 10-cycle beat.",
+    "Jager's picture is a lamp and a laser. The ordinary mind is like a lamp that spreads its energy widely and without order. Under Hemi-Sync it is like a laser: the same energy, concentrated and coherent. Dr. Stuart Twemlow of the Monroe Institute reports that the tapes focus brain energy into a narrower and narrower frequency band, which he compares to the yogic idea of one-pointedness, or single-mindedness.",
+    "The assessment adds that the beat is only part of it. Following Bentov, deep stillness is said to settle the pulse wave of the heartbeat into a steady rhythm of about seven cycles per second, which travels up into the head as a gentle vibration. That rhythm lies close to the resonance of the space between the earth and the ionosphere (about 7 to 7.5 cycles per second), so the body is described as resonating with its surroundings.",
+    "How these tones fit into a full Gateway session, together with resonant tuning (humming) and the energy balloon, is covered in the CIA assessment of the Gateway Experience." ], more: ['assessment'],
+    src: ["McDonnell, W. M. (Lt. Col., MI). Analysis and Assessment of Gateway Process. US Army Intelligence and Security Command, Fort Meade, 9 June 1983 (declassified CIA copy CIA-RDP96-00788R001700210016-5).", "It cites: Bentov, Stalking the Wild Pendulum (1977); Sannella, Kundalini-Psychosis or Transcendence (1976); Monroe, Journeys Out of the Body (1971); Jager, The Lamp Turn Laser (Monroe Institute monograph); Ferguson, Human Behavior (1978); Gliedman, Science Digest (1983); Purce, The Mystic Spiral (1980); Stone, The Mother Earth News (1983); Tart, Altered States of Consciousness (1969)."] },
+  assessment: { t: "The CIA assessment of the Gateway Experience (GWE)", one: "A 1983 US Army evaluation, released through the CIA reading room: how it works and the model behind it", origin: true, p: [
+    "The Gateway Experience is a training program from the Monroe Institute, built around Hemi-Sync sound: a series of recorded sessions, each taking you to a different level of awareness. In June 1983 Lt. Col. Wayne McDonnell was asked to assess the Gateway Experience for US Army Intelligence and Security Command: how it works, and whether it is practical. To judge it he built a model from Itzhak Bentov's biomedical work, research on consciousness, and theoretical physics, and tried to put out-of-body states into the language of physical science, to take away the stigma of their occult associations. He also checked that his conclusions do not conflict with the mainstream of Eastern or Western belief systems. He wrote it as a guide for Army personnel who had to take the training or work with its materials, and says it is not meant to be the last word.",
+    "His conclusion is that there is a sound, rational basis in terms of physical science for considering Gateway plausible in its essential objectives, and that intuitive insights of a practical and professional kind seem within reasonable expectations. He adds that a phased approach would be needed to bring the time to advanced states within manageable limits. The related techniques he compares first (hypnosis, transcendental meditation and biofeedback) are on the Meditation, hypnosis and biofeedback page, and the Hemi-Sync sound mechanism is on its own page.",
+    "The guidance comes from recordings. The tapes carry instructions, an affirmation and suggestions along with the tones, including Monroe's own voice, and some of the suggestions are subtle or below clear hearing. The assessment describes no live hypnotist or inductor. It does mention trainers at the Monroe Institute and a course of about seven days, and says the user keeps working with the tapes over a period of time.",
+    "A session runs in a set order. It begins with the energy conversion box, a visualization for setting aside distractions. Next is resonant tuning, humming one steady tone with the tape (see Kundalini, resonance and sound). Then comes the affirmation, repeated along with the tape, and then the Hemi-Sync tones (see Sound, brainwaves and Hemi-Sync). Progressive relaxation follows, with pink and white noise that brings the body to the edge of sleep while the right hemisphere is kept alert. It ends with the energy balloon: a flow of energy from the top of the head out and down around the body and back up through it.",
+    "The assessment does not describe Gateway as hypnosis. It shares features with it, since both quiet the left, screening hemisphere and the tapes carry suggestions, and it lists hypnosis among the related techniques that can speed entry. His own proposal to add hypnotic suggestion is in his recommended path further down. It is not part of the course as described.",
+    "McDonnell describes the stages as Focus 10 (body asleep, mind awake), Focus 12 (expanded awareness, where the tools are used), Focus 15 (travel into the past, which he says fewer than five percent reach in the seven-day course) and Focus 21 (the future, thought to need months or years of practice).",
+    "At Focus 12 he lists these tools. Problem solving: put the problem into your expanded awareness and project it outward; answers come as sudden knowing, often within two to three days, or as symbols. Patterning: concentrate on a wanted outcome as if it were already established, and do not force the pace, because the more it departs from your current reality, the longer it takes. Remote viewing: turn the energy bar into a whirling vortex and send your imagination through it in search of insight. The color breathing, energy bar and living body map tools are on the Energy & healing page.",
+    "Only one tape in the program is devoted to out-of-body movement. The Monroe Institute stresses that the program was not set up only for that and does not promise it. The assessment describes the methods, and what it says about them is on the Projection page.",
+    "He judges that progress comes much faster with Gateway than with transcendental meditation or other mental disciplines. It is a step-by-step procedure in which each insight lets you go further in the next session. The speed depends less on hours spent than on how quickly you release anxieties and stresses, because those energy blockages are the main barrier. The more compulsive and uptight a person is at the start, the more barriers they meet, until the insights begin to come.",
+    "The model starts from the idea that everything, the brain and consciousness included, is a system of oscillating energy. Following Bentov, it describes the universe as a hologram, a pattern made when moving energy meets energy at rest, in which every part carries the whole. The mind is described as a hologram too, tuning in to the larger one by matching its frequency, and perceiving by comparing what arrives with its own stored patterns. Karl Pribram and David Bohm are cited for the holographic view.",
+    "In expanded states, the right hemisphere acts as the receiver of the holographic input, and the left hemisphere, working in step with it, reduces it to words and concepts. Bentov is quoted: whenever we perceive something, we always perceive differences only. The assessment adds that Gateway succeeds to the extent that it refines the mind's energy pattern so that it can perceive without the physical senses, and it quotes Marilyn Ferguson that Pribram and Bohm's theories appear to account for transcendental experience, paranormal events and even normal perceptual oddities.",
+    "Self-cognition is the part of the model that explains how humans do not only know, but know that they know. The mind duplicates aspects of its own hologram, projects them out, and compares them with the memory part of the hologram, where its standards are stored. The differences it senses are what produce verbal awareness of the self.",
+    "To move beyond time and space, the model says the mind's frequency must become so coherent that, at the point of rest in each oscillation, part of it 'clicks out' of time-space into in-between dimensions. These lie between ordinary time-space and what the assessment calls the Absolute: energy at rest in infinity, which is conscious but creates nothing by itself. In them, time and space may stop lining up as usual, and the past and future may become reachable.",
+    "The assessment compares this click-out to the behavior of subatomic particles. Citing Gliedman in Science Digest, it notes that particles that have collided keep responding to each other instantly across any distance. McDonnell suggests that such communication happens during the click-out, outside time-space, which would leave relativity intact. Bentov mentions hypothetical tachyons, particles that travel faster than light.",
+    "Bentov's account of the universe is an egg-shaped torus. Matter streams out of a nucleus of compressed energy through a 'white hole' and returns through a 'black hole', and time is the measure of change as energy evolves along the shell. Our place is near the top of the egg, where galaxies to the north recede faster. Because the torus holds every phase at once, past, present and future all exist in the universal hologram together, and a sufficiently focused consciousness could in principle read them.",
+    "Consciousness, in this view, is the organizing principle that keeps energy in motion in a pattern, and the more complex the system, the more of it there is. When a person's reality ends, the energy returns to the Absolute with all its memories, merging with the whole without losing its identity, though it gives up the power to choose. An out-of-body experience is then described as projecting that eternal spark of consciousness and memory to learn in dimensions both inside and outside time-space.",
+    "His recommended phased path is: Hemi-Sync tapes for focus and hemisphere synchronization; then REM-sleep frequencies for quiet and deep relaxation; then hypnotic suggestion so that a person can enter a self-hypnotic state at will; then autohypnotic suggestion to speed the Focus 12 work; then repeated sessions with the suggestion that an out-of-body movement will occur and be remembered, and later that it can be controlled; and only then the Focus 15 and 21 objectives. For information gathering he proposes a multi-focus approach: three people go out of the body together, one viewing the target in the present, one at Focus 15 as it slips into the immediate past, and one at Focus 21 as it moves into the immediate future, then all three are debriefed and compared.",
+    "He also advises pursuing full self-knowledge to remove personal blocks, and being prepared for possible encounters with intelligent non-corporal forms when the boundaries of time-space are passed. The energy balloon is described as protection for a first out-of-body experience, and he suggests groups in Focus 12 building holographic patterns around sensitive areas to repel unwanted presences.",
+    "In the closing sections he notes that the ideas do not conflict with the main Eastern or Western traditions, citing Tibetan teachings of reality as movement, a Hindu image of a net of pearls each reflecting all the others, and parallels in Judeo-Christian thought." ], more: ['states', 'hemisync', 'kundalini', 'gwenergy', 'project'],
+    src: ["McDonnell, W. M. (Lt. Col., MI). Analysis and Assessment of Gateway Process. US Army Intelligence and Security Command, Fort Meade, 9 June 1983 (declassified copy released through the CIA reading room, CIA-RDP96-00788R001700210016-5).", "It cites: Bentov, Stalking the Wild Pendulum (1977); Sannella, Kundalini-Psychosis or Transcendence (1976); Monroe, Journeys Out of the Body (1971); Jager, The Lamp Turn Laser (Monroe Institute monograph); Ferguson, Human Behavior (1978); Gliedman, Science Digest (1983); Purce, The Mystic Spiral (1980); Stone, The Mother Earth News (1983); Tart, Altered States of Consciousness (1969)."] },
+  gwenergy: { t: "Color, light and the energy bar", one: "Three energy tools from the Gateway assessment", origin: true, p: [
+    "The Army assessment of the Gateway Process describes color breathing as a healing technique: at Focus 12, you imagine colors very vividly so that they resonate with the body's energies and activate them. It is built on the principle that the body's electromagnetic field can change its resonance pattern and take in energy from the earth's field, and the colors cue which frequencies are wanted. In the Hemi-Sync version no outside light is used. The mind is the only agent.",
+    "The energy bar tool: imagine a small point of light and charge it in your imagination until it pulses, then extend it into a sparkling, vibrating cylinder, which you use to channel energy from the universe to chosen parts of your body. The assessment notes that wands and sceptors recur across cultures and may reflect an archetypal symbol the mind responds to.",
+    "The living body map amplifies the energy bar. You imagine the outline of your body, fill the main systems (nervous, circulatory) with color within that outline, and apply the energy bar to energize, balance and revitalize whichever area you choose. It rests on the assumption that a body made of energy can be vitalized by adding energy in the right form." ],
+    src: ["McDonnell, W. M. (Lt. Col., MI). Analysis and Assessment of Gateway Process. US Army Intelligence and Security Command, Fort Meade, 9 June 1983 (declassified copy released through the CIA reading room, CIA-RDP96-00788R001700210016-5).", "It cites: Bentov, Stalking the Wild Pendulum (1977); Sannella, Kundalini-Psychosis or Transcendence (1976); Monroe, Journeys Out of the Body (1971); Jager, The Lamp Turn Laser (Monroe Institute monograph); Ferguson, Human Behavior (1978); Gliedman, Science Digest (1983); Purce, The Mystic Spiral (1980); Stone, The Mother Earth News (1983); Tart, Altered States of Consciousness (1969)."] },
+  kundalini: { t: "Kundalini, resonance and sound", one: "Bentov's model and the Gateway humming, from the Army assessment", origin: true, p: [
+    "In the assessment's account of transcendental meditation, intense single-minded concentration on drawing energy up the spine is said, in Bentov's model as described by Lee Sannella, to produce standing sound waves in the fluid-filled cavities of the brain. The waves stimulate the cortex on the right side and polarize it, so that it conducts a signal along the body map in the cortex, starting from the toes and moving up.",
+    "According to Bentov, the standing waves come from the altered rhythm of the heart sounds that prolonged meditation brings about. He describes the bliss reported by people who have completed the full kundalini loop as self-stimulation of the brain's pleasure centers by a current circulating along the sensory cortex, and he notes that most of the symptoms start on the left side of the body, which means the process is mostly a development in the right hemisphere.",
+    "Bentov says about five years of intense concentration and practice is normally needed to bring up the kundalini, but that long exposure to mechanical vibrations of 4 to 7 cycles per second, such as a car's suspension or an air-conditioning duct, can have the same effect. He suggests the cumulative effect may trigger a spontaneous sequence in susceptible people with a particularly sensitive nervous system.",
+    "The Gateway method begins with resonant tuning: humming a single, steady tone, along with a chorus of such sounds on the tape, until a feeling of vibration builds, particularly in the head. It is a close cousin of the seed sounds and AUM in the chakra and pineal practices. The assessment describes the goal as setting the body into resonance, the first step toward the quiet that deeper states need." ],
+    src: ["McDonnell, W. M. (Lt. Col., MI). Analysis and Assessment of Gateway Process. US Army Intelligence and Security Command, Fort Meade, 9 June 1983 (declassified copy released through the CIA reading room, CIA-RDP96-00788R001700210016-5).", "It cites: Bentov, Stalking the Wild Pendulum (1977); Sannella, Kundalini-Psychosis or Transcendence (1976); Monroe, Journeys Out of the Body (1971); Jager, The Lamp Turn Laser (Monroe Institute monograph); Ferguson, Human Behavior (1978); Gliedman, Science Digest (1983); Purce, The Mystic Spiral (1980); Stone, The Mother Earth News (1983); Tart, Altered States of Consciousness (1969)."] },
+  balance: { t: 'Counterbalance', one: 'Answer a swing with its opposite', p: [
+    'Counterbalance pairs a swing in one direction with a deliberate move in the other: out of balance toward the negative, you steer toward a steadier, positive state, and the reverse when you are over-positive.',
+    'It is a way of coming back to the middle instead of staying at either extreme. It is close to what psychologists call reframing, which has good support for improving mood and calm.',
+    'Use the Negative version when you are low, and the Over-Positive version when you are running too high.' ] },
+  living: { t: 'Living practices', one: 'Carry it into the day', p: [
+    'These are not sit-down exercises. They are ways of living the five building blocks in ordinary hours: watching your words, listening to your body, being here now, keeping body and mind clean.',
+    'They are the point of the rest. A few minutes of practice matters most when it changes how you speak, eat, react and rest for the other twenty-three hours.',
+    'Take one at a time and notice what shifts. The Do\'s and Don\'ts is a short reminder list to come back to.' ] },
+  chakra: { t: 'Chakra alignment', one: 'Attention through the body\'s centers', p: [
+    'In the yogic tradition the chakras are seven centers along the body, from the base of the spine to the crown. Each has its own element, seed sound and quality.',
+    'The walkthrough puts steady attention in each area in turn, root to crown, until it feels coherent. The seven meditations take one center at a time with its seed sound.',
+    'Focused body attention with a sound or rhythm settles the nervous system and builds concentration. The Chakra reference lists each center, its sound, location, what blocks it and its gland.' ], more: ['kundalini'], links: [{ href: '#chakras', t: 'Chakra reference', one: 'Seven chakras, seed sounds, glands' }] },
+  centers: { t: 'Psychic centers', one: 'The advanced center work', p: [
+    'This series works with centers in the heart, head and throat in a set order: Heart first, then Pituitary, Pineal, Throat, and only then the combined attunement.',
+    'The order is taught because each stage builds what the next one leans on. As taught, the early stages bring sharper observation and a steadier mind, and the later ones build on that.',
+    'Take it in order and give each stage steady effort before the next.' ] },
+  journey: { t: 'Inner journeys', one: 'Go inward and allow what comes', p: [
+    'Inner journeys use deep relaxation and a guided scene (a staircase, a library, a meeting place) to open the inner space and receive what comes.',
+    'The only rule is to allow it. Do not force the images and do not judge them. Let the scene unfold and ask what you want to know.',
+    'Guided imagery is a well-studied relaxation tool, and what comes up can feel meaningful. Do them somewhere quiet, and take a moment to come back fully before you stand up.' ] },
+  project: { t: 'Projection', one: 'The most advanced practices', p: [
+    'Mental projection keeps your awareness anchored while the mind travels to a familiar place. Etheric projection uses a resonant OM and lying still.',
+    'As taught, they come after the earlier stages are steady.',
+    'Stay a spectator and do not drift into sleep.' ,
+    "The 1983 Army assessment of the Gateway Process lists three conditions for going out of the body at will: a state of deep quiet with resonance at about seven cycles per second, synchronized brainwaves in both hemispheres, and then raising the alertness of the right hemisphere. The simple methods it names are rolling out, lifting out headfirst and rigid like a telephone pole, and sliding out through either end of the body.",
+    "It reports Monroe's remark that an ex-trainer could guarantee the experience by bringing people into REM sleep first, and suggests why: the body is completely still and the right hemisphere is free to respond. It also reports that in experiments, travelers asked to read ten computer-generated numbers across the country got some digits right but never all ten, and it puts the distortion partly down to other energy patterns left at the site by people and events." ],
+    src: ["McDonnell, W. M. (Lt. Col., MI). Analysis and Assessment of Gateway Process. US Army Intelligence and Security Command, Fort Meade, 9 June 1983 (declassified CIA copy CIA-RDP96-00788R001700210016-5).", "It cites: Bentov, Stalking the Wild Pendulum (1977); Sannella, Kundalini-Psychosis or Transcendence (1976); Monroe, Journeys Out of the Body (1971); Jager, The Lamp Turn Laser (Monroe Institute monograph); Ferguson, Human Behavior (1978); Gliedman, Science Digest (1983); Purce, The Mystic Spiral (1980); Stone, The Mother Earth News (1983); Tart, Altered States of Consciousness (1969)."] },
 };
