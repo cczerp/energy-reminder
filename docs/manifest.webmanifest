@@ -1,7 +1,7 @@
 {
   "name": "Timbre Tamer",
   "short_name": "Timbre Tamer",
-  "description": "Meditation, energy, and mindfulness reminders with a practice log. Works offline.",
+  "description": "Mental training, meditation, energy, and mindfulness reminders with a practice log. Works offline.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

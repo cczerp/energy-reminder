@@ -30,11 +30,11 @@ Paste these:
 
 **Full description:**
 ```
-Timbre Tamer helps you build a daily mindfulness and meditation practice, privately.
+Timbre Tamer helps you build a daily mental training and meditation practice, privately.
 
 • Reminders when you want them: set times, spread through the day, or random. Pick how many.
 • Daily goals that clear away when you finish them, with a small celebration when the whole day is done.
-• A library of guided practices: meditation, observation and concentration exercises, emotional tools, bedtime practices, energy and healing, and more. Gentle timers and an optional buzz keep you on track.
+• A library of guided practices: sitting practice, mental training (observation, concentration, attention and emotional tools), bedtime practices, energy and healing, and more. Gentle timers and an optional buzz keep you on track.
 • Climb the Scale and the Focus Wheel for working with how you feel.
 • A private log: notes, evening recall, and a history of every day.
 • No account. Your notes, logs and goals stay on your phone. The free version shows a few ads on the Practice and Info lists; one purchase removes them and unlocks the advanced teachings.

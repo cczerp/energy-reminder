@@ -1,4 +1,4 @@
-# Timbre Tamer — meditation & mindfulness reminder app
+# Timbre Tamer — mental training & mindfulness reminder app
 
 An offline-capable web app (PWA) built from a set of meditation and energy-work guides. No account, no server: everything is stored on the phone. Source lives in `docs/` (plain HTML/JS, no build step).
 
