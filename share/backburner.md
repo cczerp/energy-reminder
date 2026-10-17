@@ -2,6 +2,27 @@
 
 Things parked on purpose. Nothing here is lost; it just is not in the app yet. Add to the top, move to done when handled.
 
+## Sources owed for restored claims (parked 2026-10-17)
+
+The user has these sources and will pull them up later. Until then the claims stay in the teachings as written. Each needs a citation (Credits line, or a Sources block like the one on "Energy and the body's fields").
+
+| # | Claim | Where |
+|---|---|---|
+| 1 | Deliberate noticing improves memory for detail | Observation teaching |
+| 2 | Regular meditation linked to calmer stress responses and steadier attention | Meditation teaching; Why these five |
+| 3 | Naming a feeling tends to soften it | Emotional control teaching |
+| 4 | Sleep consolidates memory and resets mood | Bedtime teaching; Why these five |
+| 5 | Hypnosis research describes narrowed, absorbed focus as central to induction | Attention lesson |
+| 6 | Sleep, exercise and rest set the ceiling for how well you can direct and hold attention | Attention lesson |
+| 7 | Breath and visualization practices bring calm, focus and renewed energy | Energy & healing teaching |
+| 8 | Reframing, which counterbalance resembles, has good support for improving mood | Counterbalance teaching |
+| 9 | Focused body attention with a sound or rhythm settles the nervous system | Chakra alignment teaching |
+| 10 | Guided imagery is a well-studied relaxation tool | Inner journeys teaching |
+
+Rule from the user: ask whether they have a source for any claim that hits a safety flag; if they do not have it at hand it will not take much to obtain. No disclaimers in the teachings; spiritual material is credited as "taught from" the teachers in Credits.
+
+Also still to credit: older health claims in practice text (colds and germs, Self-Healing conditions, Headache Relief).
+
 ## Parked sayings / content
 
 - **Media and fear saying (parked 2026-10-17, was in the app as "Is what you are watching or reading feeding fear? Change the channel.")**
