@@ -739,7 +739,7 @@ export const PACKAGES = [
   { pid: 'pkg_laws', name: 'Universal laws', desc: 'The universal laws of manifestation: how a steady thought shapes your state.', info: ['laws'] },
   { pid: 'pkg_cycles', name: 'Life cycles', desc: 'Favorable and unfavorable activities by period.', info: ['cycles'] },
   { pid: 'pkg_dos', name: "Do's and Don'ts", desc: "The do's and don'ts of living this practice.", ex: ['live-dos'] },
-  { pid: 'pkg_habits', name: 'Supporting habits', desc: 'The habits that keep your energy up.', ex: ['energy-habits'] },
+  { pid: 'pkg_habits', name: 'Supporting habits', desc: 'The habits that keep your energy up, and the Frequency Fast.', ex: ['energy-habits'], info: ['fast'] },
 ];
 // The package a lock key belongs to: an exercise id, or 'info:laws' style keys for the reading pages. Unlisted keys are free.
 export const pkgFor = (key) => {
@@ -792,23 +792,30 @@ export const NUDGES = [
   // emotional mastery
   'Feeling a craving? Do not fight it — redirect it. Take the better thing instead of nothing.',
   'Every emotion has a higher and a lower side. Which one is this? Shift toward the higher.',
-  'Fear: what is there to fear? You are secure. You have faced this before. Use your mind, not your will.',
+  'Fear: what is there to fear? You are secure, and you have faced this before. Confidence is stronger than hope: hope waits for something to happen, confidence knows you can handle it. Use your mind, not your will.',
   'Whose emotion is this — yours, or picked up from someone nearby?',
   'A borrowed feeling: step out of it, like stepping out of a room. Keep it only if you want it.',
   'Do not just block a feeling down. Suppression ends in an explosion; redirection does not.',
+  // emotions: kept short and separate so each one stands alone
+  'You cannot destroy a feeling by fighting it. The more you avoid it, the longer it stays.',
+  'A feeling and its thought feed each other. Focus on a thought with the opposite emotion and your body will change to feel what you are thinking about.',
+  'Every negative feeling has an opposite. Fear: trust. Anger: relief. Sadness: appreciation.',
+  'Think of someone you appreciate. Do not just picture them. Let yourself feel it.',
+  'Do not push the bad feeling out. Sink into a good thought until it becomes a daydream and you are there.',
+  'Feelings live in the body, thoughts in the mind. Sink fully into a thought and the body\'s feeling fades into the background.',
+  'Thoughts bring feelings, and feelings bring more thoughts that feel the same. Which loop are you feeding?',
   'Closer bodies share more emotion. Give yourself some distance if you need it.',
   // supporting habits and do/don't
   'Eat and drink what actually agrees with YOU, not what is habit or custom.',
   'A little mild exercise keeps the blood circulating. Stand up and move.',
   'Clean and refreshed: a bath or shower washes away worries too.',
   'Jealousy, suspicion, fear: lower emotions lower your energy. Notice, and let them go.',
-  'Do not rush the sequence of your practice. Heart before throat or head.',
   'Take a breath in, hold, and let it go slowly. Store a little energy.',
   'Picture the sun for a moment. Let its energy flow through you.',
   'Is your motive worthwhile and unselfish? Check it before you begin anything important.',
   // everyday mindfulness
   'Put on one of your songs. Let it do its work.',
-  'Feel your feet on the floor. Where is your attention right now?',
+  'Feel the ground or surface under you. Look around: where are you? Name 5 things you can see, or small things happening around you.',
   'Take one deep breath. Let your shoulders drop.',
   'Slow down. Let someone go first, and smile about it.',
   'Check your posture: back straight, head erect, jaw loose.',
@@ -826,24 +833,16 @@ export const NUDGES = [
   "Circumstances do not matter. Your state of being does.",
   "Your state of being shapes your circumstances, not the other way around.",
   "What you believe is what you experience. Change the definition and the experience changes. Which belief is running the day right now?",
-  "The definition is the reality.",
-  "There is no \"out there\" out there. Everything you see is also a reflection of you.",
   "Excitement is the feeling of your true self. What is the most exciting thing you could do in the next five minutes?",
   "Fear is excitement without breath. Take a breath.",
   "You can't be harmed by what you don't believe in. Is there a belief hurting you today?",
-  "Every moment reflects your strongest belief.",
   "Don't wait for permission to be who you are. What would you do today if you didn't need anyone's yes?",
   "Whatever comes to you is the opportunity. What is in front of you right now?",
-  "You are infinite, pretending to be finite. You can ease up on the pretending.",
-  "Think from the wish fulfilled, not of it. Thinking of it keeps it far away. Thinking from it closes the gap.",
   "Don't ask the universe. Assume the state of the one who already has it.",
   "Feeling is the secret. It is not the words but a steady feeling of the wish fulfilled that sinks in.",
-  "Live in the end. Stay in the fulfilled state even when your senses argue.",
   "Your free will is real for one thing: choosing which state to occupy. Which one are you choosing right now?",
-  "Still assuming? Remain in the end.",
   "You can't feel lack and create abundance. Which are you feeling?",
-  "Don't check for evidence and don't talk it over. Once the state is assumed, let it work.",
-  "Brazen impudence: pray as the answered man. Bold, shameless certainty.",
+  "No emotion lives longer than 90 seconds unless you put more thought behind it. Narrow your focus to what it feels like in your body and watch it until it fades.",
   "You are not stressed, broke, or shy. Those are states you are wearing. You are the one wearing them.",
   "You are a frequency, a halo of consciousness, having a physical experience. Thought is creative. Choose your thoughts the way you choose your words.",
   "Fear is a currency. Notice where you are spending your energy on it.",
@@ -851,11 +850,8 @@ export const NUDGES = [
   "Much of what runs your life is inherited belief. Whose script are you reading from today?",
   "Stop the merry-go-round. You can step out of the role your family, culture, or media handed you.",
   "Time is not a line. This moment is the only point of power, and from here the past and the future can both be changed.",
-  "States of consciousness are the only true cause. Change the state and what follows changes.",
   "Follow the whim: one small, safe, instant impulse today.",
   "Notice one thought pulling you. You are not the thought, you are where it appears.",
-  "Where are you on the scale right now? Aim one rung up, no more.",
-  "Any upward step counts. Anger is progress from rage.",
   'Allow it. Do not analyze or judge what comes up. Just let it be there.',
   'Make some quiet for yourself today. Go within and simply listen.',
   'Fear lowers your frequency and love raises it. Which one are you feeding?',
@@ -864,20 +860,33 @@ export const NUDGES = [
   'Your body is talking: a craving, an ache, an aversion. Listen instead of overriding it.',
   'Let the past go and stop rehearsing the future. This moment is where you act.',
   'Pure water, fruit, vegetables. What does your body actually ask for today?',
-  'Is what you are watching or reading feeding fear? Change the channel.',
   'Judgment, especially of yourself, poisons the well. Put it down for one minute.',
   'Different paths, same destination. Let someone else walk theirs.',
   'Get outside. A few minutes in nature resets the day.',
   'Your intuition has answers. Ask, then be quiet and listen.',
   'Do what lights you up. It is part of what you came here to do.',
-  'Help someone today, or simply be an example. That wakes others up.',
+  'Do one kind thing for someone today, however small. You will be the one who benefits.',
   'Watch your words today. Choose what you say.',
   'You chose to be here, on purpose.',
-  'Take advice from anyone, then decide for yourself.',
+  'Be willing to learn from every source, even ones you do not trust. Everyone has something useful to teach you.',
   'Picture light filling you, the room, and the whole world, for one breath.',
   'A thought is pulling you away. Return to what you are doing.',
   'Are you rushing? There is nothing here to rush for.',
   'Soften your eyes. Take in the whole view at once.',
+];
+
+// Sayings that belong to one lesson. They stay out of the reminder pool until the person opens that lesson and presses
+// "Add these sayings to my reminders" (or switches the set on in Settings). To add a set: give it an id, the lesson's route, and its sayings;
+// put the button on the lesson page with setCard(id). A new category of exercises can use the same switch.
+export const SAYING_SETS = [
+  { id: 'laws', name: 'Universal laws', route: '#laws', sayings: [
+    "Think from the wish fulfilled, not of it. Thinking of it keeps it far away. Thinking from it closes the gap.",
+    "Still assuming? Remain in the end.",
+  ] },
+  { id: 'scale', name: 'Climbing the Scale', route: '#scale', sayings: [
+    "Where are you on the scale right now? Aim one rung up, no more.",
+    "Any upward step counts. Anger is progress from rage.",
+  ] },
 ];
 
 // Short text for reminder notifications.

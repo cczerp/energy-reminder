@@ -10,7 +10,7 @@ android {
         // Each CI build gets a higher version so a new APK installs over the previous one.
         // The two Play bundles built from one run pass their own VERSION_CODE (Play rejects a repeated one).
         versionCode = Integer.parseInt(System.getenv("VERSION_CODE") ?: System.getenv("GITHUB_RUN_NUMBER") ?: "1")
-        // Shown in Android Settings > Apps > MindCue, so the installed build can be checked without opening the app.
+        // Shown in Android Settings > Apps > Timbre Tamer, so the installed build can be checked without opening the app.
         versionName = "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

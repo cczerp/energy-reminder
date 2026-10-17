@@ -3,7 +3,7 @@ import Capacitor
 import CoreLocation
 import UserNotifications
 
-/// "Leaving home" for iPhone: the system watches a circle around home and wakes MindCue when you cross it,
+/// "Leaving home" for iPhone: the system watches a circle around home and wakes Timbre Tamer when you cross it,
 /// even if the app is closed. Nothing runs in the background while you are at home or away.
 final class LeaveFenceCore: NSObject, CLLocationManagerDelegate {
     static let shared = LeaveFenceCore()
@@ -38,7 +38,7 @@ final class LeaveFenceCore: NSObject, CLLocationManagerDelegate {
         pendingPosition.append(done)
         switch mgr.authorizationStatus {
         case .notDetermined: mgr.requestWhenInUseAuthorization()
-        case .denied, .restricted: finishPosition(.failure(NSError(domain: "leavefence", code: 1, userInfo: [NSLocalizedDescriptionKey: "Location is off for MindCue"]))); return
+        case .denied, .restricted: finishPosition(.failure(NSError(domain: "leavefence", code: 1, userInfo: [NSLocalizedDescriptionKey: "Location is off for Timbre Tamer"]))); return
         default: mgr.requestLocation()
         }
     }
@@ -83,7 +83,7 @@ final class LeaveFenceCore: NSObject, CLLocationManagerDelegate {
 
     private func content(for item: [String: Any]) -> UNMutableNotificationContent {
         let c = UNMutableNotificationContent()
-        c.title = item["title"] as? String ?? "MindCue"
+        c.title = item["title"] as? String ?? "Timbre Tamer"
         c.body = item["body"] as? String ?? ""
         c.sound = .default
         c.userInfo = ["route": item["route"] as? String ?? "#today"]

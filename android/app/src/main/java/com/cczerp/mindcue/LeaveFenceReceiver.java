@@ -126,7 +126,7 @@ public class LeaveFenceReceiver extends BroadcastReceiver {
                 nm.notify(2147000000, new NotificationCompat.Builder(c, "leave") // the group summary (fixed id: replaced, never repeated)
                     .setSmallIcon(R.drawable.ic_stat_mindcue)
                     .setColor(0xFF8294FF)
-                    .setContentTitle("MindCue")
+                    .setContentTitle("Timbre Tamer")
                     .setContentText("Your reminders")
                     .setGroup("mindcue")
                     .setGroupSummary(true)

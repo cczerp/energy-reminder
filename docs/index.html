@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1e1833">
-<title>MindCue</title>
+<title>Timbre Tamer</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -30,13 +30,13 @@
   setTimeout(function () {
     var v = document.getElementById('view');
     if (window.__mindfulBooted && v && v.innerHTML.replace(/\s/g, '')) return;
-    v.innerHTML = '<div style="padding:16px;color:#f2c94c;font-size:14px;line-height:1.5">MindCue did not finish starting.<br><br>Please screenshot this screen and send it.<br><br><b>Phone engine:</b> ' +
+    v.innerHTML = '<div style="padding:16px;color:#f2c94c;font-size:14px;line-height:1.5">Timbre Tamer did not finish starting.<br><br>Please screenshot this screen and send it.<br><br><b>Phone engine:</b> ' +
       navigator.userAgent.replace(/</g, '&lt;') + '<br><br><b>Problems found:</b><br>' + (errs.join('<br>') || 'none reported') + '</div>';
   }, 3500);
 })();
 </script>
 <script nomodule>
-document.getElementById('view').innerHTML = '<div style="padding:16px;color:#f2c94c;font-size:15px">This phone\'s web engine is too old to run MindCue.<br><br>Open the Play Store, search for "Android System WebView" and "Google Chrome", update both, then reopen Mindful.</div>';
+document.getElementById('view').innerHTML = '<div style="padding:16px;color:#f2c94c;font-size:15px">This phone\'s web engine is too old to run Timbre Tamer.<br><br>Open the Play Store, search for "Android System WebView" and "Google Chrome", update both, then reopen Mindful.</div>';
 </script>
 <script src="capacitor.js"></script>
 <script type="module" src="app.js"></script>

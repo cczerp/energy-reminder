@@ -86,17 +86,17 @@ jobs:
         run: |
           gh release delete latest-apk --cleanup-tag --yes || true
           cat > notes.md <<NOTES
-          ## Install MindCue (Android phones only)
+          ## Install Timbre Tamer (Android phones only)
           **Easiest:** tap **mindcue.apk** under *Assets* below, then follow these steps.
 
           1. If the phone says the file "can harm your device", tap **Download anyway**, then **Open**.
           2. If it says it isn't allowed to install unknown apps from this source, tap **Settings**, switch on **Allow from this source**, then press Back.
           3. Tap **Install**.
           4. If **Google Play Protect** appears, tap **More details**, then **Install anyway**. (Not "Got it" or "OK" - those do not install it.)
-          5. Open MindCue and tap **Allow notifications**.
+          5. Open Timbre Tamer and tap **Allow notifications**.
 
-          Already have MindCue? Install this over it - your settings stay. If it says "App not installed", uninstall the old copy first.
-          The bottom of the Today screen shows **MindCue - build ${{ github.run_number }}** so you can tell which version you have.
+          Already have Timbre Tamer? Install this over it - your settings stay. If it says "App not installed", uninstall the old copy first.
+          The bottom of the Today screen shows **Timbre Tamer - build ${{ github.run_number }}** so you can tell which version you have.
 
           Printable one-page guide with a QR code: https://github.com/${GITHUB_REPOSITORY}/blob/main/share/MindCue-install-guide.pdf
 
@@ -106,7 +106,7 @@ jobs:
           NOTES
           EXTRA=""; [ -f mindcue.aab ] && EXTRA="mindcue.aab"
           gh release create latest-apk mindcue.apk mindtap.apk mindful.apk $EXTRA --target "$GITHUB_SHA" --latest \
-            --title "MindCue build ${{ github.run_number }}" --notes-file notes.md
+            --title "Timbre Tamer build ${{ github.run_number }}" --notes-file notes.md
 
   smoke:
     # Installs the built APK in a real Android emulator and prints what the app shows, so problems are visible here.

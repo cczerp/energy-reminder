@@ -12,7 +12,7 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 /**
  * "Leaving home" detection done by the phone's own geofencing (Google Play services), so the app does not
- * keep location switched on. The phone wakes MindCue only when you cross the edge of home.
+ * keep location switched on. The phone wakes Timbre Tamer only when you cross the edge of home.
  */
 @CapacitorPlugin(name = "LeaveFence")
 public class LeaveFencePlugin extends Plugin {

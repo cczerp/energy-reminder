@@ -23,7 +23,7 @@ index 52def58..2475c6c 100644
          // shade (NotificationDismissReceiver).
      }
  
-+    // MindCue patch: Android only nests notifications that share a group key when a summary notification for that group exists.
++    // Timbre Tamer patch: Android only nests notifications that share a group key when a summary notification for that group exists.
 +    // Post one summary (fixed id, so it is replaced rather than repeated) every time a grouped notification arrives, so every
 +    // notification after the first nests under it like Gmail's.
 +    private fun postGroupSummary(context: Context, nm: NotificationManager, child: Notification) {
@@ -36,7 +36,7 @@ index 52def58..2475c6c 100644
 +            val b = Notification.Builder(context, child.channelId)
 +                .setSmallIcon(child.smallIcon)
 +                .setColor(child.color)
-+                .setContentTitle("MindCue")
++                .setContentTitle("Timbre Tamer")
 +                .setContentText("Your reminders")
 +                .setGroup(group)
 +                .setGroupSummary(true)

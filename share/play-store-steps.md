@@ -1,4 +1,4 @@
-# Putting MindCue on Google Play — step by step
+# Putting Timbre Tamer on Google Play — step by step
 
 Do these in order. Anything marked **[me]** is something I do in the code; everything else is you in Play Console (play.google.com/console). Google changes these screens now and then, so if a label differs a little, follow the nearest one.
 
@@ -9,7 +9,7 @@ Do these in order. Anything marked **[me]** is something I do in the code; every
 
 ## 1. Create the app
 1. Play Console → **Create app**.
-2. App name: **MindCue**. Default language: English (US). **App** (not game). **Free**.
+2. App name: **Timbre Tamer**. Default language: English (US). **App** (not game). **Free**.
 3. Tick the declarations (developer program policies, US export laws).
 
 ## 2. Upload the build
@@ -30,7 +30,7 @@ Paste these:
 
 **Full description:**
 ```
-MindCue helps you build a daily mindfulness and meditation practice, privately.
+Timbre Tamer helps you build a daily mindfulness and meditation practice, privately.
 
 • Reminders when you want them: set times, spread through the day, or random. Pick how many.
 • Daily goals that clear away when you finish them, with a small celebration when the whole day is done.
@@ -39,7 +39,7 @@ MindCue helps you build a daily mindfulness and meditation practice, privately.
 • A private log: notes, evening recall, and a history of every day.
 • No account. Your notes, logs and goals stay on your phone. The free version shows a few ads on the Practice and Info lists; one purchase removes them and unlocks the advanced teachings.
 
-MindCue supports a practice. It is not medical care and does not replace a counselor or doctor.
+Timbre Tamer supports a practice. It is not medical care and does not replace a counselor or doctor.
 ```
 
 **Graphics:** app icon (512×512) = `docs/icon-512.png`; feature graphic (1024×500) and 2–8 phone screenshots are needed. **[me]** I'll generate them if you ask (Today, Settings, a guided practice, the Days log).
@@ -57,18 +57,18 @@ Use the page already in this repository: `docs/privacy.html` (publish it on your
 - **Government / financial / news:** No.
 
 ## 6. Permissions Google asks you to explain
-- **Background location (leave-home reminders)** — the strictest one. Reason: "MindCue reminds you of a short practice when you leave your home. The user sets their home once. A system geofence detects leaving. The app does not track or store location history and nothing leaves the device." Google may ask for a **short screen recording**: record yourself setting home in Settings, walking out, and the reminder appearing. If this is refused, we remove that feature from the Play version.
+- **Background location (leave-home reminders)** — the strictest one. Reason: "Timbre Tamer reminds you of a short practice when you leave your home. The user sets their home once. A system geofence detects leaving. The app does not track or store location history and nothing leaves the device." Google may ask for a **short screen recording**: record yourself setting home in Settings, walking out, and the reminder appearing. If this is refused, we remove that feature from the Play version.
 - **Exact alarms** (reminders at exact times): reason: "Meditation reminders at times the user chooses."
 - **Notifications:** normal.
 
 ## 6½. AdMob (ads) — do this before going public
 1. Go to admob.google.com and sign in with the same Google account. Accept the terms.
-2. **Apps → Add app.** Choose Android, say the app is **not yet published** (you can link it to Play later), name it MindCue. Copy the **App ID** (it looks like `ca-app-pub-1234567890123456~1234567890`).
+2. **Apps → Add app.** Choose Android, say the app is **not yet published** (you can link it to Play later), name it Timbre Tamer. Copy the **App ID** (it looks like `ca-app-pub-1234567890123456~1234567890`).
 3. In the app, make two ad units: **Banner** (name "Lists banner") and **Rewarded** (name "Unlock one practice"). Copy each **Ad unit ID** (`ca-app-pub-…/…`).
 4. Under **Payments**, add your payment details and tax info so you can be paid.
 5. **Done:** your real App ID and the two ad unit IDs are in the app. The Play bundle build turns test mode off by itself, so real users get real ads.
    **Protect your account:** never tap your own live ads. Before you test the Play build on your phone, add your phone as a **test device** in AdMob (Settings → Test devices), so your phone only gets test ads.
-6. After the app is live on Play, in AdMob **Apps → MindCue → App settings → Link to Google Play**, so the ads are tied to your store listing.
+6. After the app is live on Play, in AdMob **Apps → Timbre Tamer → App settings → Link to Google Play**, so the ads are tied to your store listing.
 7. Europe and the UK: in AdMob **Privacy & messaging**, create the consent message ("GDPR") and publish it. Without it, ads may not show there.
 
 ## 7. The one-time purchases (do this before going public)

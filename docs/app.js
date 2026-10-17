@@ -1,4 +1,4 @@
-import { PACKAGES, EVERYTHING_ID, UNLOCK_AT, pkgFor, CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, PING, SCALE, SCALE_UP } from './content.js';
+import { PACKAGES, EVERYTHING_ID, UNLOCK_AT, pkgFor, CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, SAYING_SETS, PING, SCALE, SCALE_UP } from './content.js';
 import * as native from './native.js';
 import { BUILD } from './build.js';
 import { PAYWALL, ADS, ADMOB } from './config.js';
@@ -6,7 +6,7 @@ import { PAYWALL, ADS, ADMOB } from './config.js';
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, owned: [], adPass: null, tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, scale: [], wheels: [], loops: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, owned: [], adPass: null, tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, sets: [], scale: [], wheels: [], loops: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -97,6 +97,8 @@ const catCount = (gid, day = dayKey()) => {
   return c.ex.filter((id) => tallyOf(id, day) > 0).length;
 };
 const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].goal;
+const nudgePool = () => NUDGES.concat(...SAYING_SETS.filter((x) => (S.sets || []).includes(x.id)).map((x) => x.sayings)); // plain sayings plus any lesson sets the person switched on
+const setCard = (id) => { const x = SAYING_SETS.find((y) => y.id === id), on = (S.sets || []).includes(id); return card(`${check(on, '<b>Add these sayings to my reminders</b>', 'sayset:' + id, on ? 'On. They now come up in your mindfulness reminders.' : `${x.sayings.length} short sayings from this lesson. Press once you have read it.`)}`); };
 const canLeave = () => native.isNative && !!S.rem.home;
 const ownedPkgs = () => PACKAGES.filter((k) => S.owned.includes(k.pid)).length;
 const hasAll = () => S.owned.includes(EVERYTHING_ID) || ownedPkgs() >= UNLOCK_AT; // the everything purchase, or enough packages (which earns the rest)
@@ -138,7 +140,7 @@ function occurrences(date) {
   }
   const mi = S.rem.mind;
   if (mi.on) minutesFor('mind', mi.n, 'even', date).forEach((m, k) =>
-    out.push({ id: `mind${k}`, at: at(date, Math.floor(m / 60), m % 60), label: 'Mindfulness', title: 'Mindful moment', body: NUDGES[(dayNum(date) * 17 + k * 7) % NUDGES.length], route: '#today' }));
+    out.push({ id: `mind${k}`, at: at(date, Math.floor(m / 60), m % 60), label: 'Mindfulness', title: 'Mindful moment', body: nudgePool()[(dayNum(date) * 17 + k * 7) % nudgePool().length], route: '#today' }));
   // keep reminders from stacking: nudge anything within 10 minutes of the previous one
   out.sort((a, b) => a.at - b.at);
   for (let i = 1; i < out.length; i++) if (out[i].at - out[i - 1].at < 10 * 60000 && out[i].id !== 'recall') out[i].at = new Date(out[i - 1].at.getTime() + 10 * 60000);
@@ -205,7 +207,7 @@ function exportCalendar() {
   const pad = (n) => String(n).padStart(2, '0');
   const stamp = (d) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
   const tx = (s) => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
-  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MindCue//EN', 'CALSCALE:GREGORIAN'];
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Timbre Tamer//EN', 'CALSCALE:GREGORIAN'];
   const now = new Date().toISOString().replace(/[-:]|\.\d+/g, '');
   for (let i = 0; i < 14; i++) {
     const d = new Date(); d.setDate(d.getDate() + i);
@@ -217,7 +219,7 @@ function exportCalendar() {
     }
   }
   L.push('END:VCALENDAR');
-  download('mindcue-reminders.ics', 'text/calendar', L.join('\r\n'));
+  download('timbre-tamer-reminders.ics', 'text/calendar', L.join('\r\n'));
 }
 function download(name, type, text) {
   const a = document.createElement('a');
@@ -228,6 +230,8 @@ function download(name, type, text) {
 /* ---------------- ui helpers ---------------- */
 const card = (inner, o = '') => `<div class="card ${o}">${inner}</div>`;
 const link = (href, inner, o = '') => `<a class="card ${o}" href="${href}">${inner}</a>`;
+let setOpen = {}; // which settings blocks are dropped down
+const head = (on, label, sub, act, key) => `<div class="check ${on ? 'on' : ''}"><div class="box" data-act="${act}">${on ? '✓' : ''}</div><div style="flex:1" data-act="sopen:${key}"><div>${label}</div>${sub ? `<div class="dim sm">${sub}</div>` : ''}</div><div class="dim" style="padding:0 4px" data-act="sopen:${key}">${setOpen[key] ? '▴' : '▾'}</div></div>`;
 const check = (on, label, act, sub = '') => `<div class="check ${on ? 'on' : ''}" data-act="${act}"><div class="box">${on ? '✓' : ''}</div><div><div>${label}</div>${sub ? `<div class="dim sm">${sub}</div>` : ''}</div></div>`;
 const stepper = (name, val, fmt) => `<span class="stepper"><button data-act="dec:${name}">−</button><span>${fmt ? fmt(val) : val}</span><button data-act="inc:${name}">+</button></span>`;
 const rating = (name, val) => `<div class="rating">${[1, 2, 3, 4, 5].map((n) => `<button data-act="rate:${name}:${n}" class="${val >= n ? 'on' : ''}">${n}</button>`).join('')}</div>`;
@@ -267,7 +271,8 @@ function Scale() {
     <p class="dim">You can only climb one to three rungs at a time. Trying to jump to joy from the bottom just proves you are failing. Any upward step is success. Your emotion is guidance, not a verdict: it reads out the gap between you and what you want.</p>
     <p class="dim">Where are you right now, 1 to 22?</p>
     ${SCALE.map((r) => `<div class="bul scrung" data-act="scstart:${r.n}"><b class="pd">${r.n}</b><span>${esc(r.name)}</span></div>`).join('')}
-    ${hist ? `<h2>Recent climbs</h2>${card(hist)}` : ''}`;
+    ${hist ? `<h2>Recent climbs</h2>${card(hist)}` : ''}
+    ${setCard('scale')}`;
   const r = SCALE[sc.rung - 1]; const up = sc.rung > 1 ? SCALE[sc.rung - 2] : null;
   if (sc.done || !up) {
     const moved = sc.start - sc.rung;
@@ -318,7 +323,7 @@ const exRow = (id) => `<div class="exrow"><a href="#ex/${id}" class="exname">${e
 function Today() {
   snapPlan();
   const now = new Date();
-  const nudge = NUDGES[dayNum() % NUDGES.length];
+  const nudge = nudgePool()[dayNum() % nudgePool().length];
   const n = streak();
   const next = {}; occurrences(now).forEach((o) => { if (o.cat && o.id !== 'recall' && o.at > now && !next[o.cat]) next[o.cat] = o.at; });
   const on = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on);
@@ -342,15 +347,15 @@ function Today() {
   <h1>${n ? `${n}-day streak` : 'Begin today'}</h1>
   <div class="row"><a class="btn" href="#guide/funk-reset">I'm in a funk</a>${S.rem.playlist ? '<button class="btn ghost" data-act="music">♪ Play my songs</button>' : ''}</div>
   ${card(`<div class="dim sm">Mindful moment</div><div style="font-size:17px;margin-top:4px">${esc(nudge)}</div>`, 'accent')}
-  ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">MindCue needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → MindCue → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
-  ${native.isNative && !S.rem.home && on.some((g) => [...g.leave, ...(g.both || [])].some((id) => S.rem.cat[g.id].ex.includes(id))) ? card(`<b>Set your home</b><div class="dim sm" style="margin:4px 0 8px">Stair Count and Stranger's Face remind you as you leave the house. Stand at home and tap the button. When your phone asks about location, choose <b>While using the app</b>, then open your phone's Settings → Apps → MindCue → Permissions → Location and pick <b>Allow all the time</b>.</div><button class="btn" data-act="sethome">Set my home here</button><div id="msg" class="warn sm"></div>`, 'accent') : ''}
+  ${native.isNative && permState !== 'granted' ? card(`<b>Turn on reminders</b><div class="dim sm" style="margin:4px 0 8px">Timbre Tamer needs your OK to send notifications. That is how it reminds you.</div><button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked. Open your phone Settings → Apps → Timbre Tamer → Notifications and switch them on.</div>' : ''}`, 'accent') : ''}
+  ${native.isNative && !S.rem.home && on.some((g) => [...g.leave, ...(g.both || [])].some((id) => S.rem.cat[g.id].ex.includes(id))) ? card(`<b>Set your home</b><div class="dim sm" style="margin:4px 0 8px">Stair Count and Stranger's Face remind you as you leave the house. Stand at home and tap the button. When your phone asks about location, choose <b>While using the app</b>, then open your phone's Settings → Apps → Timbre Tamer → Permissions → Location and pick <b>Allow all the time</b>.</div><button class="btn" data-act="sethome">Set my home here</button><div id="msg" class="warn sm"></div>`, 'accent') : ''}
   ${S.tourSeen ? '' : card(`<b>New here?</b><div class="dim sm" style="margin:4px 0 8px">A one-minute tour of what is on each page.</div><div class="row"><a class="btn mini" href="#tour">Take the tour</a><button class="btn ghost mini" data-act="tourhide">Not now</button></div>`, 'accent')}
   ${cheer}
   ${morningCards()}${fastCard()}
   ${rows || recallCard ? `<h2>Today's goals</h2>${rows}${recallCard}` : on.length ? '' : '<h2>Today\'s goals</h2><div class="dim">No reminders on. Turn some on in Settings.</div>'}
   ${doneCard}
   <div class="row" style="margin-top:8px"><a class="btn ghost" href="#note">Quick note</a></div>
-  <div class="dim sm center" style="margin-top:18px">MindCue · build ${esc(BUILD)}</div>`;
+  <div class="dim sm center" style="margin-top:18px">Timbre Tamer · build ${esc(BUILD)}</div>`;
 }
 
 function Day(k) {
@@ -402,6 +407,7 @@ function Info() {
   ${ids}
   ${link(to('info:cycles', '#cycles'), `<b>${lk('info:cycles')}Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>`)}
   ${link(to('info:chakras', '#chakras'), `<b>${lk('info:chakras')}Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>`)}
+  ${link(to('info:fast', '#fast'), `<b>${lk('info:fast')}Frequency Fast</b><div class="dim sm">A short challenge: fast from fear-based input</div>`)}
   ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
 }
 let priceOf = {}; let unlockKey = '';
@@ -496,7 +502,8 @@ function Laws() {
   ${card('<div class="title" style="font-size:20px">One pure thought</div><div class="step" style="font-size:17px;margin-top:6px">Hold a single thought with no contradiction. That is the whole rule.</div>')}
   ${card('<div class="step" style="font-size:17px"><b class="pd">17 seconds</b> of a pure thought starts the change.<br><b class="pd">34 seconds</b> multiplies it.<br><b class="pd">68 seconds</b> is the target: the vibration becomes self-sustaining.</div>')}
   ${card('<div class="step" style="font-size:17px">Appreciation works best. When a contradicting thought shows up, do not follow it. Come back to the pure one. The practice is the coming back.</div>')}
-  <a class="btn" href="#guide/law-hold">Try the 17-second thought</a>`;
+  <a class="btn" href="#guide/law-hold">Try the 17-second thought</a>
+  ${setCard('laws')}`;
 }
 function Cycles() {
   return `${back('#info')}<h1>Life cycles</h1><p class="dim">${esc(CYCLES.note)}</p>` + CYCLES.periods.map((p) => card(`<b>${esc(p.name)}</b><div class="dim sm">${esc(p.intro)}</div>
@@ -553,10 +560,10 @@ function RecallForm() {
 /* ----- settings ----- */
 let permState = native.isNative ? (localStorage.getItem('mindful-perm') === 'granted' ? 'granted' : 'default') : 'Notification' in window ? Notification.permission : 'unsupported'; // remembered so the card does not flash on every open
 
-function fastSettings() {
+function FastLesson() {
   const f = S.fast; const d = fastDay(); const running = fastRunning();
-  return card(`${check(f.on, '<b class="ttl">Frequency Fast</b>', 'fon', running ? `Running: day ${d} of ${f.days}` : 'A short challenge. Off until you start it.')}
-    ${f.on ? `${fastRulesBox()}
+  return `${back('#info')}<h1>Frequency Fast</h1><p class="dim">A short challenge: fast from fear-based input and give the freed-up energy somewhere to go. It stays off until you switch it on here.</p>` + fastRulesBox() + card(`${check(f.on, '<b class="ttl">Turn on the Frequency Fast</b>', 'fon', running ? `Running: day ${d} of ${f.days}` : 'Off until you start it. When it runs, two daily goals appear on Today.')}
+    ${f.on ? `
     <div class="dim sm" style="margin-top:10px">How long</div>
     <div class="chips">${[1, 3, 5, 7].map((n) => `<button class="chip ${f.days === n ? 'on' : ''}" ${running ? 'disabled' : ''} data-act="fdays:${n}">${n} day${n === 1 ? '' : 's'}</button>`).join('')}</div>
     <div class="dim sm">Each day has two goals, shown in a bubble on Today while it runs.</div>
@@ -568,10 +575,10 @@ function Settings() {
   const groups = REMIND_GROUPS.map((g) => {
     const c = R.cat[g.id];
     const nightly = '';
-    if (g.simple) return card(`${check(c.on, `<b>${g.label}</b>`, `con:${g.id}`, 'Each reminder opens a list of meditations to choose from.')}${c.on ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
+    if (g.simple) return card(`${head(c.on, `<b>${g.label}</b>`, 'Each reminder opens a list of meditations to choose from.', `con:${g.id}`, g.id)}${setOpen[g.id] ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
     const bullets = [...g.pool, ...g.leave].filter((x) => !locked(x)).map((x) => `<div class="bul ${c.random ? 'dis' : ''}" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
-    return card(`${check(c.on, `<b class="ttl">${g.label}</b>`, `con:${g.id}`, `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day`)}
-      ${c.on ? `<div class="dim sm" style="margin-top:6px">Tick the exercises. Each ticked one is a daily goal. Or pick the random option below.</div>${bullets}
+    return card(`${head(c.on, `<b class="ttl">${g.label}</b>`, c.on ? `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day` : 'Off', `con:${g.id}`, g.id)}
+      ${setOpen[g.id] ? `<div class="dim sm" style="margin-top:6px">Tick the exercises. Each ticked one is a daily goal. Or pick the random option below.</div>${bullets}
       ${[...g.pool, ...g.leave].length > 1 ? `<div class="bul" data-act="crand:${g.id}"><span class="bx ${c.random ? 'on' : ''}">${c.random ? '✓' : ''}</span><span><b>Just 1 as my goal, picked at random</b><span class="dim"> — from all of them</span></span></div>` : ''}
       <div class="dim sm" style="margin-top:8px">Reminders per day — they keep coming until the goal is met</div>${stepper(`cn:${g.id}`, c.n)}
       <div class="dim sm" style="margin-top:8px">Remind me</div>
@@ -586,10 +593,10 @@ function Settings() {
   const anyLeave = REMIND_GROUPS.some((g) => R.cat[g.id].on && [...g.leave, ...(g.both || [])].some((id) => R.cat[g.id].ex.includes(id)));
   const home = anyLeave ? card(`<b>Leaving home</b>
     <div class="dim sm">${!native.isNative ? 'Works in the Android app only. Until then these stay quiet.' : R.home ? `Home is set. Reminders fire when you move ${R.home.r} m away.` : 'Set your home first — until then these stay quiet.'}</div>
-    <div class="dim sm" style="margin-top:6px">How many reminders when you leave home (spread out until you're back; one is picked at random if you've ticked several)</div>${stepper('leaven', R.leave.n)}
+    <div class="dim sm" style="margin-top:6px">Amount of reminders while you're away</div>${stepper('leaven', R.leave.n)}
     ${native.isNative ? `<button class="btn ghost" data-act="sethome">${R.home ? 'Update' : 'Set'} home to my current location</button>
     ${R.home ? `<div class="dim sm">Distance to count as "left"</div>${stepper('homer', R.home.r, (v) => v + ' m')}` : ''}
-    <div class="dim sm" style="margin-top:6px">Uses your phone\'s built-in home-area alert, so it barely touches the battery and shows no ongoing notification. Needs location set to "Allow all the time".</div>` : ''}`) : '';
+    <div class="dim sm" style="margin-top:6px">Needs location set to "Allow all the time".</div>` : ''}`) : '';
   return `<div class="hd" style="flex-wrap:nowrap"><h1>Settings</h1><a class="sqbtn" href="#log" aria-label="Log">Log</a></div>
   <h2>Notifications</h2>
   ${permState === 'granted' ? '<div class="good sm">Notifications are on.</div>' : `<button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked — enable notifications for this app in your phone settings.</div>' : ''}`}
@@ -599,7 +606,6 @@ function Settings() {
   ${card(`<div class="dim sm">From</div>${stepper('dayS', R.day.s, (v) => fmtTime(v))}<div class="dim sm" style="margin-top:6px">Until</div>${stepper('dayE', R.day.e, (v) => fmtTime(v))}`)}
   <h2>Daily goals</h2>
   ${groups}
-  ${fastSettings()}
   ${home}
   <h2>Funk playlist</h2>
   <div class="dim sm">Paste a Spotify (or any music) link and press Save. The funk button and "Play my songs" will open it. Downloaded playlists play without internet.</div>
@@ -607,7 +613,8 @@ function Settings() {
   <button class="btn" data-act="saveplaylist">Save playlist</button>
   ${R.playlist ? `<div class="good sm">Saved: <a href="${esc(R.playlist)}" style="color:var(--accent);word-break:break-all">${esc(R.playlist)}</a></div>` : ''}
   <h2>Mindfulness sayings</h2>
-  ${card(`${check(R.mind.on, '<b>Mindfulness sayings</b>', 'mindon', 'Habits, emotional techniques, gentle prompts')}${R.mind.on ? `<div class="dim sm" style="margin-top:6px">Per day</div>${stepper('mindn', R.mind.n)}` : ''}`)}
+  <p class="dim sm">Personal growth, one short thought at a time. The sayings mix simple basics for body and mind (breath, water, movement, kindness, slowing down), tools for your emotions, and deeper reflections drawn from mystics and teachers. Many bring you back to the present moment, a skill worth building: even 30 seconds of being present, a few times a day, steadies you and sharpens your focus.</p>
+  ${card(`${head(R.mind.on, '<b>Mindfulness sayings</b>', R.mind.on ? `${R.mind.n} a day` : 'Off', 'mindon', 'mind')}${setOpen.mind ? `<div class="dim sm" style="margin-top:6px">Per day</div>${stepper('mindn', R.mind.n)}` : ''}`)}
   <button class="btn ghost" data-act="test">Send a test notification</button>
   ${native.isNative ? '' : `<h2>Calendar reminders</h2>
   <div class="dim sm">Creates a calendar file with the next 14 days of reminders, each with an alarm.</div>
@@ -617,7 +624,7 @@ function Settings() {
   <button class="btn" data-act="export">Export backup</button>
   <label class="btn ghost" style="cursor:pointer">Restore from backup file<input type="file" id="restore" accept=".json,application/json" hidden></label>
   <div id="msg" class="good sm"></div>
-  <div class="dim sm center" style="margin-top:18px">MindCue · build ${esc(BUILD)}</div>`;
+  <div class="dim sm center" style="margin-top:18px">Timbre Tamer · build ${esc(BUILD)}</div>`;
 }
 
 /* ----- guided runner ----- */
@@ -724,6 +731,7 @@ function paint() {
     case 'about': h = About(); break;
     case 'cat': h = Choose(a); break;
     case 'scale': h = Scale(); break;
+    case 'fast': h = locked('info:fast') ? Unlock('info:fast') : FastLesson(); break;
     case 'laws': h = locked('info:laws') ? Unlock('info:laws') : Laws(); break;
     case 'wheel': h = Wheel(); break;
     case 'day': h = Day(a); break;
@@ -732,7 +740,7 @@ function paint() {
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'tour' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#info') || route === 'laws' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#practice') || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
+  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'tour' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#info') || route === 'laws' || route === 'fast' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#practice') || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   if (adsOn() && ['practice', 'info'].includes(route)) { $('#view').insertAdjacentHTML('beforeend', '<div style="height:70px"></div>'); native.showBanner(ADMOB, 56); } else native.hideBanner(); // a banner only on the Practice and Info lists, never during practice
@@ -746,7 +754,7 @@ const locDisclosure = () => new Promise((ok) => {
   if (S.locAgreed) return ok(true);
   const d = document.createElement('div');
   d.style.cssText = 'position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
-  d.innerHTML = '<div class="card" style="max-width:420px;max-height:90vh;overflow:auto"><b>Location use</b><div class="sm" style="margin:8px 0">MindCue collects your location <b>in the background, even when the app is closed or not in use</b>, to know when you leave your home so it can send the reminders you chose. This is the only reason location is used.</div><div class="sm" style="margin:8px 0">Your location stays on this phone. It is never uploaded, shared or used for ads.</div><div class="sm dim" style="margin:8px 0">Next your phone will ask for permission. Choose <b>Allow all the time</b> so reminders work with the app closed.</div><button class="btn" id="la-y">Agree and continue</button> <button class="btn ghost" id="la-n">No thanks</button></div>';
+  d.innerHTML = '<div class="card" style="max-width:420px;max-height:90vh;overflow:auto"><b>Location use</b><div class="sm" style="margin:8px 0">Timbre Tamer collects your location <b>in the background, even when the app is closed or not in use</b>, to know when you leave your home so it can send the reminders you chose. This is the only reason location is used.</div><div class="sm" style="margin:8px 0">Your location stays on this phone. It is never uploaded, shared or used for ads.</div><div class="sm dim" style="margin:8px 0">Next your phone will ask for permission. Choose <b>Allow all the time</b> so reminders work with the app closed.</div><button class="btn" id="la-y">Agree and continue</button> <button class="btn ghost" id="la-n">No thanks</button></div>';
   document.body.appendChild(d);
   const end = (v) => { d.remove(); if (v) { S.locAgreed = true; save(); } ok(v); };
   d.querySelector('#la-y').onclick = () => end(true);
@@ -787,14 +795,16 @@ document.addEventListener('click', async (e) => {
     case 'ctime': S.rem.cat[a].timing = b; save(); repaintKeep(); break;
     case 'cch': S.rem.cat[a].choose = b === '1'; save(); repaintKeep(); break;
     case 'lv': S.rem.leaveItems[a] = !S.rem.leaveItems[a]; save(); repaintKeep(); break;
+    case 'sopen': setOpen[a] = !setOpen[a]; repaintKeep(); break;
     case 'other': openCat = openCat === a ? null : a; repaintKeep(); break;
     case 'music': openMusic(); break;
+    case 'sayset': S.sets = S.sets || []; S.sets = S.sets.includes(a) ? S.sets.filter((x) => x !== a) : S.sets.concat(a); save(); repaintKeep(); break;
     case 'mindon': S.rem.mind.on = !S.rem.mind.on; save(); repaintKeep(); break;
     case 'recallon': S.rem.recall.on = !S.rem.recall.on; save(); repaintKeep(); break;
     case 'sethome': {
       if (!(await locDisclosure())) { msg(''); break; }
       msg('Finding your location…');
-      try { const p = await native.currentPosition(); S.rem.home = { latitude: p.latitude, longitude: p.longitude, r: S.rem.home?.r || 150 }; save(); repaintKeep(); msg('Home set.'); toast('Home set. Last step: phone Settings → Apps → MindCue → Permissions → Location → Allow all the time.'); }
+      try { const p = await native.currentPosition(); S.rem.home = { latitude: p.latitude, longitude: p.longitude, r: S.rem.home?.r || 150 }; save(); repaintKeep(); msg('Home set.'); toast('Home set. Last step: phone Settings → Apps → Timbre Tamer → Permissions → Location → Allow all the time.'); }
       catch (err) { msg('Could not get your location. Allow location "all the time" for this app and try again.'); }
       break;
     }
@@ -804,11 +814,11 @@ document.addEventListener('click', async (e) => {
       changed(); repaintKeep(); break;
     }
     case 'test': {
-      if (native.isNative) { if (!(await native.ensurePerms())) return msg('Notifications are blocked.'); await native.fireNow(999999, 'Mindful moment', NUDGES[Math.floor(Math.random() * NUDGES.length)], '#today'); return msg('Coming in a moment.'); }
+      if (native.isNative) { if (!(await native.ensurePerms())) return msg('Notifications are blocked.'); await native.fireNow(999999, 'Mindful moment', nudgePool()[Math.floor(Math.random() * nudgePool().length)], '#today'); return msg('Coming in a moment.'); }
       if (!('Notification' in window)) return msg('This browser does not support notifications.');
       if (Notification.permission !== 'granted') await Notification.requestPermission();
       if (Notification.permission !== 'granted') return msg('Notifications are blocked.');
-      notify('Mindful moment', NUDGES[Math.floor(Math.random() * NUDGES.length)]); msg('Sent.'); break;
+      notify('Mindful moment', nudgePool()[Math.floor(Math.random() * nudgePool().length)]); msg('Sent.'); break;
     }
     case 'ics': exportCalendar(); msg('Calendar file created — open it to add the reminders.'); break;
     case 'export': exportBackup(); break;
@@ -879,10 +889,10 @@ function stepTo(name, id, d, idx) {
   repaintKeep();
 }
 async function exportBackup() {
-  const text = JSON.stringify(S, null, 1); const name = `mindcue-backup-${dayKey()}.json`;
+  const text = JSON.stringify(S, null, 1); const name = `timbre-tamer-backup-${dayKey()}.json`;
   try {
     const f = new File([text], name, { type: 'application/json' });
-    if (navigator.canShare?.({ files: [f] })) { await navigator.share({ files: [f], title: 'MindCue backup' }); return msg('Backup shared.'); }
+    if (navigator.canShare?.({ files: [f] })) { await navigator.share({ files: [f], title: 'Timbre Tamer backup' }); return msg('Backup shared.'); }
   } catch (e) { if (e.name === 'AbortError') return; }
   download(name, 'application/json', text); msg('Backup downloaded.');
 }

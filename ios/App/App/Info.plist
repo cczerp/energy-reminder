@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>MindCue</string>
+        <string>Timbre Tamer</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -23,9 +23,9 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>MindCue uses your location once, to remember where home is.</string>
+	<string>Timbre Tamer uses your location once, to remember where home is.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>MindCue uses a small circle around home to remind you when you leave. Your location never leaves your phone.</string>
+	<string>Timbre Tamer uses a small circle around home to remind you when you leave. Your location never leaves your phone.</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-3940256099942544~1458002511</string>
 	<key>LSRequiresIPhoneOS</key>

@@ -42,9 +42,9 @@ jobs:
         run: |
           gh release delete latest-ios --cleanup-tag --yes || true
           cat > notes.md <<NOTES
-          ## MindCue for iPhone (test version)
+          ## Timbre Tamer for iPhone (test version)
           This is a test build for installing with Sideloadly or AltStore. See the instructions in the repository: share/iphone-install.md
 
           Build ${{ github.run_number }}, from main (${GITHUB_SHA::7}).
           NOTES
-          gh release create latest-ios mindcue.ipa --target "$GITHUB_SHA" --title "MindCue iPhone build ${{ github.run_number }}" --notes-file notes.md
+          gh release create latest-ios mindcue.ipa --target "$GITHUB_SHA" --title "Timbre Tamer iPhone build ${{ github.run_number }}" --notes-file notes.md
