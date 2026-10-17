@@ -1,4 +1,4 @@
-import { PACKAGES, EVERYTHING_ID, UNLOCK_AT, pkgFor, CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, SAYING_SETS, PING, SCALE, SCALE_UP } from './content.js';
+import { PACKAGES, EVERYTHING_ID, pkgFor, CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, SAYING_SETS, PING, SCALE, SCALE_UP, ATTN_LESSON, WHY, CAT_TEACH } from './content.js';
 import * as native from './native.js';
 import { BUILD } from './build.js';
 import { PAYWALL, ADS, ADMOB } from './config.js';
@@ -6,7 +6,7 @@ import { PAYWALL, ADS, ADMOB } from './config.js';
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, owned: [], adPass: null, tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, sets: [], scale: [], wheels: [], loops: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, owned: [], adPass: null, tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, learned: {}, sets: [], scale: [], wheels: [], loops: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -66,7 +66,7 @@ function streak() {
 // Remembers what today's plan was, so the day can be reviewed later even if settings change.
 function snapPlan() {
   const k = dayKey(); const p = { cats: {}, recall: false };
-  REMIND_GROUPS.forEach((g) => { if (S.rem.cat[g.id].on) p.cats[g.id] = S.rem.cat[g.id].goal; });
+  REMIND_GROUPS.forEach((g) => { if (S.rem.cat[g.id].on && ready(g)) p.cats[g.id] = S.rem.cat[g.id].goal; });
   if (!S.days) S.days = {};
   if (JSON.stringify(S.days[k]) !== JSON.stringify(p)) { S.days[k] = p; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 }
@@ -100,12 +100,14 @@ const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].go
 const nudgePool = () => NUDGES.concat(...SAYING_SETS.filter((x) => (S.sets || []).includes(x.id)).map((x) => x.sayings)); // plain sayings plus any lesson sets the person switched on
 const setCard = (id) => { const x = SAYING_SETS.find((y) => y.id === id), on = (S.sets || []).includes(id); return card(`${check(on, '<b>Add these sayings to my reminders</b>', 'sayset:' + id, on ? 'On. They now come up in your mindfulness reminders.' : `${x.sayings.length} short sayings from this lesson. Press once you have read it.`)}`); };
 const canLeave = () => native.isNative && !!S.rem.home;
-const ownedPkgs = () => PACKAGES.filter((k) => S.owned.includes(k.pid)).length;
-const hasAll = () => S.owned.includes(EVERYTHING_ID) || ownedPkgs() >= UNLOCK_AT; // the everything purchase, or enough packages (which earns the rest)
+const hasAll = () => S.owned.includes(EVERYTHING_ID); // the everything purchase (packages are bought one at a time; no count unlocks the rest)
 const adsOn = () => ADS && native.isNative && !S.owned.length; // ads only in the store build, and never after any purchase
 const passed = (id) => !!S.adPass && S.adPass.day === dayKey() && S.adPass.ids.includes(id); // a meditation opened for today by watching an ad (never the Info pages)
-const locked = (key) => { const k = pkgFor(key); return PAYWALL && !!k && !hasAll() && !S.owned.includes(k.pid) && !passed(key); }; // advanced teachings in a store build, until bought
-const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id) && !locked(id)); // exercises that ring at scheduled times (not leave-home ones)
+const locked = (key) => { const k = pkgFor(key); return PAYWALL && !!k && (k.extra || !hasAll()) && !S.owned.includes(k.pid) && !passed(key); }; // advanced teachings in a store build, until bought
+const gated = (id) => { const e = exById[id]; return !!(e && e.gate && !(S.learned || {})[e.gate]); }; // attention practices wait until the lesson's switch is on
+const off = (id) => locked(id) || gated(id);
+const ready = (g) => !g.gate || !!(S.learned || {})[g.gate]; // a group with a gate stays out of Today and Settings until its Info switch is on
+const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id) && !off(id)); // exercises that ring at scheduled times (not leave-home ones)
 const choosing = (gid) => !S.rem.cat[gid].random && schedEx(gid).length > 1; // several to do: the reminder opens the list
 const todayPick = (gid) => (schedEx(gid).length ? planned(gid) : S.rem.cat[gid].ex[0]);
 // the exercise a reminder names when it is not asking you to choose (rotates through the ones you picked)
@@ -326,7 +328,7 @@ function Today() {
   const nudge = nudgePool()[dayNum() % nudgePool().length];
   const n = streak();
   const next = {}; occurrences(now).forEach((o) => { if (o.cat && o.id !== 'recall' && o.at > now && !next[o.cat]) next[o.cat] = o.at; });
-  const on = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on);
+  const on = REMIND_GROUPS.filter((g) => S.rem.cat[g.id].on && ready(g));
   const pending = on.filter((g) => !catDone(g.id));
   const rows = pending.map((g) => {
     const c = S.rem.cat[g.id]; const cnt = catCount(g.id);
@@ -400,18 +402,23 @@ function Tour() {
 function Info() {
   const lk = (key) => (locked(key) ? '🔒 ' : '');
   const to = (key, route) => (locked(key) ? `#unlock/${key}` : route);
-  const ids = ['live-dos', 'energy-habits'].map((id) => exById[id]).map((e) => link(to(e.id, `#ex/${e.id}`), `<b>${lk(e.id)}${esc(e.title)}</b><div class="dim sm">${esc(e.summary)}</div>`)).join('');
+  const ids = TEACH.map((id) => exById[id]).map((e) => link(to(e.id, `#ex/${e.id}`), `<b>${lk(e.id)}${esc(e.title)}</b><div class="dim sm">${esc(e.summary)}</div>`)).join('');
   return `<h1>Info</h1>
   ${link('#tour', '<b>A quick tour</b><div class="dim sm">What is on each page</div>')}
+  ${link('#why', '<b>Why these five</b><div class="dim sm">Observe, hold, settle, steady, rest: what everything here builds on</div>')}
+  ${link(to('info:attn', '#attn'), `<b>${lk('info:attn')}Attention: narrow and wide</b><div class="dim sm">Learn the idea, then switch the practices on</div>`)}
+  ${link(to('cat:assessment', '#learn/assessment'), `<b>${lk('cat:assessment')}The CIA assessment of the Gateway Experience (GWE)</b><div class="dim sm">A 1983 evaluation released by the CIA, and the model behind it</div>`)}
   ${link(to('info:laws', '#laws'), `<b>${lk('info:laws')}Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>`)}
   ${ids}
+  <h2>Teachings for the practices</h2>
+  ${LEARN.map((c) => link(to('cat:' + c, `#learn/${c}`), `<b>${lk('cat:' + c)}${esc(CAT_TEACH[c].t)}</b><div class="dim sm">${esc(CAT_TEACH[c].one)}</div>`)).join('')}
   ${link(to('info:cycles', '#cycles'), `<b>${lk('info:cycles')}Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>`)}
-  ${link(to('info:chakras', '#chakras'), `<b>${lk('info:chakras')}Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>`)}
   ${link(to('info:fast', '#fast'), `<b>${lk('info:fast')}Frequency Fast</b><div class="dim sm">A short challenge: fast from fear-based input</div>`)}
   ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
 }
 let priceOf = {}; let unlockKey = '';
-const homeOf = (key) => (String(key).startsWith('info:') || ['live-dos', 'energy-habits'].includes(key) ? '#info' : '#practice');
+const TEACH = ['live-dos', 'energy-habits']; // reading pages kept as entries, shown in Info with no guided run
+const homeOf = (key) => (String(key).startsWith('info:') || String(key).startsWith('cat:') || TEACH.includes(key) ? '#info' : '#practice');
 // Ask Google Play what this account owns, so a refund relocks and a reinstall unlocks. If Play cannot be reached, keep what we knew.
 async function syncUnlock() {
   if (!PAYWALL || !native.isNative) return;
@@ -421,12 +428,11 @@ async function syncUnlock() {
 }
 function Unlock(key) {
   unlockKey = key; const k = pkgFor(key);
-  const n = ownedPkgs();
   return `${back(homeOf(key))}<h1>${k ? esc(k.name) : 'Advanced teachings'}</h1>
   ${k ? card(`<div class="step" style="font-size:17px">${esc(k.desc)}</div>`, 'accent') : ''}
-  ${k ? `<button class="btn" data-act="buy:${k.pid}">Unlock “${esc(k.name)}” · ${esc(priceOf[k.pid] || '$1.00')}</button>` : ''}
-  <button class="btn ${k ? 'ghost' : ''}" data-act="buy:${EVERYTHING_ID}">Unlock everything · ${esc(priceOf[EVERYTHING_ID] || '$4.99')}</button>
-  ${card(`<div class="sm"><b>Everything</b> opens every advanced teaching, including every one added later, for one price.<br><br>Prefer to go one at a time? Each package is ${esc(priceOf[k ? k.pid : PACKAGES[0].pid] || '$1.00')}. Own any <b>${UNLOCK_AT}</b> packages and the rest unlock free. You own <b>${n}</b> so far. Starting slow costs a little more than trusting it from the start, and either way you get the whole path.</div>`)}
+  ${k ? `<button class="btn" data-act="buy:${k.pid}">Unlock “${esc(k.name)}” · ${esc(priceOf[k.pid] || k.price || '$1.00')}</button>` : ''}
+  ${k && k.extra ? '' : `<button class="btn ${k ? 'ghost' : ''}" data-act="buy:${EVERYTHING_ID}">Unlock everything · ${esc(priceOf[EVERYTHING_ID] || '$4.99')}</button>`}
+  ${k && k.extra ? card('<div class="sm">This teaching is sold on its own. It is not part of Everything, and owning other packages does not unlock it.</div>') : card(`<div class="sm"><b>Everything</b> opens every advanced teaching except the CIA assessment, including every other one added later, for one price.<br><br>Prefer to go one at a time? Each teaching is priced on its own, and its practices come with it.</div>`)}
   ${adsOn() && k && homeOf(key) === '#practice' ? `<button class="btn ghost" data-act="watchad:${key}">Watch a short ad to open this one for today</button>` : ''}
   <button class="btn ghost" data-act="restoreunlock">Restore purchases</button>
   <div id="msg" class="warn sm"></div>`;
@@ -437,7 +443,7 @@ function Practice() {
   const ids = (list) => list.map((id) => exById[id]).filter(Boolean).map(row).join('');
   const cats = (cat, skip = []) => EXERCISES.filter((e) => e.cat === cat && !e.hidden && !skip.includes(e.id)).map(row).join('');
   const sub = (label, inner) => (inner ? `<h3>${label}</h3>${inner}` : '');
-  const knowledge = ['live-dos', 'energy-habits']; // shown on the Info page
+  const knowledge = TEACH; // shown on the Info page
   const medPractice = ['med-practice', 'med-cloud', 'med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love'];
   return `<h1>Practice</h1>
   <h2>Meditation practice</h2>
@@ -448,6 +454,8 @@ function Practice() {
   ${sub(CATS.bedtime, cats('bedtime'))}${sub(CATS.living, cats('living', knowledge))}${sub(CATS.balance, cats('balance'))}
   <h2>Energy &amp; healing meditations</h2>
   ${cats('energy', knowledge)}
+  <h2>Attention</h2>
+  ${(S.learned || {}).attn ? cats('attention') : link('#attn', `<b>${locked('info:attn') ? '🔒 ' : ''}Attention practices</b><div class="dim sm">Learn the idea first, then switch them on</div>`)}
   <h2>Esoteric meditations</h2>
   ${ids(['j-library', 'j-stair', 'j-guide', 'p-mental', 'p-etheric'])}
   <h2>Chakra meditations</h2>
@@ -468,10 +476,13 @@ function Warn(id) {
     <a class="btn ghost" href="#practice">Go back</a>`;
 }
 
+const LEARN = ['observe', 'concentrate', 'meditate', 'emotion', 'bedtime', 'energy', 'balance', 'living', 'chakra', 'centers', 'journey', 'project'];
 function Exercise(id) {
   const ex = exById[id]; if (!ex) return back() + '<p>Not found.</p>';
-  return `${back(['live-dos', 'energy-habits'].includes(id) ? '#info' : '#practice')}<h1>${esc(ex.title)}</h1><div class="dim">${esc(ex.summary)}</div>
-  <div class="dim sm" style="margin:8px 0">${esc(ex.freq)}</div>
+  if (TEACH.includes(id)) return `${back('#info')}<h1>${esc(ex.title)}</h1><div class="dim">${esc(ex.summary)}</div>${ex.steps.map((t) => card(`<div class="sm" style="white-space:pre-line">${esc(typeof t === 'string' ? t : t.t)}</div>`)).join('')}`;
+  const why = CAT_TEACH[ex.cat] ? `<a class="dim sm" href="${locked('cat:' + ex.cat) ? '#unlock/cat:' + ex.cat : '#learn/' + ex.cat}">Why this? ›</a>` : '';
+  return `${back('#practice')}<h1>${esc(ex.title)}</h1><div class="dim">${esc(ex.summary)}</div>
+  <div class="dim sm" style="margin:8px 0">${esc(ex.freq)} ${why}</div>
   ${ex.caution ? card(`<div class="warn sm">${esc(ex.caution)}</div>`, 'warnb') : ''}
   <a class="btn" href="#guide/${id}">Start guided</a>
   <button class="btn ghost" data-act="done:${id}">✓ Mark completed (${tallyOf(id)} today)</button>
@@ -491,6 +502,8 @@ function About() {
     <li><b>Guru Pathik</b>, in <i>Avatar: The Last Airbender</i> — the chakra lesson</li>
     <li><b>Dolores Cannon</b> — the quiet-listening, inner-journey, energy, and everyday-living practices, written here in our own words from teachings associated with her work</li>
     <li><b>Barbara Marciniak</b>, <b>Neville Goddard</b>, <b>Bashar</b>, and <b>Esther and Abraham Hicks</b> — the whim, now-point, belief-audit, fast, breath, bedtime-loop, emotional-scale and manifestation practices, and the sayings inspired by them, in our own words</li>
+    <li><b>Randall L. Waechter and Lauren Sergio</b>, and the researchers they draw on (Burr, Baule and McFee, Schumann, Oschman, Becker) — the teaching on energy and the body's fields, from their paper in <i>Subtle Energies &amp; Energy Medicine</i></li>
+    <li><b>Lt. Col. Wayne M. McDonnell</b> and the <b>US Army Intelligence and Security Command</b>, whose 1983 Analysis and Assessment of Gateway Process (a declassified copy, released through the CIA reading room) is the source of the teachings on meditation, hypnosis and biofeedback, Hemi-Sync, kundalini and resonant sound, color and the energy bar, how a Gateway session runs and the model behind it, and out-of-body movement, and the people it draws on: <b>Itzhak Bentov</b>, <b>Robert Monroe</b> and the Monroe Institute (<b>Melissa Jager</b>, <b>Stuart Twemlow</b>), <b>Lee Sannella</b>, <b>Ronald Stone</b>, <b>Karl Pribram</b> and <b>David Bohm</b></li>
     <li><b>Wisdom of the Mystic Masters</b> — the mental training, meditation, healing, projection, and cycles teachings</li>
     <li>The yogic, tantric, and Rosicrucian traditions all of the above draw on</li>
     <li>Every teacher, student, and practitioner who passed these on</li>
@@ -504,6 +517,30 @@ function Laws() {
   ${card('<div class="step" style="font-size:17px">Appreciation works best. When a contradicting thought shows up, do not follow it. Come back to the pure one. The practice is the coming back.</div>')}
   <a class="btn" href="#guide/law-hold">Try the 17-second thought</a>
   ${setCard('laws')}`;
+}
+const taught = () => '<div class="dim sm" style="margin-top:14px">Taught from the teachers and traditions named in <a href="#about">Credits</a>.</div>';
+function Why() {
+  return `${back('#info')}<h1>Why these five</h1><p class="dim">${esc(WHY.intro)}</p>
+  ${WHY.parts.map((p) => card(`<b>${esc(p.h)}</b><div class="sm" style="margin-top:4px">${esc(p.t)}</div>`)).join('')}
+  ${card(`<div class="sm">${esc(WHY.close)}</div>`, 'accent')}
+  <a class="btn" href="#practice">Go to Practice</a>${taught()}`;
+}
+function Learn(c) {
+  const t = CAT_TEACH[c]; if (!t) return `${back('#info')}<p>Not found.</p>`;
+  return `${back('#info')}<h1>${esc(t.t)}</h1><p class="dim">${esc(t.one)}</p>
+  ${t.origin ? card('<div class="sm"><b>From a declassified document.</b> This comes from a 1983 US Army Intelligence and Security Command assessment of the Gateway Process, written by Lt. Col. Wayne McDonnell and released through the CIA reading room. It reports what the author and his sources describe. Read it and judge for yourself.</div>', 'accent') : ''}
+  ${t.p.map((x) => card(`<div class="sm">${esc(x)}</div>`)).join('')}
+  ${t.more || t.links ? `<h3>Go deeper</h3>${(t.links || []).map((l) => link(l.href, `<b>${esc(l.t)}</b><div class="dim sm">${esc(l.one)}</div>`)).join('')}${(t.more || []).map((m) => link(locked('cat:' + m) ? `#unlock/cat:${m}` : `#learn/${m}`, `<b>${locked('cat:' + m) ? '🔒 ' : ''}${esc(CAT_TEACH[m].t)}</b><div class="dim sm">${esc(CAT_TEACH[m].one)}</div>`)).join('')}` : ''}
+  ${t.src ? `<h3>Sources</h3>${t.src.map((x) => `<div class="dim sm" style="margin-bottom:6px">${esc(x)}</div>`).join('')}` : ''}
+  <a class="btn" href="#practice">Go to Practice</a>${taught()}`;
+}
+function Attn() {
+  const on = !!(S.learned || {}).attn;
+  return `${back('#info')}<h1>Attention: narrow and wide</h1><p class="dim">${esc(ATTN_LESSON.intro)}</p>
+  ${ATTN_LESSON.parts.map((p) => card(`<b>${esc(p.h)}</b><div class="sm" style="margin-top:4px">${esc(p.t)}</div>`)).join('')}
+  ${card(`${check(on, '<b class="ttl">I have learned this. Turn on the practices</b>', 'learnattn', on ? 'On. The ten practices are in Practice, and an Attention block with reminders is now in Settings.' : 'Off until you switch it on. Then ten attention practices appear in Practice, and an Attention block appears in Settings.')}
+`, 'accent')}
+  ${on ? EXERCISES.filter((e) => e.cat === 'attention').map((e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`)).join('') : ''}${taught()}`;
 }
 function Cycles() {
   return `${back('#info')}<h1>Life cycles</h1><p class="dim">${esc(CYCLES.note)}</p>` + CYCLES.periods.map((p) => card(`<b>${esc(p.name)}</b><div class="dim sm">${esc(p.intro)}</div>
@@ -572,11 +609,11 @@ function FastLesson() {
 function Settings() {
   const R = S.rem;
   const fmtMin = (v) => fmtTime(Math.floor(v / 60), v % 60);
-  const groups = REMIND_GROUPS.map((g) => {
+  const groups = REMIND_GROUPS.filter(ready).map((g) => {
     const c = R.cat[g.id];
     const nightly = '';
     if (g.simple) return card(`${head(c.on, `<b>${g.label}</b>`, 'Each reminder opens a list of meditations to choose from.', `con:${g.id}`, g.id)}${setOpen[g.id] ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
-    const bullets = [...g.pool, ...g.leave].filter((x) => !locked(x)).map((x) => `<div class="bul ${c.random ? 'dis' : ''}" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
+    const bullets = [...g.pool, ...g.leave].filter((x) => !off(x)).map((x) => `<div class="bul ${c.random ? 'dis' : ''}" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
     return card(`${head(c.on, `<b class="ttl">${g.label}</b>`, c.on ? `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day` : 'Off', `con:${g.id}`, g.id)}
       ${setOpen[g.id] ? `<div class="dim sm" style="margin-top:6px">Tick the exercises. Each ticked one is a daily goal. Or pick the random option below.</div>${bullets}
       ${[...g.pool, ...g.leave].length > 1 ? `<div class="bul" data-act="crand:${g.id}"><span class="bx ${c.random ? 'on' : ''}">${c.random ? '✓' : ''}</span><span><b>Just 1 as my goal, picked at random</b><span class="dim"> — from all of them</span></span></div>` : ''}
@@ -720,9 +757,9 @@ function paint() {
     case 'practice': h = Practice(); break;
     case 'info': h = Info(); break;
     case 'tour': S.tourSeen = true; save(); h = Tour(); break;
-    case 'ex': h = locked(a) ? Unlock(a) : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
+    case 'ex': h = locked(a) ? Unlock(a) : gated(a) ? Attn() : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
     case 'unlock': h = Unlock(decodeURIComponent(a)); break;
-    case 'guide': if (locked(a)) { h = Unlock(a); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
+    case 'guide': if (locked(a)) { h = Unlock(a); break; } if (gated(a)) { h = Attn(); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
     case 'log': h = Log(); break;
     case 'note': h = NoteForm(a); break;
     case 'recall': h = RecallForm(); break;
@@ -731,6 +768,9 @@ function paint() {
     case 'about': h = About(); break;
     case 'cat': h = Choose(a); break;
     case 'scale': h = Scale(); break;
+    case 'why': h = Why(); break;
+    case 'learn': h = locked('cat:' + a) ? Unlock('cat:' + a) : Learn(a); break;
+    case 'attn': h = locked('info:attn') ? Unlock('info:attn') : Attn(); break;
     case 'fast': h = locked('info:fast') ? Unlock('info:fast') : FastLesson(); break;
     case 'laws': h = locked('info:laws') ? Unlock('info:laws') : Laws(); break;
     case 'wheel': h = Wheel(); break;
@@ -740,7 +780,7 @@ function paint() {
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'tour' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#info') || route === 'laws' || route === 'fast' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#practice') || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
+  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'tour' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#info') || route === 'laws' || route === 'fast' || route === 'chakras' || route === 'cycles' || route === 'about' || route === 'learn' || route === 'why' || route === 'attn' || (route === 'ex' && TEACH.includes(a)) ? 'info' : route === 'ex' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#practice') || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   if (adsOn() && ['practice', 'info'].includes(route)) { $('#view').insertAdjacentHTML('beforeend', '<div style="height:70px"></div>'); native.showBanner(ADMOB, 56); } else native.hideBanner(); // a banner only on the Practice and Info lists, never during practice
@@ -822,6 +862,7 @@ document.addEventListener('click', async (e) => {
     }
     case 'ics': exportCalendar(); msg('Calendar file created — open it to add the reminders.'); break;
     case 'export': exportBackup(); break;
+    case 'learnattn': S.learned = { ...(S.learned || {}), attn: !(S.learned || {}).attn }; save(); repaintKeep(); break;
     case 'fon': S.fast.on = !S.fast.on; if (!S.fast.on) S.fast.start = ''; save(); repaintKeep(); break;
     case 'fdays': S.fast.days = +a; save(); repaintKeep(); break;
     case 'fstart': S.fast.start = dayKey(); S.fast.done = {}; save(); repaintKeep(); toast('Frequency Fast started'); break;
