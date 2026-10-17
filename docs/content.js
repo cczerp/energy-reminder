@@ -1050,3 +1050,16 @@ export const ATTN_LESSON = {
     { h: 'How you train it', t: 'Every time your mind wanders and you bring it back, that is one successful rep, not a failure. Short, daily practice counts more than long, rare sessions. Sleep, exercise and fewer distractions raise the ceiling for how long you can concentrate.' },
   ],
 };
+
+// "Why these five" (Info, always free). Plain, truthful wording for now; the Rosicrucian wording can replace it later.
+export const WHY = {
+  intro: 'Everything in MindCue grows from five building blocks. They are not five separate skills. Each one makes the next one possible, and together they are how a mind learns to steady itself and choose how it responds.',
+  parts: [
+    { h: '1. Observation', t: 'You cannot work with what you do not notice. Observing means taking in what is actually here, accurately, without adding a story. It is the raw material for everything after it, and it pulls you out of autopilot and into the present moment.' },
+    { h: '2. Concentration', t: 'Once you can notice, you learn to hold. Concentration is keeping your attention on one thing and bringing it back when it slips. It is the muscle behind every other practice, and the reason a wandering mind can become a steady one.' },
+    { h: '3. Meditation', t: 'Meditation is concentration turned inward and sustained, until the mind settles. It is where you meet your own thoughts and feelings without being carried off by them. Regular practice is linked in research to calmer stress responses and steadier attention.' },
+    { h: '4. Emotional control', t: 'This does not mean suppressing feelings. It means noticing a feeling early, naming it, and choosing your response instead of being run by it. It rests on the first three: you have to see the feeling (observation), stay with it (concentration), and let it settle (meditation).' },
+    { h: '5. Bedtime', t: 'The day ends with review and rest. Looking back over the day calmly lets you learn from it and put it down, and good sleep is when the brain consolidates memory and resets mood. A mind that closes the day well starts the next one steadier.' },
+  ],
+  close: 'The order matters. Observe, hold, settle, steady the feelings, then rest. Every other practice in the app, the extra ones and the advanced ones, is a way of deepening one of these five. If you ever feel lost in the app, come back here and do the simplest practice from the five.',
+};

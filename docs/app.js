@@ -1,4 +1,4 @@
-import { PACKAGES, EVERYTHING_ID, UNLOCK_AT, pkgFor, CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, SAYING_SETS, PING, SCALE, SCALE_UP, ATTN_LESSON } from './content.js';
+import { PACKAGES, EVERYTHING_ID, UNLOCK_AT, pkgFor, CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, SAYING_SETS, PING, SCALE, SCALE_UP, ATTN_LESSON, WHY } from './content.js';
 import * as native from './native.js';
 import { BUILD } from './build.js';
 import { PAYWALL, ADS, ADMOB } from './config.js';
@@ -405,6 +405,7 @@ function Info() {
   const ids = ['live-dos', 'energy-habits'].map((id) => exById[id]).map((e) => link(to(e.id, `#ex/${e.id}`), `<b>${lk(e.id)}${esc(e.title)}</b><div class="dim sm">${esc(e.summary)}</div>`)).join('');
   return `<h1>Info</h1>
   ${link('#tour', '<b>A quick tour</b><div class="dim sm">What is on each page</div>')}
+  ${link('#why', '<b>Why these five</b><div class="dim sm">Observe, hold, settle, steady, rest: what everything here builds on</div>')}
   ${link('#attn', '<b>Attention: narrow and wide</b><div class="dim sm">Learn the idea, then switch the practices on</div>')}
   ${link(to('info:laws', '#laws'), `<b>${lk('info:laws')}Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>`)}
   ${ids}
@@ -509,6 +510,12 @@ function Laws() {
   ${card('<div class="step" style="font-size:17px">Appreciation works best. When a contradicting thought shows up, do not follow it. Come back to the pure one. The practice is the coming back.</div>')}
   <a class="btn" href="#guide/law-hold">Try the 17-second thought</a>
   ${setCard('laws')}`;
+}
+function Why() {
+  return `${back('#info')}<h1>Why these five</h1><p class="dim">${esc(WHY.intro)}</p>
+  ${WHY.parts.map((p) => card(`<b>${esc(p.h)}</b><div class="sm" style="margin-top:4px">${esc(p.t)}</div>`)).join('')}
+  ${card(`<div class="sm">${esc(WHY.close)}</div>`, 'accent')}
+  <a class="btn" href="#practice">Go to Practice</a>`;
 }
 function Attn() {
   const on = !!(S.learned || {}).attn;
@@ -744,6 +751,7 @@ function paint() {
     case 'about': h = About(); break;
     case 'cat': h = Choose(a); break;
     case 'scale': h = Scale(); break;
+    case 'why': h = Why(); break;
     case 'attn': h = Attn(); break;
     case 'fast': h = locked('info:fast') ? Unlock('info:fast') : FastLesson(); break;
     case 'laws': h = locked('info:laws') ? Unlock('info:laws') : Laws(); break;
