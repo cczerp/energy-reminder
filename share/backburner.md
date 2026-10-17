@@ -23,6 +23,11 @@ Rule from the user: ask whether they have a source for any claim that hits a saf
 
 Also still to credit: older health claims in practice text (colds and germs, Self-Healing conditions, Headache Relief).
 
+## Source notes
+
+- The declassified McDonnell Gateway assessment copy (CIA-RDP96-00788R001700210016-5) jumps from paragraph 34 to 37; paragraphs 35 and 36 are not in the file we were given. Get a complete copy if they matter.
+- Teachings built from it: Meditation, hypnosis and biofeedback; Sound, brainwaves and Hemi-Sync (both free, under Meditation); The Gateway model and its tools (under Inner journeys, locked with that package); out-of-body cards added to Projection.
+
 ## Parked sayings / content
 
 - **Media and fear saying (parked 2026-10-17, was in the app as "Is what you are watching or reading feeding fear? Change the channel.")**

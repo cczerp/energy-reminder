@@ -478,7 +478,7 @@ function Warn(id) {
     <a class="btn ghost" href="#practice">Go back</a>`;
 }
 
-const LEARN = ['observe', 'concentrate', 'meditate', 'emotion', 'bedtime', 'energy', 'fields', 'balance', 'living', 'chakra', 'centers', 'journey', 'project'];
+const LEARN = ['observe', 'concentrate', 'meditate', 'emotion', 'bedtime', 'energy', 'balance', 'living', 'chakra', 'centers', 'journey', 'project'];
 function Exercise(id) {
   const ex = exById[id]; if (!ex) return back() + '<p>Not found.</p>';
   if (TEACH.includes(id)) return `${back('#info')}<h1>${esc(ex.title)}</h1><div class="dim">${esc(ex.summary)}</div>${ex.steps.map((t) => card(`<div class="sm" style="white-space:pre-line">${esc(typeof t === 'string' ? t : t.t)}</div>`)).join('')}`;
@@ -505,6 +505,7 @@ function About() {
     <li><b>Dolores Cannon</b> — the quiet-listening, inner-journey, energy, and everyday-living practices, written here in our own words from teachings associated with her work</li>
     <li><b>Barbara Marciniak</b>, <b>Neville Goddard</b>, <b>Bashar</b>, and <b>Esther and Abraham Hicks</b> — the whim, now-point, belief-audit, fast, breath, bedtime-loop, emotional-scale and manifestation practices, and the sayings inspired by them, in our own words</li>
     <li><b>Randall L. Waechter and Lauren Sergio</b>, and the researchers they draw on (Burr, Baule and McFee, Schumann, Oschman, Becker) — the teaching on energy and the body's fields, from their paper in <i>Subtle Energies &amp; Energy Medicine</i></li>
+    <li><b>Lt. Col. Wayne M. McDonnell</b>, whose 1983 US Army assessment of the Gateway Process (a declassified copy) is the source of the teachings on meditation, hypnosis and biofeedback, Hemi-Sync, the Gateway model, and out-of-body movement, and the people it draws on: <b>Itzhak Bentov</b>, <b>Robert Monroe</b> and the Monroe Institute (<b>Melissa Jager</b>, <b>Stuart Twemlow</b>), <b>Lee Sannella</b>, <b>Ronald Stone</b>, <b>Karl Pribram</b> and <b>David Bohm</b></li>
     <li><b>Wisdom of the Mystic Masters</b> — the mental training, meditation, healing, projection, and cycles teachings</li>
     <li>The yogic, tantric, and Rosicrucian traditions all of the above draw on</li>
     <li>Every teacher, student, and practitioner who passed these on</li>
@@ -530,9 +531,9 @@ function Learn(c) {
   const t = CAT_TEACH[c]; if (!t) return `${back('#info')}<p>Not found.</p>`;
   return `${back('#info')}<h1>${esc(t.t)}</h1><p class="dim">${esc(t.one)}</p>
   ${t.p.map((x) => card(`<div class="sm">${esc(x)}</div>`)).join('')}
-  ${t.more ? link(`#learn/${t.more}`, `<b>${esc(CAT_TEACH[t.more].t)}</b><div class="dim sm">${esc(CAT_TEACH[t.more].one)}</div>`) : ''}
+  ${t.more ? `<h3>Go deeper</h3>${t.more.map((m) => link(locked('cat:' + m) ? `#unlock/cat:${m}` : `#learn/${m}`, `<b>${locked('cat:' + m) ? '🔒 ' : ''}${esc(CAT_TEACH[m].t)}</b><div class="dim sm">${esc(CAT_TEACH[m].one)}</div>`)).join('')}` : ''}
   ${t.src ? `<h3>Sources</h3>${t.src.map((x) => `<div class="dim sm" style="margin-bottom:6px">${esc(x)}</div>`).join('')}` : ''}
-  ${t.more || t.src ? '' : '<a class="btn" href="#practice">Go to Practice</a>'}${taught()}`;
+  <a class="btn" href="#practice">Go to Practice</a>${taught()}`;
 }
 function Attn() {
   const on = !!(S.learned || {}).attn;
