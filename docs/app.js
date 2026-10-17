@@ -408,7 +408,8 @@ function Info() {
   ${link('#tour', '<b>A quick tour</b><div class="dim sm">What is on each page</div>')}
   ${link('#why', '<b>Why these five</b><div class="dim sm">Observe, hold, settle, steady, rest: what everything here builds on</div>')}
   ${link(to('info:attn', '#attn'), `<b>${lk('info:attn')}Attention: narrow and wide</b><div class="dim sm">Learn the idea, then switch the practices on</div>`)}
-  ${link(to('cat:gateway', '#learn/gateway'), `<b>${lk('cat:gateway')}The Gateway experience</b><div class="dim sm">A 1983 Army assessment: the model, the stages, the tools</div>`)}
+  ${link(to('cat:gateway', '#learn/gateway'), `<b>${lk('cat:gateway')}The Gateway experience</b><div class="dim sm">The Monroe Institute process: a session, the stages, the tools</div>`)}
+  ${link(to('cat:assessment', '#learn/assessment'), `<b>${lk('cat:assessment')}The Army assessment of Gateway</b><div class="dim sm">A 1983 evaluation and the model behind it</div>`)}
   ${link(to('info:laws', '#laws'), `<b>${lk('info:laws')}Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>`)}
   ${ids}
   <h2>Teachings for the practices</h2>
