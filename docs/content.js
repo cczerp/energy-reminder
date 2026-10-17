@@ -253,6 +253,110 @@ export const EXERCISES = [
   },
 
   {
+    id: 'attn-route', cat: 'attention', gate: 'attn', title: 'Landmark Route', mins: 5,
+    freq: 'A few times a week, on any familiar route',
+    summary: 'Walk a route you know without GPS, noting landmarks, distances and turns.',
+    steps: [
+      'Pick a short route you know well, on foot, and leave the navigation off.',
+      { t: 'As you go, name the landmarks, roughly how far apart they are, and each turn. Keep track of where you are in relation to where you started.', open: true },
+      'At the end, point toward where you began, then check against a map if you like.',
+    ],
+  },
+  {
+    id: 'attn-rotate', cat: 'attention', gate: 'attn', title: 'Mental Rotation', mins: 2,
+    freq: 'Daily or every few days',
+    summary: 'Look at an object, close your eyes, and turn it in your mind.',
+    steps: [
+      'Pick a small object with a distinct shape and a few features you can tell apart.',
+      { t: 'Study it from where you sit.', secs: 20 },
+      { t: 'Close your eyes and see it. Turn it slowly: a quarter turn, upside down, from behind.', secs: 60 },
+      'Open your eyes and compare. What did you get right, and what did you miss?',
+    ],
+  },
+  {
+    id: 'attn-body', cat: 'attention', gate: 'attn', title: 'Body in Space', mins: 3,
+    freq: 'Daily, short is fine',
+    summary: 'Slow balance and movement to feel where your body is in the space around you.',
+    steps: [
+      'Stand with room around you and something to catch if you wobble.',
+      { t: 'Stand on one leg. Feel your foot and ankle working, and where your body is in the room.', secs: 30 },
+      { t: 'Switch legs.', secs: 30 },
+      { t: 'Move slowly: raise an arm, turn, shift your weight. Feel every position without looking.', secs: 60 },
+    ],
+  },
+  {
+    id: 'attn-views', cat: 'attention', gate: 'attn', title: 'Two Viewpoints', mins: 6,
+    freq: 'Once or twice a week',
+    summary: 'Draw a scene from where you are, then work out and draw it from somewhere else.',
+    steps: [
+      'Sketch a simple scene or object from where you sit. It does not have to look good.',
+      { t: 'Sketch it again from a different viewpoint: from the side, from above or from behind. Work out what you would see.', open: true },
+      'If you can, move to the new viewpoint and check.',
+    ],
+  },
+  {
+    id: 'attn-obstacle', cat: 'attention', gate: 'attn', title: 'Obstacle Path', mins: 3,
+    freq: 'A few times a week',
+    summary: 'Move through a cluttered space while keeping track of several things at once.',
+    caution: 'Move slowly and keep your path clear of anything you could trip on.',
+    steps: [
+      'Choose a room or yard with several things in it: furniture, plants, people.',
+      { t: 'Walk slowly through it. Keep track of where each thing is, which are close, and which move. Stay relaxed.', secs: 60 },
+      'Stop and close your eyes. Recall where each one was, then open your eyes and check.',
+    ],
+  },
+  {
+    id: 'attn-cue', cat: 'attention', gate: 'attn', title: 'Cue Then Widen', mins: 2,
+    freq: 'During any ordinary action',
+    summary: 'Start on one exact cue while moving, then open to the whole environment, then back.',
+    steps: [
+      'Pick an action you are doing anyway: walking, washing up, drinking tea.',
+      { t: 'Narrow: put your whole attention on one cue, like your foot touching the ground or your hand on the cup.', secs: 30 },
+      { t: 'Widen: keep the cue, and let the rest of the room and your body come in.', secs: 30 },
+      { t: 'Narrow back to the cue.', secs: 30 },
+    ],
+  },
+  {
+    id: 'conc-grid', cat: 'concentrate', title: 'Grid Hold', mins: 3,
+    freq: 'Daily or every few days',
+    summary: 'Hold your attention on a grid of numbers without letting it drift.',
+    steps: [
+      'Print or draw a grid of random numbers or letters, 10 by 10 works.',
+      { t: 'Find 1, 2, 3 and so on in order, or hold on one cell at a time. When your attention slips off the grid, bring it back.', pick: [120, 300], secs: 120, max: 300 },
+      'Note how far you got.',
+    ],
+  },
+  {
+    id: 'conc-block', cat: 'concentrate', title: 'Focus Block', mins: 10,
+    freq: 'Daily, a little longer as it gets easier',
+    summary: 'One task, nothing else, for a set block. Build from 10 toward 25 minutes.',
+    steps: [
+      'Choose one task and put your phone in another room. Close everything else.',
+      { t: 'Work on only that task. Start with 10 minutes and lengthen toward 25 as it gets easier.', pick: [600, 900, 1500], secs: 600, max: 1500 },
+      'Take a short break. Stand, stretch, breathe.',
+    ],
+  },
+  {
+    id: 'conc-endure', cat: 'concentrate', title: 'Endurance Push', mins: 5,
+    freq: 'A few times a week',
+    summary: 'Stay with a task a little past the point where you want to switch.',
+    steps: [
+      'Pick one task you are already doing.',
+      { t: 'When the urge to switch rises, notice it and stay a little longer, one more minute, then another.', pick: [180, 300, 600], secs: 300, max: 600 },
+      'Note when the urge came and when it passed.',
+    ],
+  },
+  {
+    id: 'conc-read', cat: 'concentrate', title: 'Long Read', mins: 10,
+    freq: 'A few times a week',
+    summary: 'Read one thing in one stream, without stopping to check anything.',
+    steps: [
+      'Choose something worth reading in one go: a chapter or a long article. Phone away.',
+      { t: 'Read it without stopping. When you notice your attention drifting, go back to the line you were on.', pick: [600, 900, 1200], secs: 600, max: 1200 },
+      'Say in a sentence or two what you read.',
+    ],
+  },
+  {
     id: 'med-sit', cat: 'meditate', title: 'Daily Sit — your choice', mins: 5,
     freq: 'At least once a day',
     summary: 'Your baseline: sit and meditate in any way you like, even if only briefly.',
@@ -803,7 +907,7 @@ export const EVERYTHING_ID = 'advanced_unlock';
 export const UNLOCK_AT = 8;
 export const PACKAGES = [
   { pid: 'pkg_chakra', name: 'Chakra treatment', desc: 'The chakra alignment walkthrough and the seven chakra meditations. The chakra reference and its teaching stay free.', cats: ['chakra'], learn: [] },
-  { pid: 'pkg_attention', name: 'Attention', desc: 'The attention lesson and its four practices: zoom lens, whole scene, narrow and open switch, space sense.', cats: ['attention'], info: ['attn'] },
+  { pid: 'pkg_attention', name: 'Attention', desc: 'The attention lesson and its ten practices: zoom lens, whole scene, narrow and open switch, space sense, landmark route, mental rotation, body in space, two viewpoints, obstacle path, cue then widen.', cats: ['attention'], info: ['attn'] },
   { pid: 'pkg_centers', name: 'Psychic centers', desc: 'The five center meditations: heart, pituitary, pineal, throat, and the combined attunement.', cats: ['centers'] },
   { pid: 'pkg_journeys', name: 'Inner journeys', desc: 'The staircase, the library of your life, and meeting your guide or higher self.', cats: ['journey'] },
   { pid: 'pkg_projection', name: 'Projection', desc: 'Mental and etheric projection.', cats: ['project'] },
@@ -828,8 +932,8 @@ export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 export const REMIND_GROUPS = [
   // pool = exercises a timed reminder can ask for; leave = optional exercises that only fire when you leave home; ids = everything in the category
   { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], both: ['obs-room'], ids: ['obs-room', 'obs-stairs'] },
-  { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold', 'attn-hold', 'attn-single'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger', 'attn-hold', 'attn-single'] },
-  { id: 'attn', cat: 'attention', label: 'Attention', gate: 'attn', pool: ['attn-zoom', 'attn-scene', 'attn-switch', 'attn-space'], leave: [], ids: ['attn-zoom', 'attn-scene', 'attn-switch', 'attn-space'] },
+  { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold', 'attn-hold', 'attn-single', 'conc-grid', 'conc-block', 'conc-endure', 'conc-read'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger', 'attn-hold', 'attn-single', 'conc-grid', 'conc-block', 'conc-endure', 'conc-read'] },
+  { id: 'attn', cat: 'attention', label: 'Attention', gate: 'attn', pool: ['attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-route', 'attn-rotate', 'attn-body', 'attn-views', 'attn-obstacle', 'attn-cue'], leave: [], ids: ['attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-route', 'attn-rotate', 'attn-body', 'attn-views', 'attn-obstacle', 'attn-cue'] },
   { id: 'med', cat: 'meditate', label: 'Routine meditation', simple: true, pool: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
   { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-practice', 'med-cloud'], leave: [], ids: ['med-practice', 'med-color', 'med-sound', 'med-cloud'] },
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'] },
@@ -1051,9 +1155,12 @@ export const ATTN_LESSON = {
     { h: 'Spatial awareness', t: 'Spatial awareness is your sense of where things are, how far, and how they relate, including your own body. Wide focus supports it: you hold the whole layout and notice what changes around you. Narrow focus sharpens one spot but can shrink the rest into tunnel vision. Reading a gauge is narrow. Scanning a road is wide.' },
     { h: 'Absorption', t: 'Narrowing attention is also the gateway to absorption: the state of being so locked onto one thing that the rest drops away, like getting lost in a book. Hypnosis research describes this narrowed, absorbed focus as central to how hypnotic inductions work. A wide, open attention is a different flavor of presence: expansive, grounded in the space around you. Both are present. The skill is moving between them.' },
     { h: 'Narrow first', t: 'The ability to widen cleanly rests on being able to narrow and hold. Without a steady zoom, widening feels scattered. Learn to lock the lens, then open it while keeping the option to snap back.' },
-    { h: 'Attention and concentration', t: 'Attention is the whole faculty: choosing what you notice, widening or narrowing it, and moving it from one thing to another. Concentration is one use of it: holding narrow attention steady on one thing, for longer and against distraction. Attention is the control; concentration is the staying power. Single-Object Hold and Single-Task Moment train staying power, so they live with Concentration. The practices here train the control.' },
-    { h: 'How attention serves meditation', t: 'Every meditation is attention used on purpose. You choose where it rests (the breath, a color, a sound, a feeling), notice when it leaves, and bring it back, and sometimes you open it wide. If you can narrow, widen and move your attention at will here in the ordinary world, where there is something to check yourself against, you carry that control inward. A steady, flexible attention is what keeps the inner work clear instead of drifting. Training it on the physical plane first is how you prepare to work in the mind\'s inner space.' },
-    { h: 'How you train it', t: 'Every time your mind wanders and you bring it back, that is one successful rep, not a failure. Short, daily practice counts more than long, rare sessions. Sleep, exercise and fewer distractions raise the ceiling for how long you can concentrate.' },
+    { h: 'Attention and concentration are two different jobs', t: 'Attention is the control: choosing what you notice, widening or narrowing the beam, and moving it from one thing to another. Concentration is the staying power: holding narrow attention steady on one thing, for longer, against every pull to leave. Attention is the steering and concentration is the endurance. You need both, and each is trained differently. The practices in this lesson train the control. Single-Object Hold, Grid Hold, Focus Block, Endurance Push, Long Read and the other Concentration practices train the staying power.' },
+    { h: 'How concentration helps meditation', t: 'Meditation asks you to rest on one thing, such as the breath, a color, a sound or a feeling, and stay. Concentration is what lets you stay. Each time you slip and return, the hold grows longer and the mind settles instead of wandering. Without it, a sit is a string of drifts.' },
+    { h: 'How attention helps meditation', t: 'Control lets you shape the sit: narrow onto the breath, open wide to everything that arises, move from one to the other, and notice early that you have drifted. It keeps the inner work clear, because you can aim and adjust your awareness instead of being carried by it. Training it in the ordinary world first, where there is something to check yourself against, is how you prepare to work in the mind\'s inner space.' },
+    { h: 'How you train it', t: 'Every time your mind wanders and you bring it back, that is one successful rep, not a failure. Short, daily practice counts more than long, rare sessions.' },
+    { h: 'Recovery and distractions', t: 'Sleep, regular exercise and enough rest set the ceiling for how well you can direct and hold attention. Protect your practice windows: put the phone in another room, turn off notifications, and do one thing at a time. A tired or constantly interrupted mind cannot train well.' },
+    { h: 'Optional: spatial hobbies', t: 'Anything that makes you think about positions, shapes and space trains your spatial sense on the side: building with blocks or wood, origami, 3D puzzles, drawing from life, and action or spatial video games. None are required. They are extra ways to practice what Space Sense and Two Viewpoints train.' },
   ],
 };
 

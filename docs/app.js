@@ -534,7 +534,7 @@ function Attn() {
   const on = !!(S.learned || {}).attn;
   return `${back('#info')}<h1>Attention: narrow and wide</h1><p class="dim">${esc(ATTN_LESSON.intro)}</p>
   ${ATTN_LESSON.parts.map((p) => card(`<b>${esc(p.h)}</b><div class="sm" style="margin-top:4px">${esc(p.t)}</div>`)).join('')}
-  ${card(`${check(on, '<b class="ttl">I have learned this. Turn on the practices</b>', 'learnattn', on ? 'On. The four practices are in Practice, and an Attention block with reminders is now in Settings.' : 'Off until you switch it on. Then four attention practices appear in Practice, and an Attention block appears in Settings.')}
+  ${card(`${check(on, '<b class="ttl">I have learned this. Turn on the practices</b>', 'learnattn', on ? 'On. The ten practices are in Practice, and an Attention block with reminders is now in Settings.' : 'Off until you switch it on. Then ten attention practices appear in Practice, and an Attention block appears in Settings.')}
 `, 'accent')}
   ${on ? EXERCISES.filter((e) => e.cat === 'attention').map((e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`)).join('') : ''}`;
 }
