@@ -393,7 +393,7 @@ function Tour() {
   return `${back('#info')}<h1>A quick tour</h1>
   <p class="dim">What you will find on each page.</p>
   ${sec('Today', 'Your day at a glance, one bubble per goal. Tap <b>✓ Done</b> when you finish one (it goes into your Log with the time) or <b>Rules</b> to read it first. Finished goals disappear, and finishing them all earns a small celebration. The big <b>I\'m in a funk</b> button gives a short reset and plays your own songs.')}
-  ${sec('Practice', 'The library of guided practices: sitting practice, mental training exercises, energy and healing, esoteric meditations, and the chakra meditations. Open one to read how it works, or press <b>Start guided</b> to be walked through one step at a time, with optional timers.')}
+  ${sec('Training', 'The library of guided practices: sitting practice, mental training exercises, energy and healing, esoteric meditations, and the chakra meditations. Open one to read how it works, or press <b>Start guided</b> to be walked through one step at a time, with optional timers.')}
   ${sec('Info', 'Reading, not doing: the universal laws, the Do\'s and Don\'ts, supporting habits, life cycles, the chakra reference, and the credits.')}
   ${sec('Settings', 'Where you set it up your way. Choose which exercises count as goals for each area, how many reminders you want and when, the leave-home reminders, the funk playlist, the mindfulness sayings, and your backup. The small <b>Log</b> button in the top right corner opens your log.')}
   ${sec('Log', '<b>Entries</b> are your notes and recalls. <b>Days</b> is one button per day showing what you finished, what you did not, and your notes. <b>Progress</b> shows your streak and trends.')}
@@ -446,7 +446,7 @@ function Practice() {
   const sub = (label, inner) => (inner ? `<h3>${label}</h3>${inner}` : '');
   const knowledge = TEACH; // shown on the Info page
   const medPractice = ['med-practice', 'med-cloud', 'med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love'];
-  return `<h1>Practice</h1>
+  return `<h1>Training</h1>
   <h2>Sitting practice</h2>
   ${ids(medPractice)}
   <h2>Mental training</h2>
