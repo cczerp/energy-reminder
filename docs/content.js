@@ -183,9 +183,9 @@ export const EXERCISES = [
   },
 
   // ---------- Meditation ----------
-  // Attention practices: they stay hidden until "I've learned this" is switched on in the Attention lesson (Info).
+  // Attention practices: they stay hidden until "I've learned this" is switched on in the Attention lesson (Info). Single-Object Hold and Single-Task Moment are Concentration practices and are always open.
   {
-    id: 'attn-hold', cat: 'attention', gate: 'attn', title: 'Single-Object Hold', mins: 3,
+    id: 'attn-hold', cat: 'concentrate', title: 'Single-Object Hold', mins: 3,
     freq: 'Daily, a little longer as it gets easier',
     summary: 'Hold your attention on one small thing. Every return from a wander is one rep.',
     steps: [
@@ -243,7 +243,7 @@ export const EXERCISES = [
     ],
   },
   {
-    id: 'attn-single', cat: 'attention', gate: 'attn', title: 'Single-Task Moment', mins: 2,
+    id: 'attn-single', cat: 'concentrate', title: 'Single-Task Moment', mins: 2,
     freq: 'Any ordinary action, once or more a day',
     summary: 'Do one ordinary thing with your whole attention.',
     steps: [
@@ -803,7 +803,7 @@ export const EVERYTHING_ID = 'advanced_unlock';
 export const UNLOCK_AT = 8;
 export const PACKAGES = [
   { pid: 'pkg_chakra', name: 'Chakra treatment', desc: 'The chakra alignment walkthrough and the seven chakra meditations. The chakra reference and its teaching stay free.', cats: ['chakra'], learn: [] },
-  { pid: 'pkg_attention', name: 'Attention', desc: 'The attention lesson and its six practices: single-object hold, zoom lens, whole scene, narrow and open switch, space sense, single-task moment.', cats: ['attention'], info: ['attn'] },
+  { pid: 'pkg_attention', name: 'Attention', desc: 'The attention lesson and its four practices: zoom lens, whole scene, narrow and open switch, space sense.', cats: ['attention'], info: ['attn'] },
   { pid: 'pkg_centers', name: 'Psychic centers', desc: 'The five center meditations: heart, pituitary, pineal, throat, and the combined attunement.', cats: ['centers'] },
   { pid: 'pkg_journeys', name: 'Inner journeys', desc: 'The staircase, the library of your life, and meeting your guide or higher self.', cats: ['journey'] },
   { pid: 'pkg_projection', name: 'Projection', desc: 'Mental and etheric projection.', cats: ['project'] },
@@ -828,8 +828,8 @@ export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 export const REMIND_GROUPS = [
   // pool = exercises a timed reminder can ask for; leave = optional exercises that only fire when you leave home; ids = everything in the category
   { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], both: ['obs-room'], ids: ['obs-room', 'obs-stairs'] },
-  { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger'] },
-  { id: 'attn', cat: 'attention', label: 'Attention', gate: 'attn', pool: ['attn-hold', 'attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-single'], leave: [], ids: ['attn-hold', 'attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-single'] },
+  { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold', 'attn-hold', 'attn-single'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger', 'attn-hold', 'attn-single'] },
+  { id: 'attn', cat: 'attention', label: 'Attention', gate: 'attn', pool: ['attn-zoom', 'attn-scene', 'attn-switch', 'attn-space'], leave: [], ids: ['attn-zoom', 'attn-scene', 'attn-switch', 'attn-space'] },
   { id: 'med', cat: 'meditate', label: 'Routine meditation', simple: true, pool: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
   { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-practice', 'med-cloud'], leave: [], ids: ['med-practice', 'med-color', 'med-sound', 'med-cloud'] },
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'] },
@@ -1051,6 +1051,8 @@ export const ATTN_LESSON = {
     { h: 'Spatial awareness', t: 'Spatial awareness is your sense of where things are, how far, and how they relate, including your own body. Wide focus supports it: you hold the whole layout and notice what changes around you. Narrow focus sharpens one spot but can shrink the rest into tunnel vision. Reading a gauge is narrow. Scanning a road is wide.' },
     { h: 'Absorption', t: 'Narrowing attention is also the gateway to absorption: the state of being so locked onto one thing that the rest drops away, like getting lost in a book. Hypnosis research describes this narrowed, absorbed focus as central to how hypnotic inductions work. A wide, open attention is a different flavor of presence: expansive, grounded in the space around you. Both are present. The skill is moving between them.' },
     { h: 'Narrow first', t: 'The ability to widen cleanly rests on being able to narrow and hold. Without a steady zoom, widening feels scattered. Learn to lock the lens, then open it while keeping the option to snap back.' },
+    { h: 'Attention and concentration', t: 'Attention is the whole faculty: choosing what you notice, widening or narrowing it, and moving it from one thing to another. Concentration is one use of it: holding narrow attention steady on one thing, for longer and against distraction. Attention is the control; concentration is the staying power. Single-Object Hold and Single-Task Moment train staying power, so they live with Concentration. The practices here train the control.' },
+    { h: 'How attention serves meditation', t: 'Every meditation is attention used on purpose. You choose where it rests (the breath, a color, a sound, a feeling), notice when it leaves, and bring it back, and sometimes you open it wide. If you can narrow, widen and move your attention at will here in the ordinary world, where there is something to check yourself against, you carry that control inward. A steady, flexible attention is what keeps the inner work clear instead of drifting. Training it on the physical plane first is how you prepare to work in the mind\'s inner space.' },
     { h: 'How you train it', t: 'Every time your mind wanders and you bring it back, that is one successful rep, not a failure. Short, daily practice counts more than long, rare sessions. Sleep, exercise and fewer distractions raise the ceiling for how long you can concentrate.' },
   ],
 };
