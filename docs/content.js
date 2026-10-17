@@ -14,6 +14,7 @@ export const CATS = {
   living: 'Living practices',
   centers: 'Psychic centers',
   chakra: 'Chakra alignment',
+  attention: 'Attention',
   project: 'Projection',
 };
 
@@ -182,6 +183,75 @@ export const EXERCISES = [
   },
 
   // ---------- Meditation ----------
+  // Attention practices: they stay hidden until "I've learned this" is switched on in the Attention lesson (Info).
+  {
+    id: 'attn-hold', cat: 'attention', gate: 'attn', title: 'Single-Object Hold', mins: 3,
+    freq: 'Daily, a little longer as it gets easier',
+    summary: 'Hold your attention on one small thing. Every return from a wander is one rep.',
+    steps: [
+      'Pick one small detail: a mark on the wall, the tip of a pen, a leaf, a candle flame. Settle your eyes on it.',
+      { t: 'Keep your attention on it. Blink normally. When the mind wanders, notice it and bring it back. That return is the training.', pick: [120, 300, 600], secs: 180, max: 600 },
+      'Look away, take a deep breath, relax.',
+    ],
+  },
+  {
+    id: 'attn-zoom', cat: 'attention', gate: 'attn', title: 'Zoom-Lens Drill', mins: 3,
+    freq: 'Daily',
+    summary: 'Lock onto one object, open out to the whole scene while still knowing it is there, then pull back in.',
+    steps: [
+      'Pick an object a few steps away and look at it. Sit or stand comfortably.',
+      { t: 'Narrow: lock on the object. Let everything else blur. Notice its edges, color and texture.', secs: 20 },
+      { t: 'Widen: keep the object in view, and let your attention open to the whole scene around it, including the edges of your vision. Hold both.', secs: 20 },
+      { t: 'Narrow again, tight on the object.', secs: 20 },
+      { t: 'Widen again. Notice how smoothly you can move between the two.', secs: 20 },
+      'Rest your gaze, take a deep breath.',
+    ],
+  },
+  {
+    id: 'attn-scene', cat: 'attention', gate: 'attn', title: 'Whole Scene, Then Detail', mins: 3,
+    freq: 'Daily, in any room or outdoors',
+    summary: 'Take the big picture, zoom into one detail, then widen again while holding both.',
+    steps: [
+      { t: 'Take in the whole scene: the layout, where things are, how far apart, what is moving. Do not pick anything out.', secs: 30 },
+      { t: 'Choose one detail and zoom into it fully.', secs: 30 },
+      { t: 'Widen again, holding the detail and the larger scene together.', secs: 30 },
+      'Close your eyes and name what you can recall of both the detail and the layout. Open your eyes and check.',
+    ],
+  },
+  {
+    id: 'attn-switch', cat: 'attention', gate: 'attn', title: 'Narrow and Open Switch', mins: 4,
+    freq: 'Daily',
+    summary: 'Alternate narrow focus on one thing with open awareness of whatever arises.',
+    steps: [
+      'Sit comfortably, eyes closed or softly open.',
+      { t: 'Narrow: follow one breath sensation, only that.', secs: 60 },
+      { t: 'Open: let attention rest on whatever arises (sounds, sensations, thoughts) without selecting anything.', secs: 60 },
+      { t: 'Narrow again: back to the single breath sensation.', secs: 60 },
+      { t: 'Open again, as wide as it goes.', secs: 60 },
+      'Take a deep breath and relax.',
+    ],
+  },
+  {
+    id: 'attn-space', cat: 'attention', gate: 'attn', title: 'Space Sense', mins: 3,
+    freq: 'Daily, short is fine',
+    summary: 'Train your sense of where things and your body are in space.',
+    steps: [
+      'Look around the room and note where three objects are, and how far they are from you.',
+      { t: 'Close your eyes. Point toward each one, one at a time, and say its distance. Then turn slowly and point again.', open: true },
+      'Open your eyes and check how close you were.',
+      { t: 'Optional: stand on one leg and feel your body in the space around you.', secs: 30 },
+    ],
+  },
+  {
+    id: 'attn-single', cat: 'attention', gate: 'attn', title: 'Single-Task Moment', mins: 2,
+    freq: 'Any ordinary action, once or more a day',
+    summary: 'Do one ordinary thing with your whole attention.',
+    steps: [
+      'Choose a routine action: washing a dish, walking, eating, brushing your teeth.',
+      { t: 'Do only that, with your whole attention on its sensations. When your mind drifts, bring it back.', open: true },
+    ],
+  },
+
   {
     id: 'med-sit', cat: 'meditate', title: 'Daily Sit — your choice', mins: 5,
     freq: 'At least once a day',
@@ -756,7 +826,7 @@ export const exById = Object.fromEntries(EXERCISES.map((e) => [e.id, e]));
 export const REMIND_GROUPS = [
   // pool = exercises a timed reminder can ask for; leave = optional exercises that only fire when you leave home; ids = everything in the category
   { id: 'obs', cat: 'observe', label: 'Observation', pool: ['obs-room'], leave: ['obs-stairs'], both: ['obs-room'], ids: ['obs-room', 'obs-stairs'] },
-  { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger'] },
+  { id: 'conc', cat: 'concentrate', label: 'Concentration', pool: ['conc-multiply', 'conc-poem', 'law-hold', 'attn-hold', 'attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-single'], leave: ['conc-stranger'], ids: ['conc-multiply', 'conc-poem', 'law-hold', 'conc-stranger', 'attn-hold', 'attn-zoom', 'attn-scene', 'attn-switch', 'attn-space', 'attn-single'] },
   { id: 'med', cat: 'meditate', label: 'Routine meditation', simple: true, pool: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'], leave: [], ids: ['med-sit', 'med-quiet', 'med-nowpoint', 'med-transform', 'med-iam', 'med-love', 'energy-direct', 'j-stair', 'j-library', 'j-guide'] },
   { id: 'medp', cat: 'meditate', label: 'Meditation practice', pool: ['med-practice', 'med-cloud'], leave: [], ids: ['med-practice', 'med-color', 'med-sound', 'med-cloud'] },
   { id: 'emo', cat: 'emotion', label: 'Emotional control', pool: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'], leave: [], ids: ['emo-matches', 'emo-tv', 'emo-slow', 'emo-whim', 'emo-rampage', 'emo-nice'] },
@@ -966,4 +1036,17 @@ export const SCALE_UP = {
   4: 'What would you do first, if it were already arriving?',
   3: 'This is what being alive feels like.',
   2: 'Look at what you climbed through to get here. Appreciate the one who climbed.',
+};
+
+// The Attention lesson (Info). In our own words, from common psychology of attention.
+export const ATTN_LESSON = {
+  intro: 'Attention works like a zoom lens. You can narrow it onto one small thing, or widen it to take in a whole scene. Both are skills, and you can learn to move between them.',
+  parts: [
+    { h: 'Narrow (convergent) focus', t: 'You contract the beam onto one object, detail or sensation. Detail and precision go up in that spot, and you take in less of the rest. Good for reading, examining, and sinking into one thing.' },
+    { h: 'Broad (wide) focus', t: 'You open the beam to take in more of the scene at once: the layout, movement, the edges of your vision. You get the big picture and notice more, with less detail at any one point. There is always a trade: the wider it is, the less intense it is at any single spot.' },
+    { h: 'Spatial awareness', t: 'Spatial awareness is your sense of where things are, how far, and how they relate, including your own body. Wide focus supports it: you hold the whole layout and notice what changes around you. Narrow focus sharpens one spot but can shrink the rest into tunnel vision. Reading a gauge is narrow. Scanning a road is wide.' },
+    { h: 'Absorption', t: 'Narrowing attention is also the gateway to absorption: the state of being so locked onto one thing that the rest drops away, like getting lost in a book. Hypnosis research describes this narrowed, absorbed focus as central to how hypnotic inductions work. A wide, open attention is a different flavor of presence: expansive, grounded in the space around you. Both are present. The skill is moving between them.' },
+    { h: 'Narrow first', t: 'The ability to widen cleanly rests on being able to narrow and hold. Without a steady zoom, widening feels scattered. Learn to lock the lens, then open it while keeping the option to snap back.' },
+    { h: 'How you train it', t: 'Every time your mind wanders and you bring it back, that is one successful rep, not a failure. Short, daily practice counts more than long, rare sessions. Sleep, exercise and fewer distractions raise the ceiling for how long you can concentrate.' },
+  ],
 };

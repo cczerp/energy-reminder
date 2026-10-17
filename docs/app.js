@@ -1,4 +1,4 @@
-import { PACKAGES, EVERYTHING_ID, UNLOCK_AT, pkgFor, CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, SAYING_SETS, PING, SCALE, SCALE_UP } from './content.js';
+import { PACKAGES, EVERYTHING_ID, UNLOCK_AT, pkgFor, CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, SAYING_SETS, PING, SCALE, SCALE_UP, ATTN_LESSON } from './content.js';
 import * as native from './native.js';
 import { BUILD } from './build.js';
 import { PAYWALL, ADS, ADMOB } from './config.js';
@@ -6,7 +6,7 @@ import { PAYWALL, ADS, ADMOB } from './config.js';
 /* ---------------- storage ---------------- */
 const KEY = 'mindful-v2';
 const clone = (o) => JSON.parse(JSON.stringify(o)); // older phone web engines lack structuredClone
-const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, owned: [], adPass: null, tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, sets: [], scale: [], wheels: [], loops: {} });
+const fresh = () => ({ rem: clone(REMIND_DEFAULTS), milestones: {}, sessions: [], recalls: [], tally: {}, days: {}, owned: [], adPass: null, tourSeen: false, fast: { on: false, days: 3, start: '', done: {} }, learned: {}, sets: [], scale: [], wheels: [], loops: {} });
 let S;
 try { S = { ...fresh(), ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { S = fresh(); }
 // Brings saved settings (including older versions' shapes) up to the current shape.
@@ -105,7 +105,9 @@ const hasAll = () => S.owned.includes(EVERYTHING_ID) || ownedPkgs() >= UNLOCK_AT
 const adsOn = () => ADS && native.isNative && !S.owned.length; // ads only in the store build, and never after any purchase
 const passed = (id) => !!S.adPass && S.adPass.day === dayKey() && S.adPass.ids.includes(id); // a meditation opened for today by watching an ad (never the Info pages)
 const locked = (key) => { const k = pkgFor(key); return PAYWALL && !!k && !hasAll() && !S.owned.includes(k.pid) && !passed(key); }; // advanced teachings in a store build, until bought
-const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id) && !locked(id)); // exercises that ring at scheduled times (not leave-home ones)
+const gated = (id) => { const e = exById[id]; return !!(e && e.gate && !(S.learned || {})[e.gate]); }; // attention practices wait until the lesson's switch is on
+const off = (id) => locked(id) || gated(id);
+const schedEx = (gid) => S.rem.cat[gid].ex.filter((id) => group(gid).pool.includes(id) && !off(id)); // exercises that ring at scheduled times (not leave-home ones)
 const choosing = (gid) => !S.rem.cat[gid].random && schedEx(gid).length > 1; // several to do: the reminder opens the list
 const todayPick = (gid) => (schedEx(gid).length ? planned(gid) : S.rem.cat[gid].ex[0]);
 // the exercise a reminder names when it is not asking you to choose (rotates through the ones you picked)
@@ -403,6 +405,7 @@ function Info() {
   const ids = ['live-dos', 'energy-habits'].map((id) => exById[id]).map((e) => link(to(e.id, `#ex/${e.id}`), `<b>${lk(e.id)}${esc(e.title)}</b><div class="dim sm">${esc(e.summary)}</div>`)).join('');
   return `<h1>Info</h1>
   ${link('#tour', '<b>A quick tour</b><div class="dim sm">What is on each page</div>')}
+  ${link('#attn', '<b>Attention: narrow and wide</b><div class="dim sm">Learn the idea, then switch the practices on</div>')}
   ${link(to('info:laws', '#laws'), `<b>${lk('info:laws')}Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>`)}
   ${ids}
   ${link(to('info:cycles', '#cycles'), `<b>${lk('info:cycles')}Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>`)}
@@ -448,6 +451,8 @@ function Practice() {
   ${sub(CATS.bedtime, cats('bedtime'))}${sub(CATS.living, cats('living', knowledge))}${sub(CATS.balance, cats('balance'))}
   <h2>Energy &amp; healing meditations</h2>
   ${cats('energy', knowledge)}
+  <h2>Attention</h2>
+  ${(S.learned || {}).attn ? cats('attention') : link('#attn', '<b>Attention practices</b><div class="dim sm">Learn the idea first, then switch them on</div>')}
   <h2>Esoteric meditations</h2>
   ${ids(['j-library', 'j-stair', 'j-guide', 'p-mental', 'p-etheric'])}
   <h2>Chakra meditations</h2>
@@ -504,6 +509,14 @@ function Laws() {
   ${card('<div class="step" style="font-size:17px">Appreciation works best. When a contradicting thought shows up, do not follow it. Come back to the pure one. The practice is the coming back.</div>')}
   <a class="btn" href="#guide/law-hold">Try the 17-second thought</a>
   ${setCard('laws')}`;
+}
+function Attn() {
+  const on = !!(S.learned || {}).attn;
+  return `${back('#info')}<h1>Attention: narrow and wide</h1><p class="dim">${esc(ATTN_LESSON.intro)}</p>
+  ${ATTN_LESSON.parts.map((p) => card(`<b>${esc(p.h)}</b><div class="sm" style="margin-top:4px">${esc(p.t)}</div>`)).join('')}
+  ${card(`${check(on, '<b class="ttl">I have learned this. Turn on the practices</b>', 'learnattn', on ? 'On. The practices are in Practice and can be picked as Concentration goals in Settings.' : 'Off until you switch it on. Then six attention practices appear.')}
+`, 'accent')}
+  ${on ? EXERCISES.filter((e) => e.cat === 'attention').map((e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`)).join('') : ''}`;
 }
 function Cycles() {
   return `${back('#info')}<h1>Life cycles</h1><p class="dim">${esc(CYCLES.note)}</p>` + CYCLES.periods.map((p) => card(`<b>${esc(p.name)}</b><div class="dim sm">${esc(p.intro)}</div>
@@ -576,7 +589,7 @@ function Settings() {
     const c = R.cat[g.id];
     const nightly = '';
     if (g.simple) return card(`${head(c.on, `<b>${g.label}</b>`, 'Each reminder opens a list of meditations to choose from.', `con:${g.id}`, g.id)}${setOpen[g.id] ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
-    const bullets = [...g.pool, ...g.leave].filter((x) => !locked(x)).map((x) => `<div class="bul ${c.random ? 'dis' : ''}" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
+    const bullets = [...g.pool, ...g.leave].filter((x) => !off(x)).map((x) => `<div class="bul ${c.random ? 'dis' : ''}" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
     return card(`${head(c.on, `<b class="ttl">${g.label}</b>`, c.on ? `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day` : 'Off', `con:${g.id}`, g.id)}
       ${setOpen[g.id] ? `<div class="dim sm" style="margin-top:6px">Tick the exercises. Each ticked one is a daily goal. Or pick the random option below.</div>${bullets}
       ${[...g.pool, ...g.leave].length > 1 ? `<div class="bul" data-act="crand:${g.id}"><span class="bx ${c.random ? 'on' : ''}">${c.random ? '✓' : ''}</span><span><b>Just 1 as my goal, picked at random</b><span class="dim"> — from all of them</span></span></div>` : ''}
@@ -720,9 +733,9 @@ function paint() {
     case 'practice': h = Practice(); break;
     case 'info': h = Info(); break;
     case 'tour': S.tourSeen = true; save(); h = Tour(); break;
-    case 'ex': h = locked(a) ? Unlock(a) : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
+    case 'ex': h = gated(a) ? Attn() : locked(a) ? Unlock(a) : exById[a] && exById[a].advanced && !advOk.has(a) ? Warn(a) : Exercise(a); break;
     case 'unlock': h = Unlock(decodeURIComponent(a)); break;
-    case 'guide': if (locked(a)) { h = Unlock(a); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
+    case 'guide': if (gated(a)) { h = Attn(); break; } if (locked(a)) { h = Unlock(a); break; } if (!G || G.ex.id !== a) { if (exById[a]) startGuide(a); } h = Guide(); break;
     case 'log': h = Log(); break;
     case 'note': h = NoteForm(a); break;
     case 'recall': h = RecallForm(); break;
@@ -731,6 +744,7 @@ function paint() {
     case 'about': h = About(); break;
     case 'cat': h = Choose(a); break;
     case 'scale': h = Scale(); break;
+    case 'attn': h = Attn(); break;
     case 'fast': h = locked('info:fast') ? Unlock('info:fast') : FastLesson(); break;
     case 'laws': h = locked('info:laws') ? Unlock('info:laws') : Laws(); break;
     case 'wheel': h = Wheel(); break;
@@ -822,6 +836,7 @@ document.addEventListener('click', async (e) => {
     }
     case 'ics': exportCalendar(); msg('Calendar file created — open it to add the reminders.'); break;
     case 'export': exportBackup(); break;
+    case 'learnattn': S.learned = { ...(S.learned || {}), attn: !(S.learned || {}).attn }; save(); repaintKeep(); break;
     case 'fon': S.fast.on = !S.fast.on; if (!S.fast.on) S.fast.start = ''; save(); repaintKeep(); break;
     case 'fdays': S.fast.days = +a; save(); repaintKeep(); break;
     case 'fstart': S.fast.start = dayKey(); S.fast.done = {}; save(); repaintKeep(); toast('Frequency Fast started'); break;
