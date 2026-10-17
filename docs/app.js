@@ -530,6 +530,7 @@ function Why() {
 function Learn(c) {
   const t = CAT_TEACH[c]; if (!t) return `${back('#info')}<p>Not found.</p>`;
   return `${back('#info')}<h1>${esc(t.t)}</h1><p class="dim">${esc(t.one)}</p>
+  ${t.origin ? card('<div class="sm"><b>From a declassified document.</b> This comes from a 1983 US Army Intelligence and Security Command assessment of the Gateway Process, written by Lt. Col. Wayne McDonnell and released through the CIA reading room. It reports what the author and his sources describe. Read it and judge for yourself.</div>', 'accent') : ''}
   ${t.p.map((x) => card(`<div class="sm">${esc(x)}</div>`)).join('')}
   ${t.more || t.links ? `<h3>Go deeper</h3>${(t.links || []).map((l) => link(l.href, `<b>${esc(l.t)}</b><div class="dim sm">${esc(l.one)}</div>`)).join('')}${(t.more || []).map((m) => link(locked('cat:' + m) ? `#unlock/cat:${m}` : `#learn/${m}`, `<b>${locked('cat:' + m) ? '🔒 ' : ''}${esc(CAT_TEACH[m].t)}</b><div class="dim sm">${esc(CAT_TEACH[m].one)}</div>`)).join('')}` : ''}
   ${t.src ? `<h3>Sources</h3>${t.src.map((x) => `<div class="dim sm" style="margin-bottom:6px">${esc(x)}</div>`).join('')}` : ''}
