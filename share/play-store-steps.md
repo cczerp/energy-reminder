@@ -81,7 +81,7 @@ For each product: **Monetize → Products → In-app products → Create product
 | `pkg_chakra` | Chakra treatment | $1.00 |
 | `pkg_attention` | Attention | $1.00 |
 | `pkg_gateway` | Gateway experience | $4.99 |
-| `pkg_assessment` | The Army assessment of Gateway | $1.00 |
+| `pkg_assessment` | The CIA assessment of the Gateway Experience (GWE) | $1.00 |
 | `pkg_centers` | Psychic centers | $1.00 |
 | `pkg_journeys` | Inner journeys | $1.00 |
 | `pkg_projection` | Projection | $1.00 |
