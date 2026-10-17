@@ -407,6 +407,7 @@ function Info() {
   ${ids}
   ${link(to('info:cycles', '#cycles'), `<b>${lk('info:cycles')}Life cycles</b><div class="dim sm">Favorable and unfavorable activities by period</div>`)}
   ${link(to('info:chakras', '#chakras'), `<b>${lk('info:chakras')}Chakra reference</b><div class="dim sm">Seven chakras, seed sounds, glands</div>`)}
+  ${link('#sayings', '<b>Mindfulness sayings</b><div class="dim sm">Why the short reminders, and what they are for</div>')}
   ${link(to('info:fast', '#fast'), `<b>${lk('info:fast')}Frequency Fast</b><div class="dim sm">A short challenge: fast from fear-based input</div>`)}
   ${link('#about', '<b>Credits</b><div class="dim sm">With gratitude</div>')}`;
 }
@@ -569,16 +570,25 @@ function FastLesson() {
     <div class="dim sm">Each day has two goals, shown in a bubble on Today while it runs.</div>
     ${running ? '<button class="btn ghost" data-act="fstop">Stop the fast</button>' : '<button class="btn" data-act="fstart">Start today</button>'}` : ''}`);
 }
+function Sayings() {
+  return `${back('#info')}<h1>Mindfulness sayings</h1>
+  <p class="dim">Personal growth, one short thought at a time. The sayings mix simple basics for body and mind (breath, water, movement, kindness, slowing down), tools for your emotions, and deeper reflections drawn from mystics and teachers. Many bring you back to the present moment, a skill worth building: even 30 seconds of being present, a few times a day, steadies you and sharpens your focus.</p>
+  <p class="dim">Choose how many you get each day in Settings, under Daily goals.</p>`;
+}
 function Settings() {
   const R = S.rem;
   const fmtMin = (v) => fmtTime(Math.floor(v / 60), v % 60);
-  const groups = REMIND_GROUPS.map((g) => {
+  const SKILL = { obs: 'noticing fine details', conc: 'holding one thing in mind', emo: 'turn negative thoughts positive at will' };
+  const LABEL = { medp: 'Sitting practice' };
+  const lab = (g) => LABEL[g.id] || g.label;
+  const block = {};
+  REMIND_GROUPS.forEach((g) => {
     const c = R.cat[g.id];
     const nightly = '';
-    if (g.simple) return card(`${head(c.on, `<b>${g.label}</b>`, 'Each reminder opens a list of meditations to choose from.', `con:${g.id}`, g.id)}${setOpen[g.id] ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`);
+    if (g.simple) { block[g.id] = card(`${head(c.on, `<b>${lab(g)}</b>`, 'Each reminder opens a list of meditations to choose from.', `con:${g.id}`, g.id)}${setOpen[g.id] ? `<div class="dim sm" style="margin-top:6px">Reminders per day</div>${stepper(`cn:${g.id}`, c.n)}` : ''}`); return; }
     const bullets = [...g.pool, ...g.leave].filter((x) => !locked(x)).map((x) => `<div class="bul ${c.random ? 'dis' : ''}" data-act="cex:${g.id}:${x}"><span class="bx ${c.ex.includes(x) ? 'on' : ''}">${c.ex.includes(x) ? '✓' : ''}</span><span>${esc(exById[x].title)}${tag(x)}${g.leave.includes(x) ? ' <span class="dim">(when you leave home)</span>' : (g.both || []).includes(x) ? ' <span class="dim">(also when you leave home)</span>' : ''}</span></div>`).join('');
-    return card(`${head(c.on, `<b class="ttl">${g.label}</b>`, c.on ? `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day` : 'Off', `con:${g.id}`, g.id)}
-      ${setOpen[g.id] ? `<div class="dim sm" style="margin-top:6px">Tick the exercises. Each ticked one is a daily goal. Or pick the random option below.</div>${bullets}
+    block[g.id] = card(`${head(c.on, `<b class="ttl">${lab(g)}</b>`, SKILL[g.id] || (c.on ? `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day` : 'Off'), `con:${g.id}`, g.id)}
+      ${setOpen[g.id] ? `${SKILL[g.id] ? `<div class="dim sm" style="margin-top:6px">${c.on ? `Goal: ${c.goal} a day · ${c.n} reminder${c.n === 1 ? '' : 's'} a day` : 'Off'}</div>` : ''}`+ `<div class="dim sm" style="margin-top:6px">Tick the exercises. Each ticked one is a daily goal. Or pick the random option below.</div>${bullets}
       ${[...g.pool, ...g.leave].length > 1 ? `<div class="bul" data-act="crand:${g.id}"><span class="bx ${c.random ? 'on' : ''}">${c.random ? '✓' : ''}</span><span><b>Just 1 as my goal, picked at random</b><span class="dim"> — from all of them</span></span></div>` : ''}
       <div class="dim sm" style="margin-top:8px">Reminders per day — they keep coming until the goal is met</div>${stepper(`cn:${g.id}`, c.n)}
       <div class="dim sm" style="margin-top:8px">Remind me</div>
@@ -589,7 +599,7 @@ function Settings() {
       <div class="dim sm">${c.timing === 'set' ? 'You pick each time.' : c.timing === 'even' ? `Evenly across ${fmtTime(R.day.s)}–${fmtTime(R.day.e)}.` : `Random times between ${fmtTime(R.day.s)} and ${fmtTime(R.day.e)}.`}</div>
       ${c.timing === 'set' ? c.times.map((t, k) => `<div class="dim sm" style="margin-top:6px">Reminder ${k + 1}</div>${stepper(`ct:${g.id}:${k}`, t, fmtMin)}`).join('') : ''}
       ${nightly ? `<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:6px">${nightly}</div>` : ''}` : ''}`);
-  }).join('');
+  });
   const anyLeave = REMIND_GROUPS.some((g) => R.cat[g.id].on && [...g.leave, ...(g.both || [])].some((id) => R.cat[g.id].ex.includes(id)));
   const home = anyLeave ? card(`<b>Leaving home</b>
     <div class="dim sm">${!native.isNative ? 'Works in the Android app only. Until then these stay quiet.' : R.home ? `Home is set. Reminders fire when you move ${R.home.r} m away.` : 'Set your home first — until then these stay quiet.'}</div>
@@ -597,6 +607,7 @@ function Settings() {
     ${native.isNative ? `<button class="btn ghost" data-act="sethome">${R.home ? 'Update' : 'Set'} home to my current location</button>
     ${R.home ? `<div class="dim sm">Distance to count as "left"</div>${stepper('homer', R.home.r, (v) => v + ' m')}` : ''}
     <div class="dim sm" style="margin-top:6px">Needs location set to "Allow all the time".</div>` : ''}`) : '';
+  const sayingsCard = card(`${head(R.mind.on, '<b>Mindfulness sayings</b>', 'To help you become present more often', 'mindon', 'mind')}${setOpen.mind ? `<div class="dim sm" style="margin-top:6px">${R.mind.on ? 'Per day' : 'Off'} · <a href="#sayings" style="color:var(--accent)">Read why</a></div>${R.mind.on ? stepper('mindn', R.mind.n) : ''}` : ''}`);
   return `<div class="hd" style="flex-wrap:nowrap"><h1>Settings</h1><a class="sqbtn" href="#log" aria-label="Log">Log</a></div>
   <h2>Notifications</h2>
   ${permState === 'granted' ? '<div class="good sm">Notifications are on.</div>' : `<button class="btn" data-act="perm">Allow notifications</button>${permState === 'denied' ? '<div class="warn sm">Blocked — enable notifications for this app in your phone settings.</div>' : ''}`}
@@ -605,16 +616,15 @@ function Settings() {
   <div class="dim sm">Used for evenly spread and random reminders, and mindfulness sayings.</div>
   ${card(`<div class="dim sm">From</div>${stepper('dayS', R.day.s, (v) => fmtTime(v))}<div class="dim sm" style="margin-top:6px">Until</div>${stepper('dayE', R.day.e, (v) => fmtTime(v))}`)}
   <h2>Daily goals</h2>
-  ${groups}
+  ${['medp', 'obs', 'conc', 'emo'].map((id) => block[id]).join('')}
+  ${sayingsCard}
+  ${['bed', 'med'].map((id) => block[id]).join('')}
   ${home}
   <h2>Funk playlist</h2>
   <div class="dim sm">Paste a Spotify (or any music) link and press Save. The funk button and "Play my songs" will open it. Downloaded playlists play without internet.</div>
   <input type="text" name="playlist" id="playlist" placeholder="https://open.spotify.com/playlist/…" value="${esc(R.playlist)}">
   <button class="btn" data-act="saveplaylist">Save playlist</button>
   ${R.playlist ? `<div class="good sm">Saved: <a href="${esc(R.playlist)}" style="color:var(--accent);word-break:break-all">${esc(R.playlist)}</a></div>` : ''}
-  <h2>Mindfulness sayings</h2>
-  <p class="dim sm">Personal growth, one short thought at a time. The sayings mix simple basics for body and mind (breath, water, movement, kindness, slowing down), tools for your emotions, and deeper reflections drawn from mystics and teachers. Many bring you back to the present moment, a skill worth building: even 30 seconds of being present, a few times a day, steadies you and sharpens your focus.</p>
-  ${card(`${head(R.mind.on, '<b>Mindfulness sayings</b>', R.mind.on ? `${R.mind.n} a day` : 'Off', 'mindon', 'mind')}${setOpen.mind ? `<div class="dim sm" style="margin-top:6px">Per day</div>${stepper('mindn', R.mind.n)}` : ''}`)}
   <button class="btn ghost" data-act="test">Send a test notification</button>
   ${native.isNative ? '' : `<h2>Calendar reminders</h2>
   <div class="dim sm">Creates a calendar file with the next 14 days of reminders, each with an alarm.</div>
@@ -731,6 +741,7 @@ function paint() {
     case 'about': h = About(); break;
     case 'cat': h = Choose(a); break;
     case 'scale': h = Scale(); break;
+    case 'sayings': h = Sayings(); break;
     case 'fast': h = locked('info:fast') ? Unlock('info:fast') : FastLesson(); break;
     case 'laws': h = locked('info:laws') ? Unlock('info:laws') : Laws(); break;
     case 'wheel': h = Wheel(); break;
@@ -740,7 +751,7 @@ function paint() {
   }
   if (!['note', 'recall'].includes(route)) form = {};
   $('#view').innerHTML = h;
-  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'tour' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#info') || route === 'laws' || route === 'fast' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#practice') || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
+  const tab = ['today', 'practice', 'info', 'settings'].includes(route) ? route : route === 'cat' ? 'today' : route === 'tour' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#info') || route === 'laws' || route === 'sayings' || route === 'fast' || route === 'chakras' || route === 'cycles' || route === 'about' || (route === 'ex' && ['live-dos', 'energy-habits'].includes(a)) ? 'info' : route === 'ex' || (route === 'unlock' && homeOf(decodeURIComponent(a)) === '#practice') || route === 'scale' || route === 'wheel' || route === 'guide' ? 'practice' : 'settings'; // Log, notes and day pages are reached from Settings
   document.querySelectorAll('#tabs a').forEach((el) => el.classList.toggle('on', el.dataset.tab === tab));
   const rs = $('#restore'); if (rs) rs.onchange = restore;
   if (adsOn() && ['practice', 'info'].includes(route)) { $('#view').insertAdjacentHTML('beforeend', '<div style="height:70px"></div>'); native.showBanner(ADMOB, 56); } else native.hideBanner(); // a banner only on the Practice and Info lists, never during practice
