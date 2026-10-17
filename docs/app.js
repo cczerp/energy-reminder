@@ -104,7 +104,7 @@ const ownedPkgs = () => PACKAGES.filter((k) => S.owned.includes(k.pid)).length;
 const hasAll = () => S.owned.includes(EVERYTHING_ID) || ownedPkgs() >= UNLOCK_AT; // the everything purchase, or enough packages (which earns the rest)
 const adsOn = () => ADS && native.isNative && !S.owned.length; // ads only in the store build, and never after any purchase
 const passed = (id) => !!S.adPass && S.adPass.day === dayKey() && S.adPass.ids.includes(id); // a meditation opened for today by watching an ad (never the Info pages)
-const locked = (key) => { const k = pkgFor(key); return PAYWALL && !!k && !hasAll() && !S.owned.includes(k.pid) && !passed(key); }; // advanced teachings in a store build, until bought
+const locked = (key) => { const k = pkgFor(key); return PAYWALL && !!k && (k.extra || !hasAll()) && !S.owned.includes(k.pid) && !passed(key); }; // advanced teachings in a store build, until bought
 const gated = (id) => { const e = exById[id]; return !!(e && e.gate && !(S.learned || {})[e.gate]); }; // attention practices wait until the lesson's switch is on
 const off = (id) => locked(id) || gated(id);
 const ready = (g) => !g.gate || !!(S.learned || {})[g.gate]; // a group with a gate stays out of Today and Settings until its Info switch is on
@@ -408,7 +408,6 @@ function Info() {
   ${link('#tour', '<b>A quick tour</b><div class="dim sm">What is on each page</div>')}
   ${link('#why', '<b>Why these five</b><div class="dim sm">Observe, hold, settle, steady, rest: what everything here builds on</div>')}
   ${link(to('info:attn', '#attn'), `<b>${lk('info:attn')}Attention: narrow and wide</b><div class="dim sm">Learn the idea, then switch the practices on</div>`)}
-  ${link(to('cat:gateway', '#learn/gateway'), `<b>${lk('cat:gateway')}The Gateway experience</b><div class="dim sm">The Monroe Institute process: a session, the stages, the tools</div>`)}
   ${link(to('cat:assessment', '#learn/assessment'), `<b>${lk('cat:assessment')}The CIA assessment of the Gateway Experience (GWE)</b><div class="dim sm">A 1983 evaluation released by the CIA, and the model behind it</div>`)}
   ${link(to('info:laws', '#laws'), `<b>${lk('info:laws')}Universal laws of manifestation</b><div class="dim sm">How a steady thought shapes your state</div>`)}
   ${ids}
@@ -434,8 +433,8 @@ function Unlock(key) {
   return `${back(homeOf(key))}<h1>${k ? esc(k.name) : 'Advanced teachings'}</h1>
   ${k ? card(`<div class="step" style="font-size:17px">${esc(k.desc)}</div>`, 'accent') : ''}
   ${k ? `<button class="btn" data-act="buy:${k.pid}">Unlock “${esc(k.name)}” · ${esc(priceOf[k.pid] || k.price || '$1.00')}</button>` : ''}
-  <button class="btn ${k ? 'ghost' : ''}" data-act="buy:${EVERYTHING_ID}">Unlock everything · ${esc(priceOf[EVERYTHING_ID] || '$4.99')}</button>
-  ${card(`<div class="sm"><b>Everything</b> opens every advanced teaching, including every one added later, for one price.<br><br>Prefer to go one at a time? Each teaching is priced on its own, and its practices come with it. Own any <b>${UNLOCK_AT}</b> packages and the rest unlock free. You own <b>${n}</b> so far. Starting slow costs a little more than trusting it from the start, and either way you get the whole path.</div>`)}
+  ${k && k.extra ? '' : `<button class="btn ${k ? 'ghost' : ''}" data-act="buy:${EVERYTHING_ID}">Unlock everything · ${esc(priceOf[EVERYTHING_ID] || '$4.99')}</button>`}
+  ${k && k.extra ? card('<div class="sm">This teaching is sold on its own. It is not part of Everything, and owning other packages does not unlock it.</div>') : card(`<div class="sm"><b>Everything</b> opens every advanced teaching except the CIA assessment, including every other one added later, for one price.<br><br>Prefer to go one at a time? Each teaching is priced on its own, and its practices come with it. Own any <b>${UNLOCK_AT}</b> packages and the rest unlock free. You own <b>${n}</b> so far. Starting slow costs a little more than trusting it from the start, and either way you get the whole path.</div>`)}
   ${adsOn() && k && homeOf(key) === '#practice' ? `<button class="btn ghost" data-act="watchad:${key}">Watch a short ad to open this one for today</button>` : ''}
   <button class="btn ghost" data-act="restoreunlock">Restore purchases</button>
   <div id="msg" class="warn sm"></div>`;
@@ -506,7 +505,7 @@ function About() {
     <li><b>Dolores Cannon</b> — the quiet-listening, inner-journey, energy, and everyday-living practices, written here in our own words from teachings associated with her work</li>
     <li><b>Barbara Marciniak</b>, <b>Neville Goddard</b>, <b>Bashar</b>, and <b>Esther and Abraham Hicks</b> — the whim, now-point, belief-audit, fast, breath, bedtime-loop, emotional-scale and manifestation practices, and the sayings inspired by them, in our own words</li>
     <li><b>Randall L. Waechter and Lauren Sergio</b>, and the researchers they draw on (Burr, Baule and McFee, Schumann, Oschman, Becker) — the teaching on energy and the body's fields, from their paper in <i>Subtle Energies &amp; Energy Medicine</i></li>
-    <li><b>Lt. Col. Wayne M. McDonnell</b> and the <b>US Army Intelligence and Security Command</b>, whose 1983 Analysis and Assessment of Gateway Process (a declassified copy, released through the CIA reading room) is the source of the teachings on meditation, hypnosis and biofeedback, Hemi-Sync, kundalini and resonant sound, color and the energy bar, the Gateway experience, and out-of-body movement, and the people it draws on: <b>Itzhak Bentov</b>, <b>Robert Monroe</b> and the Monroe Institute (<b>Melissa Jager</b>, <b>Stuart Twemlow</b>), <b>Lee Sannella</b>, <b>Ronald Stone</b>, <b>Karl Pribram</b> and <b>David Bohm</b></li>
+    <li><b>Lt. Col. Wayne M. McDonnell</b> and the <b>US Army Intelligence and Security Command</b>, whose 1983 Analysis and Assessment of Gateway Process (a declassified copy, released through the CIA reading room) is the source of the teachings on meditation, hypnosis and biofeedback, Hemi-Sync, kundalini and resonant sound, color and the energy bar, how a Gateway session runs and the model behind it, and out-of-body movement, and the people it draws on: <b>Itzhak Bentov</b>, <b>Robert Monroe</b> and the Monroe Institute (<b>Melissa Jager</b>, <b>Stuart Twemlow</b>), <b>Lee Sannella</b>, <b>Ronald Stone</b>, <b>Karl Pribram</b> and <b>David Bohm</b></li>
     <li><b>Wisdom of the Mystic Masters</b> — the mental training, meditation, healing, projection, and cycles teachings</li>
     <li>The yogic, tantric, and Rosicrucian traditions all of the above draw on</li>
     <li>Every teacher, student, and practitioner who passed these on</li>

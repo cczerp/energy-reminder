@@ -26,10 +26,10 @@ Also still to credit: older health claims in practice text (colds and germs, Sel
 ## Source notes
 
 - Gateway tapes: NOT included, no links to copies. They are Monroe Institute commercial recordings (copyrighted); an archive.org download does not give redistribution rights. A link to the Institute's own store is fine if wanted later.
-- Pricing decision pending: Gateway experience is set to $4.99 (placeholder in `docs/content.js`, real price is the Play product `pkg_gateway`). Everything is also $4.99, so the two cost the same; decide if Everything should go up or Gateway should come down.
+- Unlock rule: with the assessment sold separately, the regular paid teachings are 7 (Chakra, Psychic centers, Inner journeys, Projection, Universal laws, Life cycles, Attention). UNLOCK_AT is still 8 and owned extras count toward it; revisit.
 
 - The declassified McDonnell Gateway assessment copy (CIA-RDP96-00788R001700210016-5) jumps from paragraph 34 to 37; paragraphs 35 and 36 are not in the file we were given. Get a complete copy if they matter.
-- Teachings built from it: Meditation, hypnosis and biofeedback; Sound, brainwaves and Hemi-Sync (both free, under Meditation); The Gateway model and its tools (under Inner journeys, locked with that package); out-of-body cards added to Projection.
+- Teachings built from it: Meditation, hypnosis and biofeedback; Sound, brainwaves and Hemi-Sync (both free, under Meditation); Kundalini, resonance and sound (under Chakra alignment, free); Color, light and the energy bar (under Energy & healing, free); out-of-body cards in Projection; and The CIA assessment of the Gateway Experience (GWE), one lesson at $4.99, sold separately and not part of Everything. The separate Gateway process lesson was removed to save the hassle (its cards were folded into the assessment lesson).
 
 ## Parked sayings / content
 
