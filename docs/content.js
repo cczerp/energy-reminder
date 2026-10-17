@@ -901,10 +901,9 @@ CHAKRAS.forEach((c) => EXERCISES.push({
 ['c-pituitary', 'c-pineal', 'c-throat', 'c-attune', 'p-mental', 'p-etheric'].forEach((id) => { EXERCISES.find((e) => e.id === id).advanced = true; });
 
 // The advanced teachings a store build sells. Each package is one $1 purchase in Google Play; EVERYTHING_ID ($4.99) opens all of them,
-// including any package added later. Owning UNLOCK_AT packages opens the rest. To add a teaching: put it in a package (or add a package,
+// including any package added later. To add a teaching: put it in a package (or add a package,
 // then create its product in Play Console). Basic teachings are simply left out of every package and stay free.
 export const EVERYTHING_ID = 'advanced_unlock';
-export const UNLOCK_AT = 8;
 export const PACKAGES = [
   { pid: 'pkg_chakra', name: 'Chakra treatment', desc: 'The chakra alignment walkthrough and the seven chakra meditations. The chakra reference and its teaching stay free.', cats: ['chakra'], learn: [] },
   { pid: 'pkg_assessment', name: 'The CIA assessment of the Gateway Experience (GWE)', desc: 'The 1983 US Army assessment of the Gateway Process, released through the CIA: how a session runs, the focus levels and tools, the model of consciousness and energy, and the phased path it recommends. Sold separately and not part of Everything.', learn: ['assessment'], price: '$4.99', extra: true },

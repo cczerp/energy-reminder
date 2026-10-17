@@ -88,7 +88,7 @@ For each product: **Monetize → Products → In-app products → Create product
 | `pkg_cycles` | Life cycles | $1.00 |
 
 - `pkg_assessment` is sold on its own: it is not unlocked by `advanced_unlock` (Everything) or by owning other packages. Gateway experience is no longer a separate product (`pkg_gateway` is not used).
-- Do's and Don'ts, Supporting habits and the Frequency Fast are free now (`pkg_dos` and `pkg_habits` are no longer used; leave them inactive). Owning any 8 packages unlocks the rest automatically (`UNLOCK_AT` in `docs/content.js`). Everything also covers packages added later.
+- Do's and Don'ts, Supporting habits and the Frequency Fast are free now (`pkg_dos` and `pkg_habits` are no longer used; leave them inactive). There is no buy-N-to-unlock-the-rest rule for now. Everything also covers packages added later.
 - Any purchase removes ads. Ads are off in the Play bundle for now (see the workflow note); turn them on when you publish.
 - You also need a **payments profile** (Monetize → Setup). Only you can do this.
 - Test a real purchase with a license-testing Gmail (Setup → License testing) on the internal test.

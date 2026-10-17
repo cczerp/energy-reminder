@@ -1,4 +1,4 @@
-import { PACKAGES, EVERYTHING_ID, UNLOCK_AT, pkgFor, CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, SAYING_SETS, PING, SCALE, SCALE_UP, ATTN_LESSON, WHY, CAT_TEACH } from './content.js';
+import { PACKAGES, EVERYTHING_ID, pkgFor, CATS, EXERCISES, MILESTONES, exById, CHAKRAS, CHAKRA_INTRO, CYCLES, REMIND_GROUPS, CAT_LABEL, REMIND_DEFAULTS, NUDGES, SAYING_SETS, PING, SCALE, SCALE_UP, ATTN_LESSON, WHY, CAT_TEACH } from './content.js';
 import * as native from './native.js';
 import { BUILD } from './build.js';
 import { PAYWALL, ADS, ADMOB } from './config.js';
@@ -100,8 +100,7 @@ const catDone = (gid, day = dayKey()) => catCount(gid, day) >= S.rem.cat[gid].go
 const nudgePool = () => NUDGES.concat(...SAYING_SETS.filter((x) => (S.sets || []).includes(x.id)).map((x) => x.sayings)); // plain sayings plus any lesson sets the person switched on
 const setCard = (id) => { const x = SAYING_SETS.find((y) => y.id === id), on = (S.sets || []).includes(id); return card(`${check(on, '<b>Add these sayings to my reminders</b>', 'sayset:' + id, on ? 'On. They now come up in your mindfulness reminders.' : `${x.sayings.length} short sayings from this lesson. Press once you have read it.`)}`); };
 const canLeave = () => native.isNative && !!S.rem.home;
-const ownedPkgs = () => PACKAGES.filter((k) => S.owned.includes(k.pid)).length;
-const hasAll = () => S.owned.includes(EVERYTHING_ID) || ownedPkgs() >= UNLOCK_AT; // the everything purchase, or enough packages (which earns the rest)
+const hasAll = () => S.owned.includes(EVERYTHING_ID); // the everything purchase (packages are bought one at a time; no count unlocks the rest)
 const adsOn = () => ADS && native.isNative && !S.owned.length; // ads only in the store build, and never after any purchase
 const passed = (id) => !!S.adPass && S.adPass.day === dayKey() && S.adPass.ids.includes(id); // a meditation opened for today by watching an ad (never the Info pages)
 const locked = (key) => { const k = pkgFor(key); return PAYWALL && !!k && (k.extra || !hasAll()) && !S.owned.includes(k.pid) && !passed(key); }; // advanced teachings in a store build, until bought
@@ -429,12 +428,11 @@ async function syncUnlock() {
 }
 function Unlock(key) {
   unlockKey = key; const k = pkgFor(key);
-  const n = ownedPkgs();
   return `${back(homeOf(key))}<h1>${k ? esc(k.name) : 'Advanced teachings'}</h1>
   ${k ? card(`<div class="step" style="font-size:17px">${esc(k.desc)}</div>`, 'accent') : ''}
   ${k ? `<button class="btn" data-act="buy:${k.pid}">Unlock “${esc(k.name)}” · ${esc(priceOf[k.pid] || k.price || '$1.00')}</button>` : ''}
   ${k && k.extra ? '' : `<button class="btn ${k ? 'ghost' : ''}" data-act="buy:${EVERYTHING_ID}">Unlock everything · ${esc(priceOf[EVERYTHING_ID] || '$4.99')}</button>`}
-  ${k && k.extra ? card('<div class="sm">This teaching is sold on its own. It is not part of Everything, and owning other packages does not unlock it.</div>') : card(`<div class="sm"><b>Everything</b> opens every advanced teaching except the CIA assessment, including every other one added later, for one price.<br><br>Prefer to go one at a time? Each teaching is priced on its own, and its practices come with it. Own any <b>${UNLOCK_AT}</b> packages and the rest unlock free. You own <b>${n}</b> so far. Starting slow costs a little more than trusting it from the start, and either way you get the whole path.</div>`)}
+  ${k && k.extra ? card('<div class="sm">This teaching is sold on its own. It is not part of Everything, and owning other packages does not unlock it.</div>') : card(`<div class="sm"><b>Everything</b> opens every advanced teaching except the CIA assessment, including every other one added later, for one price.<br><br>Prefer to go one at a time? Each teaching is priced on its own, and its practices come with it.</div>`)}
   ${adsOn() && k && homeOf(key) === '#practice' ? `<button class="btn ghost" data-act="watchad:${key}">Watch a short ad to open this one for today</button>` : ''}
   <button class="btn ghost" data-act="restoreunlock">Restore purchases</button>
   <div id="msg" class="warn sm"></div>`;
