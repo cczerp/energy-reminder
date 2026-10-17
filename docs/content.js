@@ -1146,85 +1146,85 @@ export const SCALE_UP = {
   2: 'Look at what you climbed through to get here. Appreciate the one who climbed.',
 };
 
-// The Attention lesson (Info). In our own words, from common psychology of attention.
+// The Attention lesson (Info). Locked with the Attention practices.
 export const ATTN_LESSON = {
-  intro: 'Attention works like a zoom lens. You can narrow it onto one small thing, or widen it to take in a whole scene. Both are skills, and you can learn to move between them.',
+  intro: 'A common way to picture attention is as a zoom lens. You can narrow it onto one small thing, or widen it to take in a whole scene. Both are skills, and you can learn to move between them.',
   parts: [
     { h: 'Narrow (convergent) focus', t: 'You contract the beam onto one object, detail or sensation. Detail and precision go up in that spot, and you take in less of the rest. Good for reading, examining, and sinking into one thing.' },
-    { h: 'Broad (wide) focus', t: 'You open the beam to take in more of the scene at once: the layout, movement, the edges of your vision. You get the big picture and notice more, with less detail at any one point. There is always a trade: the wider it is, the less intense it is at any single spot.' },
+    { h: 'Broad (wide) focus', t: 'You open the beam to take in more of the scene at once: the layout, movement, the edges of your vision. You get the big picture and notice more, with less detail at any one point. The wider it is, the less intense it is at any single spot.' },
     { h: 'Spatial awareness', t: 'Spatial awareness is your sense of where things are, how far, and how they relate, including your own body. Wide focus supports it: you hold the whole layout and notice what changes around you. Narrow focus sharpens one spot but can shrink the rest into tunnel vision. Reading a gauge is narrow. Scanning a road is wide.' },
-    { h: 'Absorption', t: 'Narrowing attention is also the gateway to absorption: the state of being so locked onto one thing that the rest drops away, like getting lost in a book. Hypnosis research describes this narrowed, absorbed focus as central to how hypnotic inductions work. A wide, open attention is a different flavor of presence: expansive, grounded in the space around you. Both are present. The skill is moving between them.' },
+    { h: 'Absorption', t: 'Narrowing attention is also the way into absorption: being so locked onto one thing that the rest drops away, like getting lost in a book. A wide, open attention is a different flavor of presence: expansive, grounded in the space around you. Both are present. The skill is moving between them.' },
     { h: 'Narrow first', t: 'The ability to widen cleanly rests on being able to narrow and hold. Without a steady zoom, widening feels scattered. Learn to lock the lens, then open it while keeping the option to snap back.' },
     { h: 'Attention and concentration are two different jobs', t: 'Attention is the control: choosing what you notice, widening or narrowing the beam, and moving it from one thing to another. Concentration is the staying power: holding narrow attention steady on one thing, for longer, against every pull to leave. Attention is the steering and concentration is the endurance. You need both, and each is trained differently. The practices in this lesson train the control. Single-Object Hold, Grid Hold, Focus Block, Endurance Push, Long Read and the other Concentration practices train the staying power.' },
     { h: 'How concentration helps meditation', t: 'Meditation asks you to rest on one thing, such as the breath, a color, a sound or a feeling, and stay. Concentration is what lets you stay. Each time you slip and return, the hold grows longer and the mind settles instead of wandering. Without it, a sit is a string of drifts.' },
     { h: 'How attention helps meditation', t: 'Control lets you shape the sit: narrow onto the breath, open wide to everything that arises, move from one to the other, and notice early that you have drifted. It keeps the inner work clear, because you can aim and adjust your awareness instead of being carried by it. Training it in the ordinary world first, where there is something to check yourself against, is how you prepare to work in the mind\'s inner space.' },
     { h: 'How you train it', t: 'Every time your mind wanders and you bring it back, that is one successful rep, not a failure. Short, daily practice counts more than long, rare sessions.' },
-    { h: 'Recovery and distractions', t: 'Sleep, regular exercise and enough rest set the ceiling for how well you can direct and hold attention. Protect your practice windows: put the phone in another room, turn off notifications, and do one thing at a time. A tired or constantly interrupted mind cannot train well.' },
-    { h: 'Optional: spatial hobbies', t: 'Anything that makes you think about positions, shapes and space trains your spatial sense on the side: building with blocks or wood, origami, 3D puzzles, drawing from life, and action or spatial video games. None are required. They are extra ways to practice what Space Sense and Two Viewpoints train.' },
+    { h: 'Protect your practice', t: 'Practice goes better when you are rested. Protect your practice windows: put the phone in another room, turn off notifications, and do one thing at a time.' },
+    { h: 'Optional: spatial hobbies', t: 'Anything that makes you think about positions, shapes and space is extra practice for what Space Sense and Two Viewpoints work on: building with blocks or wood, origami, 3D puzzles, drawing from life, and spatial video games. None are required.' },
   ],
 };
 
-// "Why these five" (Info, always free). Plain, truthful wording for now; the Rosicrucian wording can replace it later.
+// "Why these five" (Info, always free). Plain wording for now; the Rosicrucian wording can replace it later.
 export const WHY = {
   intro: 'Everything in MindCue grows from five building blocks. They are not five separate skills. Each one makes the next one possible, and together they are how a mind learns to steady itself and choose how it responds.',
   parts: [
     { h: '1. Observation', t: 'You cannot work with what you do not notice. Observing means taking in what is actually here, accurately, without adding a story. It is the raw material for everything after it, and it pulls you out of autopilot and into the present moment.' },
     { h: '2. Concentration', t: 'Once you can notice, you learn to hold. Concentration is keeping your attention on one thing and bringing it back when it slips. It is the muscle behind every other practice, and the reason a wandering mind can become a steady one.' },
-    { h: '3. Meditation', t: 'Meditation is concentration turned inward and sustained, until the mind settles. It is where you meet your own thoughts and feelings without being carried off by them. Regular practice is linked in research to calmer stress responses and steadier attention.' },
+    { h: '3. Meditation', t: 'Meditation is concentration turned inward and sustained, until the mind settles. It is where you meet your own thoughts and feelings without being carried off by them.' },
     { h: '4. Emotional control', t: 'This does not mean suppressing feelings. It means noticing a feeling early, naming it, and choosing your response instead of being run by it. It rests on the first three: you have to see the feeling (observation), stay with it (concentration), and let it settle (meditation).' },
-    { h: '5. Bedtime', t: 'The day ends with review and rest. Looking back over the day calmly lets you learn from it and put it down, and good sleep is when the brain consolidates memory and resets mood. A mind that closes the day well starts the next one steadier.' },
+    { h: '5. Bedtime', t: 'The day ends with review and rest. Looking back over the day calmly lets you learn from it and put it down. A mind that closes the day well starts the next one steadier.' },
   ],
   close: 'The order matters. Observe, hold, settle, steady the feelings, then rest. Every other practice in the app, the extra ones and the advanced ones, is a way of deepening one of these five. If you ever feel lost in the app, come back here and do the simplest practice from the five.',
 };
 
-// One short teaching per group of practices (Info). Plain, honest wording for now; the Rosicrucian wording can replace any block later.
+// One short teaching per group of practices (Info). Plain wording for now; the Rosicrucian wording can replace any block later.
 export const CAT_TEACH = {
   observe: { t: 'Observation', one: 'See what is actually there', p: [
     'Observation is noticing what is really in front of you (details, positions, sounds) without adding commentary. Most of the day we run on autopilot and see our expectations instead of the scene.',
-    'Everything else depends on accurate input. New-Room Recall, Stair Count and Evening Recall train you to look carefully and then test what you took in against reality. Deliberate noticing tends to improve memory for detail and keeps you in the present moment.',
+    'Everything else rests on accurate input. New-Room Recall, Stair Count and Evening Recall train you to look carefully and then check what you took in against reality.',
     'Short and often works best. Missing details is not failure; it shows you what to notice next time.' ] },
   concentrate: { t: 'Concentration', one: 'Hold one thing steady', p: [
     'Concentration is keeping your attention on one thing and bringing it back when it slips. It is the muscle underneath every other practice.',
-    'The exercises are deliberately demanding (mental multiplication, memorizing lines, holding a stranger\'s face, the 17-second pure thought) so that there is something firm to hold. The Attention lesson explains the narrow and wide sides of the same skill.',
+    'The exercises are deliberately demanding (mental multiplication, memorizing lines, holding a stranger\'s face, the 17-second pure thought, a focus block) so that there is something firm to hold. The Attention lesson explains how concentration differs from attention.',
     'Every time you notice a wander and return, that is one rep. The returning is the training.' ] },
   meditate: { t: 'Meditation', one: 'Concentration turned inward', p: [
     'Meditation is concentration turned inward and kept up until the mind settles. The forms differ (breath, a color, a sound, stillness, a feeling like love) but the move is the same: rest your attention on one thing, notice when it leaves, and come back.',
-    'Regular practice is linked in research to calmer stress responses and steadier attention. It is a skill that builds, not a cure, and the effects are gradual.',
-    'The goal is not an empty mind. A short sit every day does more than a long one now and then. Routine meditation is your daily sit; the meditation practices are the structured ones.' ] },
+    'It builds with practice. The goal is not an empty mind. A short sit every day does more than a long one now and then.',
+    'Routine meditation is your daily sit. The meditation practices are the structured ones.' ] },
   emotion: { t: 'Emotional control', one: 'Notice, name, choose', p: [
-    'Emotional control does not mean pushing feelings down. It means noticing a feeling early, naming it, and choosing your response instead of being run by it. Research finds that simply putting a name to a feeling tends to soften it.',
+    'Emotional control does not mean pushing feelings down. It means noticing a feeling early, naming it, and choosing your response instead of being run by it.',
     'The practices here are small, repeatable ways to build that gap: slowing down, patience under a fiddly task, following a small whim, appreciating what is in view, climbing the emotional scale one rung at a time, and the Funk Reset when you are stuck.',
     'It rests on the three before it: you have to see the feeling (observation), stay with it (concentration) and let it settle (meditation).' ] },
   bedtime: { t: 'Bedtime', one: 'Close the day on purpose', p: [
-    'The last minutes before sleep are a good time to review the day calmly, learn from it, and put it down. Sleep itself is when the brain consolidates memory and resets mood, so how you end the day matters.',
+    'The last minutes before sleep are a good time to review the day calmly, learn from it, and put it down.',
     'Evening Recall is observation turned backward. The Belief Audit, Revision and the Scene That Proves It use that quiet, drifting state to look at what drove your reactions and to rehearse what you want.',
     'Do them lying down and keep them short. If you fall asleep partway, that is a good outcome.' ] },
   energy: { t: 'Energy & healing', one: 'Breath, light and intention', p: [
-    'These are traditional practices that use breath, visualized light and intention. In practice they reliably produce calm, focus and a feeling of renewed energy, much as slow breathing and guided imagery do.',
-    'There is no scientific evidence that they heal illness in yourself or in others. Treat them as relaxation and intention work, never as a replacement for medical care. See a doctor for anything that is persistent, severe or new.',
-    'Stop if you feel dizzy or unwell, and do not do them when you are ill, exhausted or just after eating.' ] },
+    'These practices use breath, visualized light and intention to build, store and direct energy, as taught in the traditions named in Credits.',
+    'They are written here as they were taught: draw the energy in, hold it, and send it where it is needed, with the intention doing the directing.',
+    'The Supporting Habits reading covers the everyday habits that keep the reserve up.' ] },
   balance: { t: 'Counterbalance', one: 'Answer a swing with its opposite', p: [
-    'Counterbalance pairs a swing in one direction with a deliberate move in the other: out of balance toward the negative, you steer toward a steadier, positive state, and the reverse.',
-    'It is close to what psychologists call reframing, which has good support for improving mood and calm. It works by redirecting attention, not by pretending a feeling is absent.',
-    'Claims in the practice text about colds or germs come from the traditional teaching. Treat them as tradition, not medical advice.' ] },
+    'Counterbalance pairs a swing in one direction with a deliberate move in the other: out of balance toward the negative, you steer toward a steadier, positive state, and the reverse when you are over-positive.',
+    'It is a way of coming back to the middle instead of staying at either extreme.',
+    'Use the Negative version when you are low, and the Over-Positive version when you are running too high.' ] },
   living: { t: 'Living practices', one: 'Carry it into the day', p: [
     'These are not sit-down exercises. They are ways of living the five building blocks in ordinary hours: watching your words, listening to your body, being here now, keeping body and mind clean.',
     'They are the point of the rest. A few minutes of practice matters most when it changes how you speak, eat, react and rest for the other twenty-three hours.',
     'Take one at a time and notice what shifts. The Do\'s and Don\'ts is a short reminder list to come back to.' ] },
   chakra: { t: 'Chakra alignment', one: 'Attention through the body\'s centers', p: [
-    'In yogic tradition the chakras are seven centers along the body, from the base of the spine to the crown, each tied to a quality and a seed sound. The walkthrough puts steady attention in each area in turn, root to crown.',
-    'What you can verify is the effect of focused body attention with a sound or rhythm: it settles the nervous system and builds concentration. The deeper claims about energy centers are a tradition\'s account, not something science measures.',
-    'Read the Chakra reference alongside the meditations. Go slowly, and stop if you feel uncomfortable.' ] },
+    'In the yogic tradition the chakras are seven centers along the body, from the base of the spine to the crown. Each has its own element, seed sound and quality.',
+    'The walkthrough puts steady attention in each area in turn, root to crown, until it feels coherent. The seven meditations take one center at a time with its seed sound.',
+    'The Chakra reference lists each center, its sound, location, what blocks it and its gland.' ] },
   centers: { t: 'Psychic centers', one: 'The advanced center work', p: [
-    'This series works with centers in the heart, head and throat in a set order: Heart first, then Pituitary, Pineal, Throat, and only then the combined attunement. Each stage is meant to be steady before the next.',
-    'The order exists because the early work builds the calm and concentration the later work leans on. People report sharper observation, steadier mood and clearer intuition; these are personal and are not measured by science.',
-    'Do not rush, and do not do these when ill, exhausted or after alcohol. Stop if you feel dizzy or unwell. This is a contemplative practice, not medical care.' ] },
-  journey: { t: 'Inner journeys', one: 'Guided imagery with room to be surprised', p: [
-    'Inner journeys use deep relaxation and a guided scene (a staircase, a library, a meeting place) to open a quiet, imaginative state where images and answers can arise.',
-    'Whether you see what comes as memory, imagination or something more, the practice is the same: relax, allow, and do not force. The only rule is to allow it. Guided imagery is a well-studied relaxation tool, and what comes up can feel meaningful. It is not proof of any particular claim.',
-    'Do them somewhere safe and quiet, and take a moment to come back fully before you stand up. If anything feels distressing, stop and open your eyes.' ] },
+    'This series works with centers in the heart, head and throat in a set order: Heart first, then Pituitary, Pineal, Throat, and only then the combined attunement.',
+    'The order is taught because each stage builds what the next one leans on. As taught, the early stages bring sharper observation and a steadier mind, and the later ones build on that.',
+    'Take it in order and give each stage steady effort before the next.' ] },
+  journey: { t: 'Inner journeys', one: 'Go inward and allow what comes', p: [
+    'Inner journeys use deep relaxation and a guided scene (a staircase, a library, a meeting place) to open the inner space and receive what comes.',
+    'The only rule is to allow it. Do not force the images and do not judge them. Let the scene unfold and ask what you want to know.',
+    'Do them somewhere quiet, and take a moment to come back fully before you stand up.' ] },
   project: { t: 'Projection', one: 'The most advanced practices', p: [
-    'Mental projection keeps your awareness anchored while the mind travels to a familiar place. Etheric projection uses a resonant OM and lying still. Both are old contemplative practices.',
-    'Experiences reported with them are subjective, and science has no verified account of them. They are best treated as advanced concentration and imagery work that comes after the earlier stages are steady.',
-    'Stay a spectator and never drift into sleep. Do not do them when ill, exhausted or unwell, and stop if anything feels wrong.' ] },
+    'Mental projection keeps your awareness anchored while the mind travels to a familiar place. Etheric projection uses a resonant OM and lying still.',
+    'As taught, they come after the earlier stages are steady.',
+    'Stay a spectator and do not drift into sleep.' ] },
 };

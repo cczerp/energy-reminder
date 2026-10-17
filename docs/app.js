@@ -518,17 +518,18 @@ function Laws() {
   <a class="btn" href="#guide/law-hold">Try the 17-second thought</a>
   ${setCard('laws')}`;
 }
+const taught = () => '<div class="dim sm" style="margin-top:14px">Taught from the teachers and traditions named in <a href="#about">Credits</a>.</div>';
 function Why() {
   return `${back('#info')}<h1>Why these five</h1><p class="dim">${esc(WHY.intro)}</p>
   ${WHY.parts.map((p) => card(`<b>${esc(p.h)}</b><div class="sm" style="margin-top:4px">${esc(p.t)}</div>`)).join('')}
   ${card(`<div class="sm">${esc(WHY.close)}</div>`, 'accent')}
-  <a class="btn" href="#practice">Go to Practice</a>`;
+  <a class="btn" href="#practice">Go to Practice</a>${taught()}`;
 }
 function Learn(c) {
   const t = CAT_TEACH[c]; if (!t) return `${back('#info')}<p>Not found.</p>`;
   return `${back('#info')}<h1>${esc(t.t)}</h1><p class="dim">${esc(t.one)}</p>
   ${t.p.map((x) => card(`<div class="sm">${esc(x)}</div>`)).join('')}
-  <a class="btn" href="#practice">Go to Practice</a>`;
+  <a class="btn" href="#practice">Go to Practice</a>${taught()}`;
 }
 function Attn() {
   const on = !!(S.learned || {}).attn;
@@ -536,7 +537,7 @@ function Attn() {
   ${ATTN_LESSON.parts.map((p) => card(`<b>${esc(p.h)}</b><div class="sm" style="margin-top:4px">${esc(p.t)}</div>`)).join('')}
   ${card(`${check(on, '<b class="ttl">I have learned this. Turn on the practices</b>', 'learnattn', on ? 'On. The ten practices are in Practice, and an Attention block with reminders is now in Settings.' : 'Off until you switch it on. Then ten attention practices appear in Practice, and an Attention block appears in Settings.')}
 `, 'accent')}
-  ${on ? EXERCISES.filter((e) => e.cat === 'attention').map((e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`)).join('') : ''}`;
+  ${on ? EXERCISES.filter((e) => e.cat === 'attention').map((e) => link(`#ex/${e.id}`, `<b>${esc(e.title)}</b><div class="dim sm">${esc(e.freq)}</div>`)).join('') : ''}${taught()}`;
 }
 function Cycles() {
   return `${back('#info')}<h1>Life cycles</h1><p class="dim">${esc(CYCLES.note)}</p>` + CYCLES.periods.map((p) => card(`<b>${esc(p.name)}</b><div class="dim sm">${esc(p.intro)}</div>
